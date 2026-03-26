@@ -135,4 +135,67 @@ public class PracticeService : IPracticeService
             })
             .ToListAsync();
     }
+
+    public async Task<AttemptResponse> ReportResultAsync(Guid userId, ReportResultRequest request)
+    {
+        var session = await _db.PracticeSessions.Include(s => s.Sign)
+            .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.UserId == userId)
+            ?? throw new ArgumentException("Session not found.");
+
+        if (session.EndedAt.HasValue)
+            throw new InvalidOperationException("Session already ended.");
+
+        var attempt = new PracticeAttempt
+        {
+            Id = Guid.NewGuid(), SessionId = request.SessionId,
+            VideoClipUrl = string.Empty, // No video uploaded in this flow
+            RecordedAt = DateTime.UtcNow,
+            OverallScore = request.OverallScore
+        };
+        _db.PracticeAttempts.Add(attempt);
+
+        foreach (var fb in request.Feedbacks)
+        {
+            if (!Enum.TryParse<FeedbackType>(fb.Type, true, out var fbType)) continue;
+            _db.AIFeedbacks.Add(new AIFeedback
+            {
+                Id = Guid.NewGuid(), AttemptId = attempt.Id,
+                FeedbackType = fbType, Score = fb.Score,
+                Message = fb.Message, KeypointData = null,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        session.TotalAttempts++;
+
+        var signProgress = await _db.SignProgresses
+            .FirstOrDefaultAsync(sp => sp.UserId == userId && sp.SignId == session.SignId);
+
+        if (signProgress == null)
+        {
+            signProgress = new SignProgress
+            {
+                Id = Guid.NewGuid(), UserId = userId, SignId = session.SignId,
+                AttemptCount = 1, IsMastered = request.OverallScore >= 0.8f,
+                LastPracticedAt = DateTime.UtcNow
+            };
+            _db.SignProgresses.Add(signProgress);
+        }
+        else
+        {
+            signProgress.AttemptCount++;
+            signProgress.LastPracticedAt = DateTime.UtcNow;
+            if (request.OverallScore >= 0.8f) signProgress.IsMastered = true;
+        }
+
+        await _streakService.RecordActivityAsync(userId);
+        await _db.SaveChangesAsync();
+
+        return new AttemptResponse
+        {
+            AttemptId = attempt.Id,
+            OverallScore = request.OverallScore,
+            Feedbacks = request.Feedbacks
+        };
+    }
 }

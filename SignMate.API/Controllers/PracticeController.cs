@@ -48,4 +48,11 @@ public class PracticeController : ControllerBase
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await _practiceService.GetHistoryAsync(userId, signId));
     }
+
+    [HttpPost("report-result")]
+    public async Task<IActionResult> ReportResult([FromBody] ReportResultRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        return Ok(await _practiceService.ReportResultAsync(userId, request));
+    }
 }

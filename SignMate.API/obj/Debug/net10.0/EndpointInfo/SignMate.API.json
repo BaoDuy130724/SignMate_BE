@@ -1030,6 +1030,37 @@
         }
       }
     },
+    "/api/practice/report-result": {
+      "post": {
+        "tags": [
+          "Practice"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportResultRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportResultRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportResultRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/progress/lesson": {
       "put": {
         "tags": [
@@ -1085,6 +1116,18 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/seed": {
+      "post": {
+        "tags": [
+          "Seed"
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1327,6 +1370,37 @@
           }
         }
       }
+    },
+    "/api/vocabulary/set-reference": {
+      "post": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetReferenceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetReferenceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetReferenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1533,6 +1607,24 @@
         },
         "additionalProperties": false
       },
+      "FeedbackDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "score": {
+            "type": "number",
+            "format": "float"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ForgotPasswordRequest": {
         "required": [
           "email"
@@ -1620,6 +1712,30 @@
         },
         "additionalProperties": false
       },
+      "ReportResultRequest": {
+        "required": [
+          "sessionId"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "overallScore": {
+            "type": "number",
+            "format": "float"
+          },
+          "feedbacks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedbackDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ResetPasswordRequest": {
         "required": [
           "email",
@@ -1640,6 +1756,24 @@
           "newPassword": {
             "maxLength": 100,
             "minLength": 6,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetReferenceRequest": {
+        "required": [
+          "referenceKeypointData",
+          "signId"
+        ],
+        "type": "object",
+        "properties": {
+          "signId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "referenceKeypointData": {
+            "minLength": 1,
             "type": "string"
           }
         },

@@ -10,4 +10,5 @@ public interface ICourseService
     Task<CourseDto?> UpdateCourseAsync(Guid id, UpdateCourseRequest request);
     Task<List<LessonDto>> GetLessonsByCourseAsync(Guid courseId);
     Task<LessonDetailDto?> GetLessonByIdAsync(Guid lessonId);
+    Task<bool> SetSignReferenceAsync(SetReferenceRequest request);
 }

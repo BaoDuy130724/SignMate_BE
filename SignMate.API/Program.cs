@@ -80,14 +80,6 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// ── Database Seeding ───────────────────────────────────────────
-
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<SignMate.Infrastructure.Data.SignMateDbContext>();
-    // Execute database seed logic
-    await SignMate.Infrastructure.Data.DatabaseSeeder.SeedAsync(context);
-}
 
 // ── Middleware Pipeline ────────────────────────────────────────
 if (app.Environment.IsDevelopment())

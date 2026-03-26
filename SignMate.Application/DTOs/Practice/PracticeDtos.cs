@@ -49,3 +49,11 @@ public class AttemptSummaryDto
     public float OverallScore { get; set; }
     public List<FeedbackDto> Feedbacks { get; set; } = [];
 }
+
+public class ReportResultRequest
+{
+    [Required]
+    public Guid SessionId { get; set; }
+    public float OverallScore { get; set; }
+    public List<FeedbackDto> Feedbacks { get; set; } = [];
+}

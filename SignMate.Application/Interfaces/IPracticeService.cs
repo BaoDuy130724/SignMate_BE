@@ -8,4 +8,5 @@ public interface IPracticeService
     Task<AttemptResponse> SubmitAttemptAsync(Guid userId, Guid sessionId, Stream videoStream, string fileName);
     Task EndSessionAsync(Guid userId, Guid sessionId);
     Task<List<PracticeHistoryDto>> GetHistoryAsync(Guid userId, Guid signId);
+    Task<AttemptResponse> ReportResultAsync(Guid userId, ReportResultRequest request);
 }

@@ -134,9 +134,19 @@ public class CourseService : ICourseService
                 {
                     Id = s.Id, Word = s.Word, VideoUrl = s.VideoUrl,
                     ThumbnailUrl = s.ThumbnailUrl, Description = s.Description,
-                    OrderIndex = s.OrderIndex
+                    OrderIndex = s.OrderIndex, ReferenceKeypointData = s.ReferenceKeypointData
                 }).ToList()
             })
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<bool> SetSignReferenceAsync(SetReferenceRequest request)
+    {
+        var sign = await _db.Signs.FindAsync(request.SignId);
+        if (sign == null) return false;
+
+        sign.ReferenceKeypointData = request.ReferenceKeypointData;
+        await _db.SaveChangesAsync();
+        return true;
     }
 }

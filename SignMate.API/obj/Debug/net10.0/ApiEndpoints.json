@@ -575,6 +575,22 @@
   },
   {
     "ContainingType": "SignMate.API.Controllers.PracticeController",
+    "Method": "ReportResult",
+    "RelativePath": "api/practice/report-result",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "SignMate.Application.DTOs.Practice.ReportResultRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SignMate.API.Controllers.PracticeController",
     "Method": "EndSession",
     "RelativePath": "api/practice/session/end",
     "HttpMethod": "POST",
@@ -635,6 +651,16 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SignMate.API.Controllers.SeedController",
+    "Method": "Seed",
+    "RelativePath": "api/seed",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {
@@ -781,6 +807,22 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SignMate.API.Controllers.VocabularyController",
+    "Method": "SetReference",
+    "RelativePath": "api/vocabulary/set-reference",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "SignMate.Application.DTOs.Course.SetReferenceRequest",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": []
   }
 ]
