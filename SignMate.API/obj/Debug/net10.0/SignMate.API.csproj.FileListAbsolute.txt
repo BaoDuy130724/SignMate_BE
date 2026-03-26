@@ -144,3 +144,5 @@ F:\SignMate_BE\SignMate.API\bin\Debug\net10.0\SignMate.Infrastructure.dll
 F:\SignMate_BE\SignMate.API\bin\Debug\net10.0\SignMate.Domain.pdb
 F:\SignMate_BE\SignMate.API\bin\Debug\net10.0\SignMate.Application.pdb
 F:\SignMate_BE\SignMate.API\bin\Debug\net10.0\SignMate.Infrastructure.pdb
+F:\SignMate_BE\SignMate.API\obj\Debug\net10.0\SignMate.API.sourcelink.json
+F:\SignMate_BE\SignMate.API\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

@@ -13,3 +13,4 @@ F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\SignMate.Application.dll
 F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\refint\SignMate.Application.dll
 F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\SignMate.Application.pdb
 F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\ref\SignMate.Application.dll
+F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\SignMate.Application.sourcelink.json

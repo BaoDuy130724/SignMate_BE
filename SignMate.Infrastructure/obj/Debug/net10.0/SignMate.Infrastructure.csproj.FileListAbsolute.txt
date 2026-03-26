@@ -15,3 +15,4 @@ F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\SignMate.Infrastructure
 F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\refint\SignMate.Infrastructure.dll
 F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\SignMate.Infrastructure.pdb
 F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\ref\SignMate.Infrastructure.dll
+F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\SignMate.Infrastructure.sourcelink.json

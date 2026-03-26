@@ -9,3 +9,4 @@ F:\SignMate_BE\SignMate.Domain\obj\Debug\net10.0\SignMate.Domain.dll
 F:\SignMate_BE\SignMate.Domain\obj\Debug\net10.0\refint\SignMate.Domain.dll
 F:\SignMate_BE\SignMate.Domain\obj\Debug\net10.0\SignMate.Domain.pdb
 F:\SignMate_BE\SignMate.Domain\obj\Debug\net10.0\ref\SignMate.Domain.dll
+F:\SignMate_BE\SignMate.Domain\obj\Debug\net10.0\SignMate.Domain.sourcelink.json
