@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SignMate.API/SignMate.API.csproj" />
+  <Project Path="SignMate.Application/SignMate.Application.csproj" />
+  <Project Path="SignMate.Domain/SignMate.Domain.csproj" />
+  <Project Path="SignMate.Infrastructure/SignMate.Infrastructure.csproj" />
+</Solution>

@@ -1,0 +1,194 @@
+# SignMate - Product Prototype Specification
+
+## I. PRODUCT STRUCTURE (FINAL)
+
+### 4 Role Chính
+| Role | Mô tả |
+|---|---|
+| **B2C Learner** | User thường |
+| **B2B Student** | Giống B2C UI |
+| **Teacher** | Quản lý lớp |
+| **Center Admin** | Quản lý trung tâm |
+| **Super Admin** | Toàn hệ thống |
+
+---
+
+## II. PRICING
+
+### B2C (Individual)
+
+#### 🆓 Free Plan
+- 5 lessons/day
+- Basic correct / incorrect
+- No analytics
+- No detailed feedback
+
+#### 💎 Basic Plan — 49,000 VND/month
+- Unlimited lessons
+- Basic feedback
+- Progress tracking
+- Streak system
+
+#### ⭐ Pro Plan — 99,000 VND/month
+- Detailed AI correction
+- Error explanation (hand shape, angle)
+- Weak area detection
+- Advanced analytics
+
+### B2B (Center)
+
+> ⚠️ **KHÔNG cho mua trực tiếp**
+
+- **Pricing:** 39,000 VND / learner / month
+- **Minimum:** 20 seats
+- **B2B includes:**
+  - Teacher dashboard
+  - Class management
+  - Student tracking
+  - Performance reports
+
+### UI Rules (Quan trọng)
+- ❌ B2B **KHÔNG có** nút "Buy now"
+- ✅ B2B **có** nút: "Contact us"
+- **Contact Form:** Center name, Contact person, Phone / Email, Number of learners
+
+---
+
+## III. B2C USER FLOW (Chi Tiết UI)
+
+### 1. Auth Screen
+- Login / Signup
+- Google login
+- Role: Learner
+
+### 2. Onboarding
+- **Goal:** School / Family / Work
+- **Level:** Beginner / Intermediate
+
+### 3. Dashboard
+- Accuracy %
+- Streak
+- Continue button
+- Upgrade button
+- Suggested lesson
+
+### 4. Lesson Library
+- Topic
+- Level
+- Duration
+- Progress %
+
+### 5. Practice Screen (Core)
+- Sample video
+- Camera preview
+- Start button
+- Timer
+
+### 6. Feedback Screen (Quan Trọng Nhất)
+- **Correct:** Accuracy 85%
+- **Incorrect:**
+  - Hand shape incorrect
+  - Suggestion: "Raise your wrist"
+- **Button:** Retry
+
+### 7. Summary Screen
+- Accuracy
+- Attempts
+- Mistakes
+- Next lesson
+
+### 8. Progress Screen
+- Chart
+- Weak topics
+- Streak
+
+### 9. Game Screen
+> 🎮 Sau mỗi lesson
+
+- **Mini game:** chọn đúng sign, match gesture
+- **Reward:** XP / streak
+
+---
+
+## IV. B2B SYSTEM (Chi Tiết)
+
+### 1. Center Admin Dashboard
+- Total students
+- Active learners
+- Average accuracy
+
+### 2. Class Management
+- Create class
+- Add students
+- Assign lessons
+
+### 3. Student Tracking
+- Accuracy %
+- Weak topics
+- Practice frequency
+
+### 4. Report
+- Export PDF
+- Weekly report
+
+---
+
+## V. TEACHER DASHBOARD
+
+> 📝 Nhỏ hơn Admin
+
+- View class
+- Assign lesson
+- Track students
+- Comment (optional)
+
+---
+
+## VI. SUPER ADMIN (System)
+
+> 🛠️ Không cần design full, chỉ 1 screen
+
+### Dashboard
+- Total users
+- Total revenue
+- Active centers
+- Conversion rate
+
+### Manage
+- Users
+- Centers
+- Plans
+- Content
+
+---
+
+## VII. UI REQUIREMENTS
+
+- ✅ Logo luôn hiển (header)
+- ✅ Gamification (mini game)
+- ✅ UI đơn giản, dễ hiểu
+
+---
+
+## VIII. SCREEN LIST (FINAL)
+
+### B2C (9 screens)
+1. Login
+2. Onboarding
+3. Dashboard
+4. Lesson list
+5. Practice
+6. Feedback
+7. Summary
+8. Progress
+9. Game
+
+### B2B (4 screens)
+1. Center dashboard
+2. Class management
+3. Student tracking
+4. Report
+
+### System
+1. Super Admin dashboard
+2. B2B contact form

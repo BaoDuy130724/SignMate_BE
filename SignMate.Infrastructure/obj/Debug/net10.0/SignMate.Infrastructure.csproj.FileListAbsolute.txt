@@ -1,0 +1,17 @@
+F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\SignMate.Infrastructure.csproj.AssemblyReference.cache
+F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\SignMate.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\SignMate.Infrastructure.AssemblyInfoInputs.cache
+F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\SignMate.Infrastructure.AssemblyInfo.cs
+F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\SignMate.Infrastructure.csproj.CoreCompileInputs.cache
+F:\SignMate_BE\SignMate.Infrastructure\bin\Debug\net10.0\SignMate.Infrastructure.deps.json
+F:\SignMate_BE\SignMate.Infrastructure\bin\Debug\net10.0\SignMate.Infrastructure.dll
+F:\SignMate_BE\SignMate.Infrastructure\bin\Debug\net10.0\SignMate.Infrastructure.pdb
+F:\SignMate_BE\SignMate.Infrastructure\bin\Debug\net10.0\SignMate.Application.dll
+F:\SignMate_BE\SignMate.Infrastructure\bin\Debug\net10.0\SignMate.Domain.dll
+F:\SignMate_BE\SignMate.Infrastructure\bin\Debug\net10.0\SignMate.Domain.pdb
+F:\SignMate_BE\SignMate.Infrastructure\bin\Debug\net10.0\SignMate.Application.pdb
+F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\SignMate.920B3C1C.Up2Date
+F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\SignMate.Infrastructure.dll
+F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\refint\SignMate.Infrastructure.dll
+F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\SignMate.Infrastructure.pdb
+F:\SignMate_BE\SignMate.Infrastructure\obj\Debug\net10.0\ref\SignMate.Infrastructure.dll

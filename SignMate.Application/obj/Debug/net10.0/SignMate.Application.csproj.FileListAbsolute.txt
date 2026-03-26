@@ -1,0 +1,15 @@
+F:\SignMate_BE\SignMate.Application\bin\Debug\net10.0\SignMate.Application.deps.json
+F:\SignMate_BE\SignMate.Application\bin\Debug\net10.0\SignMate.Application.dll
+F:\SignMate_BE\SignMate.Application\bin\Debug\net10.0\SignMate.Application.pdb
+F:\SignMate_BE\SignMate.Application\bin\Debug\net10.0\SignMate.Domain.dll
+F:\SignMate_BE\SignMate.Application\bin\Debug\net10.0\SignMate.Domain.pdb
+F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\SignMate.Application.csproj.AssemblyReference.cache
+F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\SignMate.Application.GeneratedMSBuildEditorConfig.editorconfig
+F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\SignMate.Application.AssemblyInfoInputs.cache
+F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\SignMate.Application.AssemblyInfo.cs
+F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\SignMate.Application.csproj.CoreCompileInputs.cache
+F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\SignMate.DCFFD517.Up2Date
+F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\SignMate.Application.dll
+F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\refint\SignMate.Application.dll
+F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\SignMate.Application.pdb
+F:\SignMate_BE\SignMate.Application\obj\Debug\net10.0\ref\SignMate.Application.dll

@@ -1,0 +1,223 @@
+# FULL USE CASE SPEC - SYSTEM
+
+## 1. AUTH & PROFILE
+
+### UC-01: User Authentication
+- **Actors:** Guest
+- **Description:** User đăng ký / đăng nhập hệ thống
+- **Preconditions:** User chưa login
+- **Main Flow:**
+  1. User mở Auth screen
+  2. Chọn Login / Signup / Google Login
+  3. Nhập thông tin
+  4. System validate
+  5. Tạo session
+  6. Redirect:
+     - New user → Onboarding
+     - Existing → Dashboard
+- **Alternative:**
+  - Sai thông tin → error
+  - Google fail → retry
+
+### UC-02: Onboarding Setup
+- **Actors:** B2C Learner / B2B Student
+- **Preconditions:** First login
+- **Main Flow:**
+  1. User chọn:
+     - Goal (School / Family / Work)
+  2. Chọn level:
+     - Beginner / Intermediate
+  3. Submit
+  4. System lưu profile
+  5. Redirect → Dashboard
+
+---
+
+## 2. B2C LEARNING FLOW
+
+### UC-03: View Dashboard
+- **Actors:** B2C Learner / B2B Student
+- **Main Flow:**
+  1. System hiển thị:
+     - Accuracy
+     - Streak
+     - Suggested lesson
+  2. User:
+     - Continue lesson
+     - Go to lesson library
+     - Upgrade
+
+### UC-04: Browse Lessons
+- **Actors:** B2C Learner / B2B Student
+- **Main Flow:**
+  1. User mở Lesson Library
+  2. Filter: Topic / Level / Duration
+  3. Chọn lesson
+
+### UC-05: Start Practice
+- **Actors:** B2C Learner / B2B Student
+- **Preconditions:** Lesson selected
+- **Main Flow:**
+  1. Load: Sample video + Camera preview
+  2. User click Start
+  3. Timer chạy
+  4. User thực hiện
+  5. System gửi data → AI
+  6. System hiển thị loading state
+  7. Nhận kết quả
+- **Edge Cases:** Camera denied, Timeout
+
+### UC-06: Receive AI Feedback
+- **Actors:** B2C Learner / B2B Student
+- **Preconditions:** Practice completed
+- **Main Flow:**
+  1. System nhận AI result
+  2. IF correct: Show accuracy
+  3. IF incorrect:
+     - Show lỗi (hand shape, angle)
+     - Show suggestion
+  4. User: Retry / Continue
+- **Plan Logic:**
+  - Free → basic
+  - Basic → medium
+  - Pro → detailed
+
+### UC-07: View Summary
+- **Actors:** B2C Learner / B2B Student
+- **Main Flow:**
+  1. Show: Accuracy, Attempts, Mistakes
+  2. User: Next lesson / Replay
+
+### UC-08: Play Game
+- **Actors:** B2C Learner / B2B Student
+- **Trigger:** After lesson
+- **Main Flow:**
+  1. System hiển thị mini-game
+  2. User chơi
+  3. System reward: XP, Streak
+
+### UC-09: View Progress
+- **Actors:** B2C Learner / B2B Student
+- **Main Flow:**
+  1. Show: Chart, Weak topics, Streak
+- **Plan Logic:**
+  - Free → none
+  - Basic → basic
+  - Pro → advanced
+
+---
+
+## 3. PRICING & SUBSCRIPTION
+
+### UC-10: View Pricing Page (Public Access)
+- **Actor:** Guest / B2C Learner / Potential B2B Customer
+- **Description:** User có thể truy cập và xem bảng pricing (B2C + B2B) mà không cần đăng nhập
+- **Preconditions:** Không yêu cầu login
+- **Main Flow:**
+  1. User truy cập: Navbar → click Pricing hoặc Landing → click View Pricing
+  2. System load Pricing Page
+  3. System hiển thị:
+     - **Section 1 - B2C Plans:** Free / Basic (49k) / Pro (99k)
+     - CTA: Guest → Sign up | Logged-in → Upgrade
+  4. System hiển thị:
+     - **Section 2 - B2B Plan:** 79k / learner / month, Min: 20 learners
+     - CTA: Contact us
+- **Alternative Flows:**
+  - A1: User chưa login → click "Buy / Upgrade" → Redirect → Signup/Login
+  - A2: User click "Contact us" → Open Contact Form
+- **Postconditions:** User hiểu pricing, Có thể Signup (B2C) hoặc Contact (B2B)
+
+### UC-11: B2C Plan Purchase Flow
+- **Actor:** Guest / B2C Learner
+- **Main Flow:**
+  1. User click Buy / Upgrade (Basic/Pro)
+  2. IF user chưa login → Redirect → Login/Signup
+  3. IF user đã login → Go to Payment screen
+  4. User thanh toán
+  5. System: Validate payment → Update plan → Redirect → Dashboard
+- **Edge Cases:** Payment fail → retry, Cancel → back pricing
+
+### UC-12: B2B Contact Flow
+- **Actor:** Potential Center
+- **Main Flow:**
+  1. User click Contact us
+  2. System mở Contact Form
+  3. User nhập: Center name, Contact person, Phone, Email, Number of learners
+  4. Submit
+  5. System: Validate input → Save lead → Notify sales/admin → Show success message
+- **Postconditions:** Lead được tạo trong hệ thống
+
+---
+
+## 4. B2B MANAGEMENT
+
+### UC-13: View Center Dashboard
+- **Actors:** Center Admin
+- **Main Flow:**
+  1. Show: Total students, Active learners, Avg accuracy
+
+### UC-14: Manage Classes
+- **Actors:** Center Admin
+- **Main Flow:**
+  1. Create class
+  2. Add/remove students
+  3. Assign lesson
+- **Edge:** Exceed seats → block
+
+### UC-15: Track Students
+- **Actors:** Center Admin / Teacher
+- **Main Flow:**
+  1. View student list
+  2. View: Accuracy, Weak topics, Frequency
+
+### UC-16: Generate Reports
+- **Actors:** Center Admin
+- **Main Flow:**
+  1. Select time range
+  2. Export PDF
+  3. Download
+
+---
+
+## 5. TEACHER
+
+### UC-17: Assign Lesson
+- **Actors:** Teacher
+- **Main Flow:**
+  1. Select class → Select lesson → Assign
+
+### UC-18: Comment Student
+- **Actors:** Teacher
+- **Main Flow:**
+  1. Open student → Add comment
+
+---
+
+## 6. SUPER ADMIN
+
+### UC-19: View System Dashboard
+- **Actors:** Super Admin
+- **Main Flow:**
+  1. Show: Total users, Revenue, Active centers, Conversion
+
+### UC-20: Manage System
+- **Actors:** Super Admin
+- **Main Flow:**
+  1. CRUD: Users, Centers, Plans, Content
+
+---
+
+## 7. SYSTEM LOGIC (CROSS-USECASE)
+
+### UC-21: Feature Gating
+- **Actor:** System
+- **Logic:** Check plan (Free / Basic / Pro) → Enable/disable: AI feedback detail, Analytics
+
+### UC-22: Gamification Trigger
+- **Actor:** System
+- **Trigger:** Lesson completed
+- **Action:** Launch mini-game, Update XP / streak
+
+### UC-23: Role-Based Access Control
+- **Actor:** System
+- **Logic:** Check role (Learner / Teacher / Admin) → Grant permission
