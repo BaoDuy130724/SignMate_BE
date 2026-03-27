@@ -13,7 +13,7 @@ public class CourseService : ICourseService
 
     public async Task<List<CourseDto>> GetCoursesAsync(string? search, string? level)
     {
-        var query = _db.Courses.AsQueryable();
+        var query = _db.Courses.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(c => c.Title.Contains(search) || (c.Description != null && c.Description.Contains(search)));
@@ -37,6 +37,7 @@ public class CourseService : ICourseService
     public async Task<CourseDetailDto?> GetCourseByIdAsync(Guid id)
     {
         return await _db.Courses
+            .AsNoTracking()
             .Include(c => c.Lessons.OrderBy(l => l.OrderIndex))
             .Where(c => c.Id == id)
             .Select(c => new CourseDetailDto
@@ -107,6 +108,7 @@ public class CourseService : ICourseService
     public async Task<List<LessonDto>> GetLessonsByCourseAsync(Guid courseId)
     {
         return await _db.Lessons
+            .AsNoTracking()
             .Where(l => l.CourseId == courseId)
             .OrderBy(l => l.OrderIndex)
             .Select(l => new LessonDto
@@ -122,6 +124,7 @@ public class CourseService : ICourseService
     public async Task<LessonDetailDto?> GetLessonByIdAsync(Guid lessonId)
     {
         return await _db.Lessons
+            .AsNoTracking()
             .Include(l => l.Signs.OrderBy(s => s.OrderIndex))
             .Where(l => l.Id == lessonId)
             .Select(l => new LessonDetailDto

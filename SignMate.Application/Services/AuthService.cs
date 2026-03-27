@@ -15,19 +15,30 @@ public class AuthService : IAuthService
 {
     private readonly ISignMateDbContext _db;
     private readonly IConfiguration _config;
-    private readonly IEmailService _emailService;
+    private readonly IOtpService _otpService;
 
-    public AuthService(ISignMateDbContext db, IConfiguration config, IEmailService emailService)
+    public AuthService(ISignMateDbContext db, IConfiguration config, IOtpService otpService)
     {
         _db = db;
         _config = config;
-        _emailService = emailService;
+        _otpService = otpService;
+    }
+
+    public async Task SendRegisterOtpAsync(SendOtpRequest request)
+    {
+        if (await _db.Users.AnyAsync(u => u.Email == request.Email))
+            throw new InvalidOperationException("Email already exists.");
+
+        await _otpService.GenerateAndSendOtpAsync(request.Email, "Register");
     }
 
     public async Task<TokenResponse> RegisterAsync(RegisterRequest request)
     {
         if (await _db.Users.AnyAsync(u => u.Email == request.Email))
             throw new InvalidOperationException("Email already exists.");
+
+        if (!_otpService.ValidateOtp(request.Email, "Register", request.OtpCode))
+            throw new UnauthorizedAccessException("Invalid or expired OTP code.");
 
         var user = new User
         {
@@ -100,24 +111,18 @@ public class AuthService : IAuthService
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
         if (user == null) return; // Silent return for security
 
-        // Generate 6-digit OTP
-        var resetToken = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
-        
-        user.PasswordResetToken = resetToken;
-        user.PasswordResetExpiry = DateTime.UtcNow.AddMinutes(15);
-        
-        await _db.SaveChangesAsync();
-        await _emailService.SendPasswordResetEmailAsync(user.Email, resetToken);
+        await _otpService.GenerateAndSendOtpAsync(request.Email, "ResetPassword");
     }
 
     public async Task ResetPasswordAsync(ResetPasswordRequest request)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
         
-        if (user == null || user.PasswordResetToken != request.Token || user.PasswordResetExpiry < DateTime.UtcNow)
-        {
-            throw new UnauthorizedAccessException("Invalid or expired password reset token.");
-        }
+        if (user == null)
+            throw new UnauthorizedAccessException("Invalid request.");
+
+        if (!_otpService.ValidateOtp(request.Email, "ResetPassword", request.Token))
+            throw new UnauthorizedAccessException("Invalid or expired OTP code.");
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
         user.PasswordResetToken = null;

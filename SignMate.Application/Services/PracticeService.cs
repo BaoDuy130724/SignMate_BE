@@ -11,14 +11,16 @@ public class PracticeService : IPracticeService
     private readonly IBlobService _blobService;
     private readonly IAIClientService _aiClient;
     private readonly IStreakService _streakService;
+    private readonly IGeminiService _geminiService;
 
     public PracticeService(ISignMateDbContext db, IBlobService blobService,
-        IAIClientService aiClient, IStreakService streakService)
+        IAIClientService aiClient, IStreakService streakService, IGeminiService geminiService)
     {
         _db = db;
         _blobService = blobService;
         _aiClient = aiClient;
         _streakService = streakService;
+        _geminiService = geminiService;
     }
 
     public async Task<StartSessionResponse> StartSessionAsync(Guid userId, StartSessionRequest request)
@@ -191,11 +193,40 @@ public class PracticeService : IPracticeService
         await _streakService.RecordActivityAsync(userId);
         await _db.SaveChangesAsync();
 
+        // --- Gemini AI Feedback (Pro plan only) ---
+        string? geminiFeedback = null;
+        var activeSub = await _db.UserSubscriptions
+            .Include(s => s.Plan)
+            .FirstOrDefaultAsync(s => s.UserId == userId && s.IsActive && s.EndDate > DateTime.UtcNow);
+
+        if (activeSub?.Plan.Type == PlanType.Pro)
+        {
+            var previousAttempt = await _db.PracticeAttempts
+                .Where(a => a.SessionId == request.SessionId && a.Id != attempt.Id)
+                .OrderByDescending(a => a.RecordedAt)
+                .FirstOrDefaultAsync();
+
+            var geminiContext = new GeminiFeedbackContext
+            {
+                SignWord = session.Sign.Word,
+                OverallScore = request.OverallScore,
+                DtwFeedbacks = request.Feedbacks.Select(f => new FeedbackItem
+                {
+                    Type = f.Type, Score = f.Score, Message = f.Message
+                }).ToList(),
+                AttemptNumber = session.TotalAttempts,
+                PreviousScore = previousAttempt?.OverallScore
+            };
+
+            geminiFeedback = await _geminiService.GenerateDetailedFeedbackAsync(geminiContext);
+        }
+
         return new AttemptResponse
         {
             AttemptId = attempt.Id,
             OverallScore = request.OverallScore,
-            Feedbacks = request.Feedbacks
+            Feedbacks = request.Feedbacks,
+            GeminiFeedback = geminiFeedback
         };
     }
 }

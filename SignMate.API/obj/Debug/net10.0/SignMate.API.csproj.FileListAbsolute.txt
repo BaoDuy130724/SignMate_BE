@@ -293,3 +293,6 @@ D:\FPT\SP2026\Exe\SignMate_BE\SignMate.API\obj\Debug\net10.0\refint\SignMate.API
 D:\FPT\SP2026\Exe\SignMate_BE\SignMate.API\obj\Debug\net10.0\SignMate.API.pdb
 D:\FPT\SP2026\Exe\SignMate_BE\SignMate.API\obj\Debug\net10.0\SignMate.API.genruntimeconfig.cache
 D:\FPT\SP2026\Exe\SignMate_BE\SignMate.API\obj\Debug\net10.0\ref\SignMate.API.dll
+F:\SignMate_BE\SignMate.API\bin\Debug\net10.0\appsettings.Local.example.json
+F:\SignMate_BE\SignMate.API\bin\Debug\net10.0\appsettings.Local.json
+F:\SignMate_BE\SignMate.API\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

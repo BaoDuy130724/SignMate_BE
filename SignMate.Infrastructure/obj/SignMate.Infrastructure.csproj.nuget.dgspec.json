@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Infrastructure\\SignMate.Infrastructure.csproj": {}
+    "F:\\SignMate_BE\\SignMate.Infrastructure\\SignMate.Infrastructure.csproj": {}
   },
   "projects": {
-    "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Application\\SignMate.Application.csproj": {
+    "F:\\SignMate_BE\\SignMate.Application\\SignMate.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Application\\SignMate.Application.csproj",
+        "projectUniqueName": "F:\\SignMate_BE\\SignMate.Application\\SignMate.Application.csproj",
         "projectName": "SignMate.Application",
-        "projectPath": "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Application\\SignMate.Application.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Application\\obj\\",
+        "projectPath": "F:\\SignMate_BE\\SignMate.Application\\SignMate.Application.csproj",
+        "packagesPath": "C:\\Users\\admin\\.nuget\\packages\\",
+        "outputPath": "F:\\SignMate_BE\\SignMate.Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,14 +26,15 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj": {
-                "projectPath": "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj"
+              "F:\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj": {
+                "projectPath": "F:\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj"
               }
             }
           }
@@ -369,20 +370,20 @@
         }
       }
     },
-    "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj": {
+    "F:\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj",
+        "projectUniqueName": "F:\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj",
         "projectName": "SignMate.Domain",
-        "projectPath": "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Domain\\obj\\",
+        "projectPath": "F:\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj",
+        "packagesPath": "C:\\Users\\admin\\.nuget\\packages\\",
+        "outputPath": "F:\\SignMate_BE\\SignMate.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -391,6 +392,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -708,20 +710,20 @@
         }
       }
     },
-    "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Infrastructure\\SignMate.Infrastructure.csproj": {
+    "F:\\SignMate_BE\\SignMate.Infrastructure\\SignMate.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Infrastructure\\SignMate.Infrastructure.csproj",
+        "projectUniqueName": "F:\\SignMate_BE\\SignMate.Infrastructure\\SignMate.Infrastructure.csproj",
         "projectName": "SignMate.Infrastructure",
-        "projectPath": "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Infrastructure\\SignMate.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Infrastructure\\obj\\",
+        "projectPath": "F:\\SignMate_BE\\SignMate.Infrastructure\\SignMate.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\admin\\.nuget\\packages\\",
+        "outputPath": "F:\\SignMate_BE\\SignMate.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -730,17 +732,18 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Application\\SignMate.Application.csproj": {
-                "projectPath": "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Application\\SignMate.Application.csproj"
+              "F:\\SignMate_BE\\SignMate.Application\\SignMate.Application.csproj": {
+                "projectPath": "F:\\SignMate_BE\\SignMate.Application\\SignMate.Application.csproj"
               },
-              "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj": {
-                "projectPath": "D:\\FPT\\SP2026\\Exe\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj"
+              "F:\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj": {
+                "projectPath": "F:\\SignMate_BE\\SignMate.Domain\\SignMate.Domain.csproj"
               }
             }
           }

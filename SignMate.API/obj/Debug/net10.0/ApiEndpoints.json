@@ -122,6 +122,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SignMate.API.Controllers.AuthController",
+    "Method": "SendRegisterOtp",
+    "RelativePath": "api/auth/send-register-otp",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "SignMate.Application.DTOs.Auth.SendOtpRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SignMate.API.Controllers.B2BContactController",
     "Method": "Submit",
     "RelativePath": "api/b2b/contact",
@@ -687,6 +703,26 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SignMate.API.Controllers.SubscriptionController",
+    "Method": "VnPayIpn",
+    "RelativePath": "api/subscription/vnpay-ipn",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SignMate.API.Controllers.SubscriptionController",
+    "Method": "VnPayReturn",
+    "RelativePath": "api/subscription/vnpay-return",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {

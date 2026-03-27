@@ -24,6 +24,7 @@ public class AttemptResponse
     public Guid AttemptId { get; set; }
     public float OverallScore { get; set; }
     public List<FeedbackDto> Feedbacks { get; set; } = [];
+    public string? GeminiFeedback { get; set; }
 }
 
 public class FeedbackDto

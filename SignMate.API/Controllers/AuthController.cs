@@ -14,11 +14,23 @@ public class AuthController : ControllerBase
 
     public AuthController(IAuthService authService) => _authService = authService;
 
+    [HttpPost("send-register-otp")]
+    public async Task<IActionResult> SendRegisterOtp([FromBody] SendOtpRequest request)
+    {
+        try 
+        { 
+            await _authService.SendRegisterOtpAsync(request);
+            return Ok(new { message = "OTP sent successfully." });
+        }
+        catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
+    }
+
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         try { return Ok(await _authService.RegisterAsync(request)); }
         catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
+        catch (UnauthorizedAccessException ex) { return Unauthorized(new { message = ex.Message }); }
     }
 
     [HttpPost("login")]

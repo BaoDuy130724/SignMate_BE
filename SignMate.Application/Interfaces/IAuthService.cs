@@ -4,6 +4,7 @@ namespace SignMate.Application.Interfaces;
 
 public interface IAuthService
 {
+    Task SendRegisterOtpAsync(SendOtpRequest request);
     Task<TokenResponse> RegisterAsync(RegisterRequest request);
     Task<TokenResponse> LoginAsync(LoginRequest request);
     Task<TokenResponse> RefreshAsync(string refreshToken);
