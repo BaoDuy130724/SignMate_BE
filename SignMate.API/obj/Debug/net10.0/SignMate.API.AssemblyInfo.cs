@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SignMate.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+79cc53170f84391f4f0672f61e941b40500eb13b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+075c17c8d93215db80a214266d0dd19f05bc4cca")]
 [assembly: System.Reflection.AssemblyProductAttribute("SignMate.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SignMate.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,30 @@
+
+[3/27/2026 10:37:07 PM] CreatePaymentUrl:
+- TmnCode: HMCP1E7I
+- HashSecret: VF596OK6153EIX6UKANZF2R7FL5SHPHJ
+- SignData:
+vnp_Amount=9900000&vnp_Command=pay&vnp_CreateDate=20260327223707&vnp_CurrCode=VND&vnp_ExpireDate=20260327225207&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=SignMate%20-%20Nang%20cap%20goi%20G%C3%B3i%20N%C3%A2ng%20cao%20(Pro)&vnp_OrderType=billpayment&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A5184%2Fapi%2Fsubscription%2Fvnpay-return&vnp_TmnCode=HMCP1E7I&vnp_TxnRef=7E1E1E5DAD1F4BD4&vnp_Version=2.1.0
+- SecureHash:
+fee439502162428e9acd41d04618b7a2522b779d50474d5f9dc0f0690bcc295756e0239b7863ed8b5f5dc9fa45f175229e77851972a380eabcb85e614aec2714
+- FinalURL:
+https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=9900000&vnp_Command=pay&vnp_CreateDate=20260327223707&vnp_CurrCode=VND&vnp_ExpireDate=20260327225207&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=SignMate%20-%20Nang%20cap%20goi%20G%C3%B3i%20N%C3%A2ng%20cao%20(Pro)&vnp_OrderType=billpayment&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A5184%2Fapi%2Fsubscription%2Fvnpay-return&vnp_TmnCode=HMCP1E7I&vnp_TxnRef=7E1E1E5DAD1F4BD4&vnp_Version=2.1.0&vnp_SecureHash=fee439502162428e9acd41d04618b7a2522b779d50474d5f9dc0f0690bcc295756e0239b7863ed8b5f5dc9fa45f175229e77851972a380eabcb85e614aec2714
+
+[3/27/2026 10:42:16 PM] CreatePaymentUrl:
+- TmnCode: HMCP1E7I
+- HashSecret: VF596OK6153EIX6UKANZF2R7FL5SHPHJ
+- SignData:
+vnp_Amount=9900000&vnp_Command=pay&vnp_CreateDate=20260327224216&vnp_CurrCode=VND&vnp_ExpireDate=20260327225716&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=SignMate%20-%20Nang%20cap%20goi%20G%C3%B3i%20N%C3%A2ng%20cao%20%28Pro%29&vnp_OrderType=billpayment&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A5184%2Fapi%2Fsubscription%2Fvnpay-return&vnp_TmnCode=HMCP1E7I&vnp_TxnRef=1ACD2A4D69144B25&vnp_Version=2.1.0
+- SecureHash:
+5252140c64c1e2164d17c959b14cf04e8a244d86f79c6e520a1708ca63da513b70a5bd0094777d2dc4b108dfaa5d3188f635fac9a23a506ec9f86554fcca87a8
+- FinalURL:
+https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=9900000&vnp_Command=pay&vnp_CreateDate=20260327224216&vnp_CurrCode=VND&vnp_ExpireDate=20260327225716&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=SignMate%20-%20Nang%20cap%20goi%20G%C3%B3i%20N%C3%A2ng%20cao%20%28Pro%29&vnp_OrderType=billpayment&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A5184%2Fapi%2Fsubscription%2Fvnpay-return&vnp_TmnCode=HMCP1E7I&vnp_TxnRef=1ACD2A4D69144B25&vnp_Version=2.1.0&vnp_SecureHash=5252140c64c1e2164d17c959b14cf04e8a244d86f79c6e520a1708ca63da513b70a5bd0094777d2dc4b108dfaa5d3188f635fac9a23a506ec9f86554fcca87a8
+
+[3/27/2026 10:46:49 PM] CreatePaymentUrl:
+- TmnCode: HMCP1E7I
+- HashSecret: VF596OK6153EIX6UKANZF2R7FL5SHPHJ
+- SignData:
+vnp_Amount=4900000&vnp_Command=pay&vnp_CreateDate=20260327224649&vnp_CurrCode=VND&vnp_ExpireDate=20260327230149&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=SignMate%20-%20Thanh%20toan%20hoa%20don%20220bb525&vnp_OrderType=billpayment&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A5184%2Fapi%2Fsubscription%2Fvnpay-return&vnp_TmnCode=HMCP1E7I&vnp_TxnRef=220BB525E52F49FA&vnp_Version=2.1.0
+- SecureHash:
+4cdf55b6d02b390a97c101e3d35ee2341ed5a5abe5c735153a07dd6153bb9b5a08a722f9d7f48c26a1c599fc38e65906dbc033fc81ef950259d04a0a5e3a59ca
+- FinalURL:
+https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=4900000&vnp_Command=pay&vnp_CreateDate=20260327224649&vnp_CurrCode=VND&vnp_ExpireDate=20260327230149&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=SignMate%20-%20Thanh%20toan%20hoa%20don%20220bb525&vnp_OrderType=billpayment&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A5184%2Fapi%2Fsubscription%2Fvnpay-return&vnp_TmnCode=HMCP1E7I&vnp_TxnRef=220BB525E52F49FA&vnp_Version=2.1.0&vnp_SecureHash=4cdf55b6d02b390a97c101e3d35ee2341ed5a5abe5c735153a07dd6153bb9b5a08a722f9d7f48c26a1c599fc38e65906dbc033fc81ef950259d04a0a5e3a59ca

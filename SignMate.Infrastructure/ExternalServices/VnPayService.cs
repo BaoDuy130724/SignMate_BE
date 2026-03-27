@@ -49,7 +49,14 @@ public class VnPayService : IVnPayService
 
         var secureHash = HmacSha512(_hashSecret, signData);
 
-        return $"{_baseUrl}?{queryString}&vnp_SecureHash={secureHash}";
+        var finalUrl = $"{_baseUrl}?{queryString}&vnp_SecureHash={secureHash}";
+
+        try {
+            System.IO.File.AppendAllText("vnpay_debug.log", 
+                $"\n[{DateTime.Now}] CreatePaymentUrl:\n- TmnCode: {_tmnCode}\n- HashSecret: {_hashSecret}\n- SignData:\n{signData}\n- SecureHash:\n{secureHash}\n- FinalURL:\n{finalUrl}\n");
+        } catch {}
+
+        return finalUrl;
     }
 
     public VnPayCallbackResult ValidateCallback(IDictionary<string, string> vnpayParams)
@@ -106,6 +113,17 @@ public class VnPayService : IVnPayService
     private static string UrlEncode(string value)
     {
         if (string.IsNullOrEmpty(value)) return "";
-        return WebUtility.UrlEncode(value).Replace("+", "%20");
+        
+        // C#'s WebUtility.UrlEncode behaves differently than Java's URLEncoder.
+        // We must mimic Java's URLEncoder.encode exactly to pass VNPAY HMAC-SHA512.
+        // Java URLEncoder encodes space to +, which VNPAY replaces with %20.
+        // Java encodes (, ), and ~ but leaves * unencoded.
+        return WebUtility.UrlEncode(value)
+            .Replace("+", "%20")
+            .Replace("(", "%28")
+            .Replace(")", "%29")
+            .Replace("!", "%21")
+            .Replace("*", "%2A")
+            .Replace("~", "%7E");
     }
 }

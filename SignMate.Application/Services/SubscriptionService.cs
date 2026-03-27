@@ -60,7 +60,7 @@ public class SubscriptionService : ISubscriptionService
         {
             OrderId = sub.Id,
             Amount = plan.PriceVnd,
-            OrderInfo = $"SignMate - Nang cap goi {plan.Name}",
+            OrderInfo = $"SignMate - Thanh toan hoa don {sub.Id.ToString("N")[..8]}",
             ReturnUrl = returnUrl
         }, ipAddress);
 
