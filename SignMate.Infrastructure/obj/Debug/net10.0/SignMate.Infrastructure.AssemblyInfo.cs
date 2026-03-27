@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SignMate.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+294ed29396431f4bbb22b66a65dc08b55b59dfe4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8a087d919426863d6c6d152c25dc2f521b4ce123")]
 [assembly: System.Reflection.AssemblyProductAttribute("SignMate.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SignMate.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
