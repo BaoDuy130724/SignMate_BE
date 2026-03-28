@@ -12,8 +12,8 @@ using SignMate.Infrastructure.Data;
 namespace SignMate.Infrastructure.Migrations
 {
     [DbContext(typeof(SignMateDbContext))]
-    [Migration("20260328121721_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260328123616_InitMigration")]
+    partial class InitMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
