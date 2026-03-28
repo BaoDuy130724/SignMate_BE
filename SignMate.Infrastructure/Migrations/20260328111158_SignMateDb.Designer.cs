@@ -12,7 +12,7 @@ using SignMate.Infrastructure.Data;
 namespace SignMate.Infrastructure.Migrations
 {
     [DbContext(typeof(SignMateDbContext))]
-    [Migration("20260328014846_SignMateDb")]
+    [Migration("20260328111158_SignMateDb")]
     partial class SignMateDb
     {
         /// <inheritdoc />
