@@ -171,6 +171,7 @@ public class SignMateDbContext : DbContext, ISignMateDbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).HasMaxLength(200);
             e.Property(x => x.Type).HasConversion<string>().HasMaxLength(50);
+            e.Property(x => x.PriceVnd).HasColumnType("decimal(18,2)");
         });
 
         modelBuilder.Entity<UserSubscription>(e =>

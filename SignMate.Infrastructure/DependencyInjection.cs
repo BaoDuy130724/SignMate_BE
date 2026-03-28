@@ -16,7 +16,7 @@ public static class DependencyInjection
     {
         // Database
         services.AddDbContext<SignMateDbContext>(opt =>
-            opt.UseNpgsql(configuration.GetConnectionString("Default")));
+            opt.UseSqlServer(configuration.GetConnectionString("Default")));
 
         services.AddScoped<ISignMateDbContext>(sp => sp.GetRequiredService<SignMateDbContext>());
 
