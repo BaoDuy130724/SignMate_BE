@@ -21,6 +21,26 @@ public class UsersController : ControllerBase
         _streakService = streakService;
     }
 
+    [HttpGet]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> GetAllUsers([FromQuery] string? role)
+    {
+        var query = _db.Users.AsQueryable();
+        if (!string.IsNullOrEmpty(role) && Enum.TryParse<SignMate.Domain.Entities.UserRole>(role, true, out var parsedRole))
+        {
+            query = query.Where(u => u.Role == parsedRole);
+        }
+        var users = await query
+            .OrderByDescending(u => u.CreatedAt)
+            .Select(u => new UserProfileDto
+            {
+                Id = u.Id, Email = u.Email, FullName = u.FullName,
+                AvatarUrl = u.AvatarUrl, Role = u.Role.ToString(),
+                CenterId = u.CenterId, CreatedAt = u.CreatedAt
+            }).ToListAsync();
+        return Ok(users);
+    }
+
     [HttpGet("me")]
     public async Task<IActionResult> GetProfile()
     {
@@ -31,7 +51,8 @@ public class UsersController : ControllerBase
         return Ok(new UserProfileDto
         {
             Id = user.Id, Email = user.Email, FullName = user.FullName,
-            AvatarUrl = user.AvatarUrl, Role = user.Role.ToString(), CreatedAt = user.CreatedAt
+            AvatarUrl = user.AvatarUrl, Role = user.Role.ToString(), 
+            CenterId = user.CenterId, CreatedAt = user.CreatedAt
         });
     }
 
@@ -50,7 +71,8 @@ public class UsersController : ControllerBase
         return Ok(new UserProfileDto
         {
             Id = user.Id, Email = user.Email, FullName = user.FullName,
-            AvatarUrl = user.AvatarUrl, Role = user.Role.ToString(), CreatedAt = user.CreatedAt
+            AvatarUrl = user.AvatarUrl, Role = user.Role.ToString(), 
+            CenterId = user.CenterId, CreatedAt = user.CreatedAt
         });
     }
 

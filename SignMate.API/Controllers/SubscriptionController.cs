@@ -36,4 +36,9 @@ public class SubscriptionController : ControllerBase
         var sub = await _subService.GetMySubscriptionAsync(userId);
         return sub == null ? NotFound() : Ok(sub);
     }
+
+    [Authorize(Roles = "SuperAdmin")]
+    [HttpGet("subscription/all")]
+    public async Task<IActionResult> GetAllSubscriptions()
+        => Ok(await _subService.GetAllSubscriptionsAsync());
 }

@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<ITeacherService, TeacherService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IGameService, GameService>();
+        services.AddScoped<IAnalyticsService, AnalyticsService>();
 
         return services;
     }

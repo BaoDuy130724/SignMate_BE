@@ -12,6 +12,7 @@ public class User
     public bool IsOnboarded { get; set; }
     public int XpPoints { get; set; }
     public Guid? CenterId { get; set; }
+    public Center? Center { get; set; }
     public string? PasswordResetToken { get; set; }
     public DateTime? PasswordResetExpiry { get; set; }
     public UserRole Role { get; set; } = UserRole.Student;

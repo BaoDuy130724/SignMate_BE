@@ -9,6 +9,7 @@ public class UserProfileDto
     public string FullName { get; set; } = null!;
     public string? AvatarUrl { get; set; }
     public string Role { get; set; } = null!;
+    public Guid? CenterId { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

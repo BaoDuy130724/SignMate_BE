@@ -32,3 +32,16 @@ public class MySubscriptionDto
     public DateTime EndDate { get; set; }
     public bool IsActive { get; set; }
 }
+
+public class SubscriptionListItemDto
+{
+    public Guid Id { get; set; }
+    public string UserFullName { get; set; } = null!;
+    public string Email { get; set; } = null!;
+    public string? CenterName { get; set; } // If part of a center
+    public string PlanName { get; set; } = null!;
+    public decimal PriceVnd { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public bool IsActive { get; set; }
+}

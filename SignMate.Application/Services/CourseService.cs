@@ -11,9 +11,12 @@ public class CourseService : ICourseService
 
     public CourseService(ISignMateDbContext db) => _db = db;
 
-    public async Task<List<CourseDto>> GetCoursesAsync(string? search, string? level)
+    public async Task<List<CourseDto>> GetCoursesAsync(string? search, string? level, bool includeUnpublished = false)
     {
         var query = _db.Courses.AsQueryable();
+
+        if (!includeUnpublished)
+            query = query.Where(c => c.IsPublished);
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(c => c.Title.Contains(search) || (c.Description != null && c.Description.Contains(search)));
@@ -22,7 +25,6 @@ public class CourseService : ICourseService
             query = query.Where(c => c.Level == lvl);
 
         return await query
-            .Where(c => c.IsPublished)
             .OrderByDescending(c => c.CreatedAt)
             .Select(c => new CourseDto
             {
@@ -104,6 +106,16 @@ public class CourseService : ICourseService
         };
     }
 
+    public async Task DeleteCourseAsync(Guid id)
+    {
+        var course = await _db.Courses.FindAsync(id);
+        if (course != null)
+        {
+            _db.Courses.Remove(course);
+            await _db.SaveChangesAsync();
+        }
+    }
+
     public async Task<List<LessonDto>> GetLessonsByCourseAsync(Guid courseId)
     {
         return await _db.Lessons
@@ -127,7 +139,7 @@ public class CourseService : ICourseService
             .Select(l => new LessonDetailDto
             {
                 Id = l.Id, CourseId = l.CourseId, Title = l.Title,
-                OrderIndex = l.OrderIndex, VideoUrl = l.VideoUrl,
+                OrderIndex = l.OrderIndex, VideoUrl = l.VideoUrl, Topic = l.Topic,
                 Description = l.Description, DurationSeconds = l.DurationSeconds,
                 IsPublished = l.IsPublished, SignCount = l.Signs.Count,
                 Signs = l.Signs.OrderBy(s => s.OrderIndex).Select(s => new SignDto
@@ -138,6 +150,60 @@ public class CourseService : ICourseService
                 }).ToList()
             })
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<LessonDto> CreateLessonAsync(Guid courseId, CreateLessonRequest request)
+    {
+        var lesson = new Lesson
+        {
+            Id = Guid.NewGuid(), CourseId = courseId, Title = request.Title,
+            Topic = request.Topic, OrderIndex = request.OrderIndex,
+            VideoUrl = request.VideoUrl, Description = request.Description,
+            DurationSeconds = request.DurationSeconds, IsPublished = false
+        };
+        _db.Lessons.Add(lesson);
+        await _db.SaveChangesAsync();
+
+        return new LessonDto
+        {
+            Id = lesson.Id, CourseId = lesson.CourseId, Title = lesson.Title, Topic = lesson.Topic,
+            OrderIndex = lesson.OrderIndex, VideoUrl = lesson.VideoUrl, Description = lesson.Description,
+            DurationSeconds = lesson.DurationSeconds, IsPublished = lesson.IsPublished, SignCount = 0
+        };
+    }
+
+    public async Task<LessonDto?> UpdateLessonAsync(Guid lessonId, UpdateLessonRequest request)
+    {
+        var lesson = await _db.Lessons.FindAsync(lessonId);
+        if (lesson == null) return null;
+
+        if (request.Title != null) lesson.Title = request.Title;
+        if (request.Topic != null) lesson.Topic = request.Topic;
+        if (request.OrderIndex.HasValue) lesson.OrderIndex = request.OrderIndex.Value;
+        if (request.VideoUrl != null) lesson.VideoUrl = request.VideoUrl;
+        if (request.Description != null) lesson.Description = request.Description;
+        if (request.DurationSeconds.HasValue) lesson.DurationSeconds = request.DurationSeconds.Value;
+        if (request.IsPublished.HasValue) lesson.IsPublished = request.IsPublished.Value;
+
+        await _db.SaveChangesAsync();
+
+        return new LessonDto
+        {
+            Id = lesson.Id, CourseId = lesson.CourseId, Title = lesson.Title, Topic = lesson.Topic,
+            OrderIndex = lesson.OrderIndex, VideoUrl = lesson.VideoUrl, Description = lesson.Description,
+            DurationSeconds = lesson.DurationSeconds, IsPublished = lesson.IsPublished,
+            SignCount = await _db.SignProgresses.CountAsync(sp => sp.Sign.LessonId == lessonId) // Approximate or just signs table
+        };
+    }
+
+    public async Task DeleteLessonAsync(Guid lessonId)
+    {
+        var lesson = await _db.Lessons.FindAsync(lessonId);
+        if (lesson != null)
+        {
+            _db.Lessons.Remove(lesson);
+            await _db.SaveChangesAsync();
+        }
     }
 
     public async Task<bool> SetSignReferenceAsync(SetReferenceRequest request)

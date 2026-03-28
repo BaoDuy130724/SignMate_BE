@@ -70,3 +70,26 @@ public class SignDto
     public int OrderIndex { get; set; }
     public string? ReferenceKeypointData { get; set; }
 }
+
+public class CreateLessonRequest
+{
+    [Required, MaxLength(300)]
+    public string Title { get; set; } = null!;
+    public string? Topic { get; set; }
+    public int OrderIndex { get; set; }
+    public string? VideoUrl { get; set; }
+    public string? Description { get; set; }
+    public int DurationSeconds { get; set; }
+}
+
+public class UpdateLessonRequest
+{
+    [MaxLength(300)]
+    public string? Title { get; set; }
+    public string? Topic { get; set; }
+    public int? OrderIndex { get; set; }
+    public string? VideoUrl { get; set; }
+    public string? Description { get; set; }
+    public int? DurationSeconds { get; set; }
+    public bool? IsPublished { get; set; }
+}

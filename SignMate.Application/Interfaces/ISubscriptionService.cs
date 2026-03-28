@@ -8,4 +8,5 @@ public interface ISubscriptionService
     Task<SubscribeResponse> SubscribeAsync(Guid userId, SubscribeRequest request);
     Task<MySubscriptionDto?> GetMySubscriptionAsync(Guid userId);
     Task<bool> HasAccessToProFeaturesAsync(Guid userId);
+    Task<List<SubscriptionListItemDto>> GetAllSubscriptionsAsync();
 }

@@ -64,4 +64,25 @@ public class SubscriptionService : ISubscriptionService
             
         return sub != null && (sub.Plan.Type == PlanType.Pro || sub.Plan.Type == PlanType.B2B);
     }
+
+    public async Task<List<SubscriptionListItemDto>> GetAllSubscriptionsAsync()
+    {
+        return await _db.UserSubscriptions
+            .Include(s => s.User)
+                .ThenInclude(u => u.Center)
+            .Include(s => s.Plan)
+            .OrderByDescending(s => s.StartDate)
+            .Select(s => new SubscriptionListItemDto
+            {
+                Id = s.Id,
+                UserFullName = s.User.FullName,
+                Email = s.User.Email,
+                CenterName = s.User.Center != null ? s.User.Center.Name : null,
+                PlanName = s.Plan.Name,
+                PriceVnd = s.Plan.PriceVnd,
+                StartDate = s.StartDate,
+                EndDate = s.EndDate,
+                IsActive = s.IsActive
+            }).ToListAsync();
+    }
 }
