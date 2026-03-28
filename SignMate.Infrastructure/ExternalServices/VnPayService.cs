@@ -36,7 +36,7 @@ public class VnPayService : IVnPayService
             { "vnp_OrderInfo", request.OrderInfo },
             { "vnp_OrderType", "billpayment" },
             { "vnp_ReturnUrl", request.ReturnUrl },
-            { "vnp_TxnRef", request.OrderId.ToString("N")[..16].ToUpper() },
+            { "vnp_TxnRef", request.OrderId.ToString("N").ToUpper() },
             { "vnp_ExpireDate", DateTime.UtcNow.AddHours(7).AddMinutes(15).ToString("yyyyMMddHHmmss") },
         };
 

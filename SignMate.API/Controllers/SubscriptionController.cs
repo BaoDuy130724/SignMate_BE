@@ -114,21 +114,12 @@ public class SubscriptionController : ControllerBase
 
     private async Task<Guid?> FindSubscriptionByTxnRef(string txnRef)
     {
-        // TxnRef is first 16 chars of Guid.ToString("N").ToUpper()
-        // We need to find the matching subscription
-        if (string.IsNullOrEmpty(txnRef) || txnRef.Length < 16) return null;
+        if (string.IsNullOrEmpty(txnRef) || txnRef.Length < 32) return null;
 
-        // Search recent pending subscriptions
-        var candidates = await Task.FromResult(
-            txnRef.Length >= 32
-                ? (Guid?)Guid.Parse(txnRef)
-                : null
-        );
+        if (Guid.TryParseExact(txnRef, "N", out var subId))
+            return await Task.FromResult(subId);
 
-        // For 16-char refs, we search by partial match in the controller
-        // Since we're in sandbox, using a simpler approach:
-        // Look for the most recent pending (inactive) subscription
-        return candidates;
+        return null;
     }
 
     [Authorize(Roles = "SuperAdmin")]

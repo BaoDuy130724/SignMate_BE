@@ -1066,9 +1066,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.User", b =>
                 {
-                    b.HasOne("SignMate.Domain.Entities.Center", null)
+                    b.HasOne("SignMate.Domain.Entities.Center", "Center")
                         .WithMany("Users")
                         .HasForeignKey("CenterId");
+
+                    b.Navigation("Center");
                 });
 
             modelBuilder.Entity("SignMate.Domain.Entities.UserAchievement", b =>

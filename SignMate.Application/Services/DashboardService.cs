@@ -37,11 +37,33 @@ public class DashboardService : IDashboardService
             Topic = suggested.Topic
         };
 
+        // Fetch Student's classes to get assignments
+        var classIds = await _db.ClassStudents
+            .Where(cs => cs.StudentId == userId)
+            .Select(cs => cs.ClassId)
+            .ToListAsync();
+
+        var assignments = await _db.LessonAssignments
+            .AsNoTracking()
+            .Where(la => classIds.Contains(la.ClassId))
+            .Select(la => new DeadlineDto
+            {
+                Id = la.Id,
+                Title = la.Lesson.Title,
+                Teacher = la.Teacher.FullName,
+                Duedate = (la.DueDate ?? la.AssignedAt.AddDays(7)).ToString("dd/MM/yyyy"),
+                Status = _db.LessonProgresses
+                    .Any(p => p.UserId == userId && p.LessonId == la.LessonId && p.Status == LessonStatus.Completed) 
+                    ? "Completed" : "Pending"
+            })
+            .ToListAsync();
+
         return new DashboardSummaryDto
         {
             AverageAccuracy = Math.Round(avgAcc, 1),
             CurrentStreak = streak?.CurrentStreak ?? 0,
-            SuggestedLesson = lessonDto
+            SuggestedLesson = lessonDto,
+            Deadlines = assignments
         };
     }
 

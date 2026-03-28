@@ -7,6 +7,16 @@ public class DashboardSummaryDto
     public double AverageAccuracy { get; set; }
     public int CurrentStreak { get; set; }
     public LessonDto? SuggestedLesson { get; set; }
+    public List<DeadlineDto> Deadlines { get; set; } = [];
+}
+
+public class DeadlineDto
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Teacher { get; set; } = string.Empty;
+    public string Duedate { get; set; } = string.Empty;
+    public string Status { get; set; } = "Pending";
 }
 
 public class ProgressStatsDto
