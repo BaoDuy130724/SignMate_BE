@@ -14,17 +14,22 @@ public class DashboardService : IDashboardService
 
     public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(Guid userId)
     {
-        var streak = await _db.Streaks.FirstOrDefaultAsync(s => s.UserId == userId);
-        
-        var attempts = await _db.PracticeSessions
-            .Where(s => s.UserId == userId)
-            .SelectMany(s => s.Attempts)
-            .ToListAsync();
-            
-        double avgAcc = attempts.Any() ? attempts.Average(a => a.OverallScore) * 100 : 0;
+        var streak = await _db.Streaks
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.UserId == userId);
 
-        // Suggested Lesson logic (mock simple for now)
-        var suggested = await _db.Lessons.FirstOrDefaultAsync(l => l.IsPublished);
+        // Compute average directly on DB instead of loading all attempts into memory
+        double avgAcc = await _db.PracticeAttempts
+            .Where(a => a.Session.UserId == userId)
+            .Select(a => (double?)a.OverallScore)
+            .AverageAsync() ?? 0;
+        avgAcc *= 100;
+
+        // Suggested Lesson logic
+        var suggested = await _db.Lessons
+            .AsNoTracking()
+            .FirstOrDefaultAsync(l => l.IsPublished);
+
         LessonDto? lessonDto = suggested == null ? null : new LessonDto
         {
             Id = suggested.Id, CourseId = suggested.CourseId, Title = suggested.Title,
@@ -42,11 +47,17 @@ public class DashboardService : IDashboardService
 
     public async Task<ProgressStatsDto> GetProgressStatsAsync(Guid userId)
     {
-        var attempts = await _db.PracticeSessions.Where(s => s.UserId == userId).SelectMany(s => s.Attempts).ToListAsync();
-        double avgAcc = attempts.Any() ? attempts.Average(a => a.OverallScore) * 100 : 0;
-        
-        var completedLessons = await _db.LessonProgresses.CountAsync(p => p.UserId == userId && p.Status == LessonStatus.Completed);
-        var masteredSigns = await _db.SignProgresses.CountAsync(p => p.UserId == userId && p.IsMastered);
+        // Compute average directly on DB
+        double avgAcc = await _db.PracticeAttempts
+            .Where(a => a.Session.UserId == userId)
+            .Select(a => (double?)a.OverallScore)
+            .AverageAsync() ?? 0;
+        avgAcc *= 100;
+
+        var completedLessons = await _db.LessonProgresses
+            .CountAsync(p => p.UserId == userId && p.Status == LessonStatus.Completed);
+        var masteredSigns = await _db.SignProgresses
+            .CountAsync(p => p.UserId == userId && p.IsMastered);
 
         return new ProgressStatsDto
         {

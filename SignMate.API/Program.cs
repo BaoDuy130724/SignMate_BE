@@ -1,10 +1,15 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.IdentityModel.Tokens;
+using SignMate.API.Middleware;
 using SignMate.Application;
 using SignMate.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Load local secrets file (gitignored) — overrides appsettings.Development.json
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 // ── Clean Architecture DI ──────────────────────────────────────
 builder.Services.AddApplication();
@@ -29,6 +34,18 @@ builder.Services.AddAuthorization();
 
 // ── Controllers ────────────────────────────────────────────────
 builder.Services.AddControllers();
+
+// ── Response Compression ───────────────────────────────────────
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.EnableForHttps = true;
+    opts.Providers.Add<BrotliCompressionProvider>();
+    opts.Providers.Add<GzipCompressionProvider>();
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/json"]);
+});
+
+// ── Health Checks ──────────────────────────────────────────────
+builder.Services.AddHealthChecks();
 
 // ── Swagger ────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -82,16 +99,20 @@ var app = builder.Build();
 
 
 // ── Middleware Pipeline ────────────────────────────────────────
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+app.UseResponseCompression();
 // app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

@@ -23,4 +23,15 @@ public class MockEmailService : IEmailService
         
         return Task.CompletedTask;
     }
+
+    public Task SendRegistrationOtpEmailAsync(string toEmail, string otpCode)
+    {
+        _logger.LogInformation("--- MOCK REGISTRATION OTP SENT ---");
+        _logger.LogInformation("To: {Email}", toEmail);
+        _logger.LogInformation("Subject: Complete your SignMate registration");
+        _logger.LogInformation("Body: Your OTP code is: {Token}. It expires in 5 minutes.", otpCode);
+        _logger.LogInformation("-----------------------");
+        
+        return Task.CompletedTask;
+    }
 }

@@ -2,6 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SignMate.Application.DTOs.Auth;
 
+public class SendOtpRequest
+{
+    [Required, EmailAddress, MaxLength(256)]
+    public string Email { get; set; } = null!;
+}
+
 public class RegisterRequest
 {
     [Required, EmailAddress, MaxLength(256)]
@@ -12,6 +18,9 @@ public class RegisterRequest
 
     [Required, MaxLength(200)]
     public string FullName { get; set; } = null!;
+
+    [Required, Length(6, 6)]
+    public string OtpCode { get; set; } = null!;
 }
 
 public class LoginRequest

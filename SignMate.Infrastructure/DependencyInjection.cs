@@ -20,10 +20,16 @@ public static class DependencyInjection
 
         services.AddScoped<ISignMateDbContext>(sp => sp.GetRequiredService<SignMateDbContext>());
 
+        // Memory Cache for OTPs
+        services.AddMemoryCache();
+
         // External services
         services.AddHttpClient<IAIClientService, AIClientService>();
+        services.AddHttpClient<IGeminiService, GeminiService>();
         services.AddScoped<IBlobService, BlobService>();
         services.AddScoped<IEmailService, MockEmailService>();
+        services.AddScoped<IOtpService, OtpService>();
+        services.AddSingleton<IVnPayService, VnPayService>();
 
         return services;
     }

@@ -13,7 +13,7 @@ public class SubscriptionPlanDto
 public class SubscribeRequest
 {
     public Guid PlanId { get; set; }
-    public string PaymentMethod { get; set; } = "Momo"; // Mocked
+    public string? ReturnUrl { get; set; }
 }
 
 public class SubscribeResponse
@@ -21,6 +21,7 @@ public class SubscribeResponse
     public bool Success { get; set; }
     public string Message { get; set; } = null!;
     public string? PaymentUrl { get; set; }
+    public Guid? SubscriptionId { get; set; }
 }
 
 public class MySubscriptionDto
