@@ -16,9 +16,14 @@ public class VnPayService : IVnPayService
 
     public VnPayService(IConfiguration config)
     {
-        _tmnCode = config["VnPay:TmnCode"] ?? "CGXZLS0Z";
-        _hashSecret = config["VnPay:HashSecret"] ?? "XNBCJFAKAZQSGTARRLGCHVZWCIOIGSHN";
-        _baseUrl = config["VnPay:BaseUrl"] ?? "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+        _tmnCode = config["VnPay:TmnCode"]
+            ?? throw new Exception("Missing VnPay:TmnCode");
+
+        _hashSecret = config["VnPay:HashSecret"]
+            ?? throw new Exception("Missing VnPay:HashSecret");
+
+        _baseUrl = config["VnPay:BaseUrl"]
+            ?? "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     }
 
     public string CreatePaymentUrl(VnPayPaymentRequest request, string ipAddress)
@@ -40,21 +45,28 @@ public class VnPayService : IVnPayService
             { "vnp_ExpireDate", DateTime.UtcNow.AddHours(7).AddMinutes(15).ToString("yyyyMMddHHmmss") },
         };
 
-        var queryString = string.Join("&",
-            vnpParams
-                .Where(kv => !string.IsNullOrEmpty(kv.Value))
-                .Select(kv => $"{UrlEncode(kv.Key)}={UrlEncode(kv.Value)}"));
+        // === KEY FIX: VNPay hashes the URL-encoded query string ===
+        // Both signData and queryString must be IDENTICAL (both URL-encoded)
+        var data = new StringBuilder();
+        foreach (var kv in vnpParams.Where(kv => !string.IsNullOrEmpty(kv.Value)))
+        {
+            if (data.Length > 0) data.Append('&');
+            data.Append(WebUtility.UrlEncode(kv.Key));
+            data.Append('=');
+            data.Append(WebUtility.UrlEncode(kv.Value));
+        }
 
-        var signData = queryString;
-
-        var secureHash = HmacSha512(_hashSecret, signData);
+        var queryString = data.ToString();
+        var secureHash = HmacSha512(_hashSecret, queryString);
 
         var finalUrl = $"{_baseUrl}?{queryString}&vnp_SecureHash={secureHash}";
 
-        try {
-            System.IO.File.AppendAllText("vnpay_debug.log", 
-                $"\n[{DateTime.Now}] CreatePaymentUrl:\n- TmnCode: {_tmnCode}\n- HashSecret: {_hashSecret}\n- SignData:\n{signData}\n- SecureHash:\n{secureHash}\n- FinalURL:\n{finalUrl}\n");
-        } catch {}
+        try
+        {
+            System.IO.File.AppendAllText("vnpay_debug.log",
+                $"\n[{DateTime.Now}] CreatePaymentUrl:\n- QueryString (= SignData):\n{queryString}\n- SecureHash:\n{secureHash}\n- FinalURL:\n{finalUrl}\n");
+        }
+        catch { }
 
         return finalUrl;
     }
@@ -76,12 +88,17 @@ public class VnPayService : IVnPayService
             StringComparer.Ordinal
         );
 
-        var signData = string.Join("&",
-            checkParams
-                .Where(kv => !string.IsNullOrEmpty(kv.Value))
-                .Select(kv => $"{UrlEncode(kv.Key)}={UrlEncode(kv.Value)}"));
+        // Build sign data with URL-encoded values (same as CreatePaymentUrl)
+        var data = new StringBuilder();
+        foreach (var kv in checkParams.Where(kv => !string.IsNullOrEmpty(kv.Value)))
+        {
+            if (data.Length > 0) data.Append('&');
+            data.Append(WebUtility.UrlEncode(kv.Key));
+            data.Append('=');
+            data.Append(WebUtility.UrlEncode(kv.Value));
+        }
 
-        var computedHash = HmacSha512(_hashSecret, signData);
+        var computedHash = HmacSha512(_hashSecret, data.ToString());
 
         result.IsValid = string.Equals(computedHash, receivedHash, StringComparison.OrdinalIgnoreCase);
 
@@ -90,11 +107,6 @@ public class VnPayService : IVnPayService
             result.ResponseCode = vnpayParams.TryGetValue("vnp_ResponseCode", out var rc) ? rc : "";
             result.TransactionId = vnpayParams.TryGetValue("vnp_TransactionNo", out var tn) ? tn : "";
             result.IsSuccess = result.ResponseCode == "00";
-
-            // Parse OrderId from TxnRef
-            var txnRef = vnpayParams.TryGetValue("vnp_TxnRef", out var tr) ? tr : "";
-            // We stored OrderId as first 16 chars of Guid.ToString("N")
-            // We need to look up by this reference in the controller
         }
 
         return result;
@@ -107,23 +119,10 @@ public class VnPayService : IVnPayService
 
         using var hmac = new HMACSHA512(keyBytes);
         var hashBytes = hmac.ComputeHash(dataBytes);
-        return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
-    }
 
-    private static string UrlEncode(string value)
-    {
-        if (string.IsNullOrEmpty(value)) return "";
-        
-        // C#'s WebUtility.UrlEncode behaves differently than Java's URLEncoder.
-        // We must mimic Java's URLEncoder.encode exactly to pass VNPAY HMAC-SHA512.
-        // Java URLEncoder encodes space to +, which VNPAY replaces with %20.
-        // Java encodes (, ), and ~ but leaves * unencoded.
-        return WebUtility.UrlEncode(value)
-            .Replace("+", "%20")
-            .Replace("(", "%28")
-            .Replace(")", "%29")
-            .Replace("!", "%21")
-            .Replace("*", "%2A")
-            .Replace("~", "%7E");
+        var sb = new StringBuilder(hashBytes.Length * 2);
+        foreach (var b in hashBytes)
+            sb.Append(b.ToString("x2"));    // lowercase hex — matches VNPay demo
+        return sb.ToString();
     }
 }

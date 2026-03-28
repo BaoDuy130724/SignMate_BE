@@ -8,8 +8,8 @@ using SignMate.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load local secrets file (gitignored) — overrides appsettings.Development.json
-builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+//// Load local secrets file (gitignored) — overrides appsettings.Development.json
+//builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 // ── Clean Architecture DI ──────────────────────────────────────
 builder.Services.AddApplication();

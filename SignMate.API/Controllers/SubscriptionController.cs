@@ -28,12 +28,16 @@ public class SubscriptionController : ControllerBase
     public async Task<IActionResult> Subscribe([FromBody] SubscribeRequest request)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "127.0.0.1";
+
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        if (string.IsNullOrEmpty(ipAddress) || ipAddress == "::1")
+        {
+            ipAddress = "127.0.0.1";
+        }
 
         var res = await _subService.SubscribeAsync(userId, request, ipAddress);
         return res.Success ? Ok(res) : BadRequest(new { message = res.Message });
     }
-
     /// <summary>
     /// VNPay redirect callback — user returns here after payment.
     /// </summary>
