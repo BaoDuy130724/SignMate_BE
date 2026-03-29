@@ -32,6 +32,7 @@ public class SignMateDbContext : DbContext, ISignMateDbContext
     public DbSet<TeacherComment> TeacherComments => Set<TeacherComment>();
     public DbSet<B2BContactLead> B2BContactLeads => Set<B2BContactLead>();
     public DbSet<GameSession> GameSessions => Set<GameSession>();
+    public DbSet<SignReferenceRequest> SignReferenceRequests => Set<SignReferenceRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

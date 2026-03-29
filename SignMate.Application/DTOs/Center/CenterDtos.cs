@@ -18,6 +18,8 @@ public class CenterDashboardDto
     public int TotalStudents { get; set; }
     public int ActiveLearners { get; set; }
     public double AverageAccuracy { get; set; }
+    public int TotalPracticeMinutes { get; set; }
+    public int NewStudentsThisMonth { get; set; }
 }
 
 public class CreateCenterAdminRequest

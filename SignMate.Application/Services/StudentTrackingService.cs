@@ -31,7 +31,7 @@ public class StudentTrackingService : IStudentTrackingService
             {
                 StudentId = student.Id, FullName = student.FullName,
                 AccuracyPercent = Math.Round(avgAcc, 1),
-                PracticeFrequencyDays = attempts.Count // simple mock
+                PracticeFrequencyDays = attempts.Count
             });
         }
         return result;
@@ -41,7 +41,7 @@ public class StudentTrackingService : IStudentTrackingService
     {
         return Task.FromResult(new TrackingReportResponse
         {
-            ReportUrl = "https://placeholder-url.com/report.pdf",
+            ReportUrl = "",
             GeneratedAt = DateTime.UtcNow
         });
     }

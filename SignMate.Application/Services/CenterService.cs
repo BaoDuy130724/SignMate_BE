@@ -50,13 +50,25 @@ public class CenterService : ICenterService
             
         double avgAcc = attempts.Any() ? attempts.Average(a => a.OverallScore) * 100 : 0;
 
+        // Calculate total practice minutes from sessions
+        var sessions = await _db.PracticeSessions
+            .Where(s => studentIds.Contains(s.UserId) && s.EndedAt != null)
+            .ToListAsync();
+        int totalMinutes = sessions.Sum(s => (int)(s.EndedAt! - s.StartedAt).Value.TotalMinutes);
+
+        // New students this month
+        var monthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        int newStudents = students.Count(u => u.CreatedAt >= monthStart);
+
         return new CenterDashboardDto
         {
             CenterName = center.Name,
             MaxSeats = center.MaxSeats,
             TotalStudents = students.Count,
             ActiveLearners = students.Count(u => u.PracticeSessions.Any()),
-            AverageAccuracy = Math.Round(avgAcc, 1)
+            AverageAccuracy = Math.Round(avgAcc, 1),
+            TotalPracticeMinutes = totalMinutes,
+            NewStudentsThisMonth = newStudents
         };
     }
 

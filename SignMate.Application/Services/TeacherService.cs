@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SignMate.Application.DTOs.Class;
 using SignMate.Application.DTOs.Teacher;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
@@ -39,5 +40,55 @@ public class TeacherService : ITeacherService
                 Id = tc.Id, TeacherId = tc.TeacherId, TeacherName = tc.Teacher.FullName,
                 StudentId = tc.StudentId, Content = tc.Content, CreatedAt = tc.CreatedAt
             }).ToListAsync();
+    }
+
+    public async Task<TeacherDashboardDto> GetTeacherDashboardAsync(Guid teacherId)
+    {
+        var teacher = await _db.Users.FindAsync(teacherId);
+        if (teacher == null) throw new InvalidOperationException("Teacher not found");
+        
+        var totalClasses = await _db.Classes.CountAsync(c => c.TeacherId == teacherId);
+        var totalStudents = await _db.ClassStudents
+            .Include(cs => cs.Class)
+            .Where(cs => cs.Class.TeacherId == teacherId)
+            .Select(cs => cs.StudentId)
+            .Distinct()
+            .CountAsync();
+
+        return new TeacherDashboardDto
+        {
+            TotalClasses = totalClasses,
+            TotalStudents = totalStudents
+        };
+    }
+
+    public async Task<List<ClassDto>> GetTeacherClassesAsync(Guid teacherId)
+    {
+        return await _db.Classes
+            .Where(c => c.TeacherId == teacherId)
+            .Select(c => new ClassDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                TeacherId = c.TeacherId,
+                TeacherName = c.Teacher.FullName,
+                StudentCount = c.ClassStudents.Count
+            })
+            .ToListAsync();
+    }
+
+    public async Task<List<ClassStudentDto>> GetTeacherStudentsAsync(Guid teacherId)
+    {
+        return await _db.ClassStudents
+            .Include(cs => cs.Class)
+            .Where(cs => cs.Class.TeacherId == teacherId)
+            .Select(cs => new ClassStudentDto
+            {
+                StudentId = cs.StudentId,
+                FullName = cs.Student.FullName,
+                Email = cs.Student.Email
+            })
+            .Distinct()
+            .ToListAsync();
     }
 }

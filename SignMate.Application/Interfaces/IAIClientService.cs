@@ -3,6 +3,14 @@ namespace SignMate.Application.Interfaces;
 public interface IAIClientService
 {
     Task<AIAnalysisResult> AnalyzeAsync(string videoUrl, string signId, string? referenceKeypoints);
+    Task<ExtractReferenceResult> ExtractReferenceKeypointsAsync(string videoUrl);
+}
+
+public class ExtractReferenceResult
+{
+    public string Status { get; set; } = null!;
+    public int TotalFrames { get; set; }
+    public string ReferenceKeypoints { get; set; } = null!;
 }
 
 public class AIAnalysisResult

@@ -30,4 +30,14 @@ public class AIClientService : IAIClientService
         return await response.Content.ReadFromJsonAsync<AIAnalysisResult>()
                ?? throw new Exception("Empty AI response");
     }
+
+    public async Task<ExtractReferenceResult> ExtractReferenceKeypointsAsync(string videoUrl)
+    {
+        var payload = new { video_url = videoUrl };
+        var response = await _http.PostAsJsonAsync($"{_aiBaseUrl}/extract-reference", payload);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<ExtractReferenceResult>()
+               ?? throw new Exception("Empty AI response from extract-reference");
+    }
 }

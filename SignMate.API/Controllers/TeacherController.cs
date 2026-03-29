@@ -27,4 +27,25 @@ public class TeacherController : ControllerBase
     [HttpGet("students/{studentId:guid}/comments")]
     public async Task<IActionResult> GetStudentComments(Guid studentId)
         => Ok(await _teacherService.GetStudentCommentsAsync(studentId));
+
+    [HttpGet("dashboard")]
+    public async Task<IActionResult> GetDashboard()
+    {
+        var teacherId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        return Ok(await _teacherService.GetTeacherDashboardAsync(teacherId));
+    }
+
+    [HttpGet("classes")]
+    public async Task<IActionResult> GetClasses()
+    {
+        var teacherId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        return Ok(await _teacherService.GetTeacherClassesAsync(teacherId));
+    }
+
+    [HttpGet("students")]
+    public async Task<IActionResult> GetStudents()
+    {
+        var teacherId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        return Ok(await _teacherService.GetTeacherStudentsAsync(teacherId));
+    }
 }

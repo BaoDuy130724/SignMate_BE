@@ -32,6 +32,7 @@ public interface ISignMateDbContext
     DbSet<TeacherComment> TeacherComments { get; }
     DbSet<B2BContactLead> B2BContactLeads { get; }
     DbSet<GameSession> GameSessions { get; }
+    DbSet<SignReferenceRequest> SignReferenceRequests { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

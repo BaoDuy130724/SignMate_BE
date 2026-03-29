@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SignMate.Application.Interfaces;
 using SignMate.Infrastructure.Data;
 using SignMate.Infrastructure.ExternalServices;
+using SignMate.Infrastructure.Services;
 
 namespace SignMate.Infrastructure;
 
@@ -30,6 +31,10 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, MockEmailService>();
         services.AddScoped<IOtpService, OtpService>();
         services.AddSingleton<IVnPayService, VnPayService>();
+
+        // Background Processing
+        services.AddSingleton<IVideoProcessingQueue, VideoProcessingQueue>();
+        services.AddHostedService<SignMate.Infrastructure.BackgroundJobs.VideoProcessingBackgroundService>();
 
         return services;
     }

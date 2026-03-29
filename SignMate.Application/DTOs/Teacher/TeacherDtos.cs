@@ -15,3 +15,9 @@ public class CreateCommentRequest
     public Guid StudentId { get; set; }
     public string Content { get; set; } = null!;
 }
+
+public class TeacherDashboardDto
+{
+    public int TotalClasses { get; set; }
+    public int TotalStudents { get; set; }
+}

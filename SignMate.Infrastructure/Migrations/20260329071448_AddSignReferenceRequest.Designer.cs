@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SignMate.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using SignMate.Infrastructure.Data;
 namespace SignMate.Infrastructure.Migrations
 {
     [DbContext(typeof(SignMateDbContext))]
-    partial class SignMateDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260329071448_AddSignReferenceRequest")]
+    partial class AddSignReferenceRequest
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

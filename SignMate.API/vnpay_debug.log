@@ -180,3 +180,11 @@ vnp_Amount=9900000&vnp_Command=pay&vnp_CreateDate=20260328182817&vnp_CurrCode=VN
 9fe7f4d88a40f94c39e2ad3f9252462e584d3c806234c114eaa946d7c42f676b1b5e1abb22051bc7698db72a8e5caeaaa0786a78783f5ccbcef2897cb85de61d
 - FinalURL:
 https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=9900000&vnp_Command=pay&vnp_CreateDate=20260328182817&vnp_CurrCode=VND&vnp_ExpireDate=20260328184317&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=SignMate+-+Thanh+toan+hoa+don+7b4a4a4f&vnp_OrderType=billpayment&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A3000%2Fpayment-callback&vnp_TmnCode=0S49OK1Y&vnp_TxnRef=7B4A4A4FE2DF4E0DB60A94427216338D&vnp_Version=2.1.0&vnp_SecureHash=9fe7f4d88a40f94c39e2ad3f9252462e584d3c806234c114eaa946d7c42f676b1b5e1abb22051bc7698db72a8e5caeaaa0786a78783f5ccbcef2897cb85de61d
+
+[3/29/2026 3:23:11 PM] CreatePaymentUrl:
+- QueryString (= SignData):
+vnp_Amount=4900000&vnp_Command=pay&vnp_CreateDate=20260329152311&vnp_CurrCode=VND&vnp_ExpireDate=20260329153811&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=SignMate+-+Thanh+toan+hoa+don+6a640919&vnp_OrderType=billpayment&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A5184%2Fapi%2Fsubscription%2Fvnpay-return&vnp_TmnCode=HMCP1E7I&vnp_TxnRef=6A6409190DC94442A09B3D1DB33C4CAA&vnp_Version=2.1.0
+- SecureHash:
+ed27e90285aef3316b6a9babc22609069ffc23ead3d506fafeed452774347e2d0b41063ab841944b358c3ae62f60257e0f4daf3a5b06b3d53c4aec6259cb2319
+- FinalURL:
+https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=4900000&vnp_Command=pay&vnp_CreateDate=20260329152311&vnp_CurrCode=VND&vnp_ExpireDate=20260329153811&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=SignMate+-+Thanh+toan+hoa+don+6a640919&vnp_OrderType=billpayment&vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A5184%2Fapi%2Fsubscription%2Fvnpay-return&vnp_TmnCode=HMCP1E7I&vnp_TxnRef=6A6409190DC94442A09B3D1DB33C4CAA&vnp_Version=2.1.0&vnp_SecureHash=ed27e90285aef3316b6a9babc22609069ffc23ead3d506fafeed452774347e2d0b41063ab841944b358c3ae62f60257e0f4daf3a5b06b3d53c4aec6259cb2319
