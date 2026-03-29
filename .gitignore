@@ -7,6 +7,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
 
+# Visual Studio user files
+*.user
+*.pubxml.user
+
+# Nếu không muốn share publish profile
+# *.pubxml
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
