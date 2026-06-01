@@ -48,11 +48,19 @@ public class UsersController : ControllerBase
         var user = await _db.Users.FindAsync(userId);
         if (user == null) return NotFound();
 
+        var activeSub = await _db.UserSubscriptions
+            .Include(us => us.Plan)
+            .Where(us => us.UserId == userId && us.IsActive && us.EndDate >= DateTime.UtcNow)
+            .OrderByDescending(us => us.EndDate)
+            .FirstOrDefaultAsync();
+            
+        var currentPlan = activeSub != null ? activeSub.Plan.Type.ToString() : "Free";
+
         return Ok(new UserProfileDto
         {
             Id = user.Id, Email = user.Email, FullName = user.FullName,
             AvatarUrl = user.AvatarUrl, Role = user.Role.ToString(), 
-            CenterId = user.CenterId, CreatedAt = user.CreatedAt
+            Plan = currentPlan, CenterId = user.CenterId, CreatedAt = user.CreatedAt
         });
     }
 
@@ -68,11 +76,19 @@ public class UsersController : ControllerBase
         user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
+        var activeSub = await _db.UserSubscriptions
+            .Include(us => us.Plan)
+            .Where(us => us.UserId == userId && us.IsActive && us.EndDate >= DateTime.UtcNow)
+            .OrderByDescending(us => us.EndDate)
+            .FirstOrDefaultAsync();
+            
+        var currentPlan = activeSub != null ? activeSub.Plan.Type.ToString() : "Free";
+
         return Ok(new UserProfileDto
         {
             Id = user.Id, Email = user.Email, FullName = user.FullName,
             AvatarUrl = user.AvatarUrl, Role = user.Role.ToString(), 
-            CenterId = user.CenterId, CreatedAt = user.CreatedAt
+            Plan = currentPlan, CenterId = user.CenterId, CreatedAt = user.CreatedAt
         });
     }
 

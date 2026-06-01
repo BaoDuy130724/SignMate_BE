@@ -105,6 +105,8 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseResponseCompression();
+// Serving static dataset files
+app.UseStaticFiles();
 // app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();

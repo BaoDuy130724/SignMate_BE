@@ -22,6 +22,8 @@ public static class DatabaseSeeder
             var cls = await SeedClassAsync(context, center.Id, teacher.Id, student.Id);
             await SeedCoursesAndLessonsAsync(context, admin.Id, student.Id);
         }
+        
+        await SeedSignsAsync(context);
     }
 
     private static async Task SeedPlansAsync(SignMateDbContext context)
@@ -289,7 +291,7 @@ public static class DatabaseSeeder
 
         var lesson1 = new Lesson
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.Parse("55013511-91e5-425f-886a-a4f9276271a9"),
             CourseId = course1.Id,
             Title = "Bài 1: Chào hỏi",
             Description = "Cách chào, tạm biệt, cảm ơn.",
@@ -322,5 +324,18 @@ public static class DatabaseSeeder
         });
 
         await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedSignsAsync(SignMateDbContext context)
+    {
+        if (!await context.Signs.AnyAsync())
+        {
+            var sqlFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "SeedData_Signs.sql");
+            if (File.Exists(sqlFile))
+            {
+                var sql = await File.ReadAllTextAsync(sqlFile);
+                await context.Database.ExecuteSqlRawAsync(sql);
+            }
+        }
     }
 }
