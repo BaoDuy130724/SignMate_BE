@@ -21,6 +21,6 @@ public class OnboardingController : ControllerBase
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var res = await _onboardingService.SubmitOnboardingAsync(userId, request);
-        return res.Success ? Ok(res) : BadRequest();
+        return res.Success ? Ok(res) : BadRequest(new { message = res.Message });
     }
 }
