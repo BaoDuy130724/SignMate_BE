@@ -1,8 +1,10 @@
 using System.Security.Claims;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SignMate.Application.DTOs.Auth;
-using SignMate.Application.Interfaces;
+using SignMate.Application.DTOs.Common;
+using SignMate.Application.Features.Auth;
 
 namespace SignMate.API.Controllers;
 
@@ -10,41 +12,36 @@ namespace SignMate.API.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly IAuthService _authService;
+    private readonly IMediator _mediator;
 
-    public AuthController(IAuthService authService) => _authService = authService;
+    public AuthController(IMediator mediator) => _mediator = mediator;
 
     [HttpPost("send-register-otp")]
     public async Task<IActionResult> SendRegisterOtp([FromBody] SendOtpRequest request)
     {
-        try 
-        { 
-            await _authService.SendRegisterOtpAsync(request);
-            return Ok(new { message = "OTP sent successfully." });
-        }
-        catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
+        await _mediator.Send(new SendRegisterOtpCommand(request));
+        return Ok(ApiResponse.SuccessResult("OTP sent successfully."));
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        try { return Ok(await _authService.RegisterAsync(request)); }
-        catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
-        catch (UnauthorizedAccessException ex) { return Unauthorized(new { message = ex.Message }); }
+        var result = await _mediator.Send(new RegisterCommand(request));
+        return Ok(ApiResponse<TokenResponse>.SuccessResult(result, "Registration successful."));
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        try { return Ok(await _authService.LoginAsync(request)); }
-        catch (UnauthorizedAccessException ex) { return Unauthorized(new { message = ex.Message }); }
+        var result = await _mediator.Send(new LoginCommand(request));
+        return Ok(ApiResponse<TokenResponse>.SuccessResult(result, "Login successful."));
     }
 
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
     {
-        try { return Ok(await _authService.RefreshAsync(request.RefreshToken)); }
-        catch (UnauthorizedAccessException ex) { return Unauthorized(new { message = ex.Message }); }
+        var result = await _mediator.Send(new RefreshCommand(request.RefreshToken));
+        return Ok(ApiResponse<TokenResponse>.SuccessResult(result, "Token refreshed successfully."));
     }
 
     [Authorize]
@@ -52,39 +49,30 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Logout([FromBody] RefreshRequest request)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        await _authService.LogoutAsync(userId, request.RefreshToken);
-        return NoContent();
+        await _mediator.Send(new LogoutCommand(userId, request.RefreshToken));
+        return Ok(ApiResponse.SuccessResult("Logged out successfully."));
     }
 
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
-        await _authService.ForgotPasswordAsync(request);
-        // Always return 200 OK so we don't leak user existence
-        return Ok(new { message = "If the email exists, a reset code has been sent." });
+        await _mediator.Send(new ForgotPasswordCommand(request));
+        return Ok(ApiResponse.SuccessResult("If the email exists, a reset code has been sent."));
     }
 
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
-        try 
-        { 
-            await _authService.ResetPasswordAsync(request);
-            return Ok(new { message = "Password has been successfully reset." });
-        }
-        catch (UnauthorizedAccessException ex) { return Unauthorized(new { message = ex.Message }); }
+        await _mediator.Send(new ResetPasswordCommand(request));
+        return Ok(ApiResponse.SuccessResult("Password has been successfully reset."));
     }
 
     [Authorize]
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
-        try
-        {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _authService.ChangePasswordAsync(userId, request);
-            return Ok(new { message = "Password changed successfully." });
-        }
-        catch (UnauthorizedAccessException ex) { return Unauthorized(new { message = ex.Message }); }
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _mediator.Send(new ChangePasswordCommand(userId, request));
+        return Ok(ApiResponse.SuccessResult("Password changed successfully."));
     }
 }

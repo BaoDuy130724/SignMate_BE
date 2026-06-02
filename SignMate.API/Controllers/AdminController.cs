@@ -1,6 +1,9 @@
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SignMate.Application.Interfaces;
+using SignMate.Application.DTOs.Admin;
+using SignMate.Application.DTOs.Common;
+using SignMate.Application.Features.Admin;
 
 namespace SignMate.API.Controllers;
 
@@ -9,12 +12,15 @@ namespace SignMate.API.Controllers;
 [Authorize(Roles = "SuperAdmin")]
 public class AdminController : ControllerBase
 {
-    private readonly IAdminService _adminService;
+    private readonly IMediator _mediator;
 
-    public AdminController(IAdminService adminService)
-        => _adminService = adminService;
+    public AdminController(IMediator mediator)
+        => _mediator = mediator;
 
     [HttpGet("dashboard")]
     public async Task<IActionResult> GetDashboard()
-        => Ok(await _adminService.GetSystemDashboardAsync());
+    {
+        var result = await _mediator.Send(new GetSystemDashboardQuery());
+        return Ok(ApiResponse<SystemDashboardDto>.SuccessResult(result, "Dashboard loaded successfully."));
+    }
 }

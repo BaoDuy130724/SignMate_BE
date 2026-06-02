@@ -1,18 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 using SignMate.Application.DTOs.StudentTracking;
 using SignMate.Application.Interfaces;
+using SignMate.Domain.Entities;
 
 namespace SignMate.Application.Services;
 
 public class StudentTrackingService : IStudentTrackingService
 {
-    private readonly ISignMateDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public StudentTrackingService(ISignMateDbContext db) => _db = db;
+    public StudentTrackingService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
     public async Task<List<StudentTrackingStatsDto>> GetClassTrackingStatsAsync(Guid classId)
     {
-        var students = await _db.ClassStudents
+        var students = await _unitOfWork.Repository<ClassStudent>().Query()
             .Where(cs => cs.ClassId == classId)
             .Select(cs => cs.Student)
             .ToListAsync();
@@ -20,7 +21,7 @@ public class StudentTrackingService : IStudentTrackingService
         var result = new List<StudentTrackingStatsDto>();
         foreach (var student in students)
         {
-            var attempts = await _db.PracticeSessions
+            var attempts = await _unitOfWork.Repository<PracticeSession>().Query()
                 .Where(s => s.UserId == student.Id)
                 .SelectMany(s => s.Attempts)
                 .ToListAsync();
