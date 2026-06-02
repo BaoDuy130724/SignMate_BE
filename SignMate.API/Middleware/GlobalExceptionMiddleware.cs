@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json;
+using FluentValidation;
+using SignMate.Application.DTOs.Common;
 
 namespace SignMate.API.Middleware;
 
@@ -28,13 +30,18 @@ public class GlobalExceptionMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
-        var (statusCode, message) = ex switch
+        var (statusCode, message, errors) = ex switch
         {
-            ArgumentException => (HttpStatusCode.BadRequest, ex.Message),
-            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, ex.Message),
-            InvalidOperationException => (HttpStatusCode.Conflict, ex.Message),
-            KeyNotFoundException => (HttpStatusCode.NotFound, ex.Message),
-            _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")
+            ValidationException valEx => (
+                HttpStatusCode.BadRequest, 
+                "Validation failed.", 
+                valEx.Errors.Select(e => e.ErrorMessage).ToList()
+            ),
+            ArgumentException => (HttpStatusCode.BadRequest, ex.Message, (List<string>?)null),
+            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, ex.Message, (List<string>?)null),
+            InvalidOperationException => (HttpStatusCode.Conflict, ex.Message, (List<string>?)null),
+            KeyNotFoundException => (HttpStatusCode.NotFound, ex.Message, (List<string>?)null),
+            _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.", (List<string>?)null)
         };
 
         if (statusCode == HttpStatusCode.InternalServerError)
@@ -45,10 +52,10 @@ public class GlobalExceptionMiddleware
         context.Response.StatusCode = (int)statusCode;
         context.Response.ContentType = "application/json";
 
-        var response = JsonSerializer.Serialize(new
+        var apiResponse = ApiResponse.FailureResult(message, errors);
+        var response = JsonSerializer.Serialize(apiResponse, new JsonSerializerOptions
         {
-            error = message,
-            statusCode = (int)statusCode
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
 
         await context.Response.WriteAsync(response);

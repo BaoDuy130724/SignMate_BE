@@ -21,6 +21,10 @@ public static class DependencyInjection
 
         services.AddScoped<ISignMateDbContext>(sp => sp.GetRequiredService<SignMateDbContext>());
 
+        // Generic Repository & Unit of Work
+        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
         // Memory Cache for OTPs
         services.AddMemoryCache();
 

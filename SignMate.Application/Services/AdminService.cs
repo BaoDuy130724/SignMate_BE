@@ -7,18 +7,18 @@ namespace SignMate.Application.Services;
 
 public class AdminService : IAdminService
 {
-    private readonly ISignMateDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public AdminService(ISignMateDbContext db) => _db = db;
+    public AdminService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
     public async Task<SystemDashboardDto> GetSystemDashboardAsync()
     {
-        var totalUsers = await _db.Users.CountAsync();
-        var activeCenters = await _db.Centers.CountAsync(c => c.IsActive);
+        var totalUsers = await _unitOfWork.Repository<User>().Query().CountAsync();
+        var activeCenters = await _unitOfWork.Repository<Center>().Query().CountAsync(c => c.IsActive);
         
         // Simulating retention and premium users based on active practice sessions
-        var premiumUsers = await _db.Users.CountAsync(u => u.Role == UserRole.Student && u.XpPoints > 500); 
-        var activeUsersLastMonth = await _db.PracticeSessions
+        var premiumUsers = await _unitOfWork.Repository<User>().Query().CountAsync(u => u.Role == UserRole.Student && u.XpPoints > 500); 
+        var activeUsersLastMonth = await _unitOfWork.Repository<PracticeSession>().Query()
             .Where(ps => ps.StartedAt >= DateTime.UtcNow.AddDays(-30))
             .Select(ps => ps.UserId)
             .Distinct()
