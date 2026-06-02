@@ -8,6 +8,9 @@ public static class DatabaseSeeder
 {
     public static async Task SeedAsync(SignMateDbContext context)
     {
+        // Automatically apply EF migrations and create the database if it doesn't exist
+        await context.Database.MigrateAsync();
+
         await SeedPlansAsync(context);
         
         // Seed dummy data if no users exist
@@ -32,7 +35,6 @@ public static class DatabaseSeeder
         {
             new SubscriptionPlan
             {
-                Id = Guid.NewGuid(),
                 Name = "Gói Miễn phí",
                 PriceVnd = 0,
                 DurationDays = 30,
@@ -47,7 +49,6 @@ public static class DatabaseSeeder
             },
             new SubscriptionPlan
             {
-                Id = Guid.NewGuid(),
                 Name = "Gói Cơ bản",
                 PriceVnd = 49000,
                 DurationDays = 30,
@@ -62,7 +63,6 @@ public static class DatabaseSeeder
             },
             new SubscriptionPlan
             {
-                Id = Guid.NewGuid(),
                 Name = "Gói Nâng cao (Pro)",
                 PriceVnd = 99000,
                 DurationDays = 30,
@@ -77,7 +77,6 @@ public static class DatabaseSeeder
             },
             new SubscriptionPlan
             {
-                Id = Guid.NewGuid(),
                 Name = "Gói Trung tâm (B2B)",
                 PriceVnd = 79000,
                 DurationDays = 30,
@@ -122,7 +121,6 @@ public static class DatabaseSeeder
     {
         var center1 = new Center
         {
-            Id = Guid.NewGuid(),
             Name = "Trung tâm VSL Hà Nội",
             ContactPerson = "Nguyễn Văn A",
             Email = "contact@vslhanoi.edu.vn",
@@ -130,7 +128,6 @@ public static class DatabaseSeeder
         };
         var center2 = new Center
         {
-            Id = Guid.NewGuid(),
             Name = "Trung tâm VSL TP.HCM",
             ContactPerson = "Trần Thị B",
             Email = "hcm@vsl.edu.vn",
@@ -138,7 +135,6 @@ public static class DatabaseSeeder
         };
         var center3 = new Center
         {
-            Id = Guid.NewGuid(),
             Name = "Trung tâm VSL Đà Nẵng",
             ContactPerson = "Lê Văn C",
             Email = "danang@vsl.edu.vn",
@@ -150,14 +146,13 @@ public static class DatabaseSeeder
         return center1; // Return the first one to use for mapping
     }
 
-    private static async Task<List<User>> SeedUsersAsync(SignMateDbContext context, Guid centerId)
+    private static async Task<List<User>> SeedUsersAsync(SignMateDbContext context, int centerId)
     {
         var defaultPasswordHash = BCrypt.Net.BCrypt.HashPassword("123456");
         var users = new List<User>
         {
             new User
             {
-                Id = Guid.NewGuid(),
                 Email = "admin@signmate.vn",
                 PasswordHash = defaultPasswordHash,
                 FullName = "Hệ thống Quản trị",
@@ -168,7 +163,6 @@ public static class DatabaseSeeder
             },
             new User
             {
-                Id = Guid.NewGuid(),
                 Email = "centeradmin@vslhanoi.edu.vn",
                 PasswordHash = defaultPasswordHash,
                 FullName = "Admin Trung tâm",
@@ -180,7 +174,6 @@ public static class DatabaseSeeder
             },
             new User
             {
-                Id = Guid.NewGuid(),
                 Email = "teacher@vslhanoi.edu.vn",
                 PasswordHash = defaultPasswordHash,
                 FullName = "Giáo viên Trần B",
@@ -192,7 +185,6 @@ public static class DatabaseSeeder
             },
             new User
             {
-                Id = Guid.NewGuid(),
                 Email = "student@gmail.com",
                 PasswordHash = defaultPasswordHash,
                 FullName = "Học viên Nguyễn C",
@@ -206,11 +198,11 @@ public static class DatabaseSeeder
         };
 
         context.Users.AddRange(users);
+        await context.SaveChangesAsync(); // Save first to populate generated User IDs
         
         var student = users.First(u => u.Role == UserRole.Student);
         context.Streaks.Add(new Streak
         {
-            Id = Guid.NewGuid(),
             UserId = student.Id,
             CurrentStreak = 3,
             LongestStreak = 5,
@@ -221,31 +213,29 @@ public static class DatabaseSeeder
         return users;
     }
 
-    private static async Task<Class> SeedClassAsync(SignMateDbContext context, Guid centerId, Guid teacherId, Guid studentId)
+    private static async Task<Class> SeedClassAsync(SignMateDbContext context, int centerId, int teacherId, int studentId)
     {
         var cls1 = new Class
         {
-            Id = Guid.NewGuid(),
             CenterId = centerId,
             TeacherId = teacherId,
             Name = "Lớp Cơ bản 01"
         };
         var cls2 = new Class
         {
-            Id = Guid.NewGuid(),
             CenterId = centerId,
             TeacherId = teacherId,
             Name = "Lớp Giao tiếp 02"
         };
         var cls3 = new Class
         {
-            Id = Guid.NewGuid(),
             CenterId = centerId,
             TeacherId = teacherId,
             Name = "Lớp Nâng cao 01"
         };
 
         context.Classes.AddRange(cls1, cls2, cls3);
+        await context.SaveChangesAsync(); // Save to generate Class IDs
 
         context.ClassStudents.Add(new ClassStudent
         {
@@ -263,11 +253,10 @@ public static class DatabaseSeeder
         return cls1;
     }
 
-    private static async Task SeedCoursesAndLessonsAsync(SignMateDbContext context, Guid adminId, Guid studentId)
+    private static async Task SeedCoursesAndLessonsAsync(SignMateDbContext context, int adminId, int studentId)
     {
         var course1 = new Course
         {
-            Id = Guid.NewGuid(),
             Title = "Giao tiếp Cơ bản",
             Description = "Học các từ vựng và mẫu câu giao tiếp phổ biến hàng ngày.",
             Level = CourseLevel.Beginner,
@@ -278,7 +267,6 @@ public static class DatabaseSeeder
         
         var course2 = new Course
         {
-            Id = Guid.NewGuid(),
             Title = "Bảng chữ cái & Số đếm",
             Description = "Nền tảng quan trọng nhất để ghép vần tên riêng.",
             Level = CourseLevel.Beginner,
@@ -288,10 +276,10 @@ public static class DatabaseSeeder
         };
 
         context.Courses.AddRange(course1, course2);
+        await context.SaveChangesAsync(); // Save to populate generated Course IDs
 
         var lesson1 = new Lesson
         {
-            Id = Guid.Parse("55013511-91e5-425f-886a-a4f9276271a9"),
             CourseId = course1.Id,
             Title = "Bài 1: Chào hỏi",
             Description = "Cách chào, tạm biệt, cảm ơn.",
@@ -302,7 +290,6 @@ public static class DatabaseSeeder
 
         var lesson2 = new Lesson
         {
-            Id = Guid.NewGuid(),
             CourseId = course1.Id,
             Title = "Bài 2: Tự giới thiệu",
             Description = "Hỏi tên, giới thiệu bản thân.",
@@ -312,12 +299,10 @@ public static class DatabaseSeeder
         };
 
         context.Lessons.AddRange(lesson1, lesson2);
-
-
+        await context.SaveChangesAsync();
 
         context.Enrollments.Add(new Enrollment
         {
-            Id = Guid.NewGuid(),
             UserId = studentId,
             CourseId = course1.Id,
             EnrolledAt = DateTime.UtcNow

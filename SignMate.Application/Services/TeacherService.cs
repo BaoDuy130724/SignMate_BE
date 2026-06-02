@@ -8,21 +8,21 @@ namespace SignMate.Application.Services;
 
 public class TeacherService : ITeacherService
 {
-    private readonly ISignMateDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public TeacherService(ISignMateDbContext db) => _db = db;
+    public TeacherService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
-    public async Task<TeacherCommentDto> AddCommentAsync(Guid teacherId, CreateCommentRequest request)
+    public async Task<TeacherCommentDto> AddCommentAsync(int teacherId, CreateCommentRequest request)
     {
         var comment = new TeacherComment
         {
-            Id = Guid.NewGuid(), TeacherId = teacherId, StudentId = request.StudentId,
+            Id = 0, TeacherId = teacherId, StudentId = request.StudentId,
             Content = request.Content, CreatedAt = DateTime.UtcNow
         };
-        _db.TeacherComments.Add(comment);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.Repository<TeacherComment>().AddAsync(comment);
+        await _unitOfWork.SaveChangesAsync();
 
-        var teacher = await _db.Users.FindAsync(teacherId);
+        var teacher = await _unitOfWork.Repository<User>().GetByIdAsync(teacherId);
 
         return new TeacherCommentDto
         {
@@ -31,9 +31,9 @@ public class TeacherService : ITeacherService
         };
     }
 
-    public async Task<List<TeacherCommentDto>> GetStudentCommentsAsync(Guid studentId)
+    public async Task<List<TeacherCommentDto>> GetStudentCommentsAsync(int studentId)
     {
-        return await _db.TeacherComments
+        return await _unitOfWork.Repository<TeacherComment>().Query()
             .Where(tc => tc.StudentId == studentId)
             .Select(tc => new TeacherCommentDto
             {
@@ -42,13 +42,14 @@ public class TeacherService : ITeacherService
             }).ToListAsync();
     }
 
-    public async Task<TeacherDashboardDto> GetTeacherDashboardAsync(Guid teacherId)
+    public async Task<TeacherDashboardDto> GetTeacherDashboardAsync(int teacherId)
     {
-        var teacher = await _db.Users.FindAsync(teacherId);
+        var teacher = await _unitOfWork.Repository<User>().GetByIdAsync(teacherId);
         if (teacher == null) throw new InvalidOperationException("Teacher not found");
         
-        var totalClasses = await _db.Classes.CountAsync(c => c.TeacherId == teacherId);
-        var totalStudents = await _db.ClassStudents
+        var totalClasses = await _unitOfWork.Repository<Class>().Query()
+            .CountAsync(c => c.TeacherId == teacherId);
+        var totalStudents = await _unitOfWork.Repository<ClassStudent>().Query()
             .Include(cs => cs.Class)
             .Where(cs => cs.Class.TeacherId == teacherId)
             .Select(cs => cs.StudentId)
@@ -62,9 +63,9 @@ public class TeacherService : ITeacherService
         };
     }
 
-    public async Task<List<ClassDto>> GetTeacherClassesAsync(Guid teacherId)
+    public async Task<List<ClassDto>> GetTeacherClassesAsync(int teacherId)
     {
-        return await _db.Classes
+        return await _unitOfWork.Repository<Class>().Query()
             .Where(c => c.TeacherId == teacherId)
             .Select(c => new ClassDto
             {
@@ -72,14 +73,27 @@ public class TeacherService : ITeacherService
                 Name = c.Name,
                 TeacherId = c.TeacherId,
                 TeacherName = c.Teacher.FullName,
-                StudentCount = c.ClassStudents.Count
+                StudentCount = c.ClassStudents.Count,
+                Students = c.ClassStudents.Select(cs => new ClassStudentDetailDto
+                {
+                    Id = cs.Student.Id,
+                    FullName = cs.Student.FullName,
+                    Email = cs.Student.Email,
+                    PracticeAccuracy = cs.Student.PracticeSessions
+                        .SelectMany(ps => ps.Attempts)
+                        .Any()
+                        ? (int)(cs.Student.PracticeSessions
+                            .SelectMany(ps => ps.Attempts)
+                            .Average(a => a.OverallScore) * 100)
+                        : 0
+                }).ToList()
             })
             .ToListAsync();
     }
 
-    public async Task<List<ClassStudentDto>> GetTeacherStudentsAsync(Guid teacherId)
+    public async Task<List<ClassStudentDto>> GetTeacherStudentsAsync(int teacherId)
     {
-        return await _db.ClassStudents
+        return await _unitOfWork.Repository<ClassStudent>().Query()
             .Include(cs => cs.Class)
             .Where(cs => cs.Class.TeacherId == teacherId)
             .Select(cs => new ClassStudentDto

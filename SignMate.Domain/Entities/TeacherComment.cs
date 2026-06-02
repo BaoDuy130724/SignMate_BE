@@ -2,9 +2,9 @@ namespace SignMate.Domain.Entities;
 
 public class TeacherComment
 {
-    public Guid Id { get; set; }
-    public Guid TeacherId { get; set; }
-    public Guid StudentId { get; set; }
+    public int Id { get; set; }
+    public int TeacherId { get; set; }
+    public int StudentId { get; set; }
     public string Content { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
 

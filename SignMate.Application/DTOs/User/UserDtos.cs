@@ -4,14 +4,19 @@ namespace SignMate.Application.DTOs.User;
 
 public class UserProfileDto
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string Email { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public string? AvatarUrl { get; set; }
     public string Role { get; set; } = null!;
     public string Plan { get; set; } = "Free";
-    public Guid? CenterId { get; set; }
+    public int? CenterId { get; set; }
     public DateTime CreatedAt { get; set; }
+    public int Streak { get; set; }
+    public int TotalXp { get; set; }
+    public int Level { get; set; } = 1;
+    public int LessonsCompleted { get; set; }
+    public int PracticeAccuracy { get; set; }
 }
 
 public class UpdateProfileRequest
@@ -30,7 +35,7 @@ public class StreakDto
 
 public class AchievementDto
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
     public string? IconUrl { get; set; }

@@ -12,8 +12,8 @@ using SignMate.Infrastructure.Data;
 namespace SignMate.Infrastructure.Migrations
 {
     [DbContext(typeof(SignMateDbContext))]
-    [Migration("20260329074610_AddNewCol")]
-    partial class AddNewCol
+    [Migration("20260602150606_InitialIntSchema")]
+    partial class InitialIntSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,12 +27,14 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.AIFeedback", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("AttemptId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AttemptId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -61,9 +63,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.Achievement", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ConditionType")
                         .IsRequired()
@@ -92,9 +96,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.B2BContactLead", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CenterName")
                         .IsRequired()
@@ -133,9 +139,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.Center", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ContactPerson")
                         .IsRequired()
@@ -173,12 +181,14 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.Class", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("CenterId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CenterId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -188,8 +198,8 @@ namespace SignMate.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<Guid>("TeacherId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("TeacherId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -202,11 +212,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.ClassStudent", b =>
                 {
-                    b.Property<Guid>("ClassId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("ClassId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
 
                     b.HasKey("ClassId", "StudentId");
 
@@ -217,15 +227,17 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.Course", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -253,21 +265,23 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.Enrollment", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("EnrolledAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -281,9 +295,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.GameSession", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("GameType")
                         .IsRequired()
@@ -293,8 +309,8 @@ namespace SignMate.Infrastructure.Migrations
                     b.Property<DateTime>("PlayedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.Property<int>("XpEarned")
                         .HasColumnType("int");
@@ -308,12 +324,14 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.Lesson", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -347,24 +365,26 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.LessonAssignment", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("AssignedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("AssignedBy")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("AssignedBy")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("ClassId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("ClassId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("LessonId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("LessonId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -379,26 +399,28 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.LessonProgress", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("EnrollmentId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EnrollmentId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("LastWatchedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("LessonId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("LessonId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.Property<int>("WatchDurationSeconds")
                         .HasColumnType("int");
@@ -417,9 +439,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.Notification", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Body")
                         .IsRequired()
@@ -441,8 +465,8 @@ namespace SignMate.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -453,9 +477,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.PracticeAttempt", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<float>("OverallScore")
                         .HasColumnType("real");
@@ -463,8 +489,8 @@ namespace SignMate.Infrastructure.Migrations
                     b.Property<DateTime>("RecordedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("SessionId")
+                        .HasColumnType("int");
 
                     b.Property<string>("VideoClipUrl")
                         .IsRequired()
@@ -479,15 +505,17 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.PracticeSession", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime?>("EndedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("SignId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("SignId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("datetime2");
@@ -495,8 +523,8 @@ namespace SignMate.Infrastructure.Migrations
                     b.Property<int>("TotalAttempts")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -509,9 +537,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.RefreshToken", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("datetime2");
@@ -523,8 +553,8 @@ namespace SignMate.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -538,15 +568,17 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.Sign", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("LessonId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("LessonId")
+                        .HasColumnType("int");
 
                     b.Property<int>("OrderIndex")
                         .HasColumnType("int");
@@ -575,9 +607,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.SignProgress", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AttemptCount")
                         .HasColumnType("int");
@@ -588,11 +622,11 @@ namespace SignMate.Infrastructure.Migrations
                     b.Property<DateTime?>("LastPracticedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("SignId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("SignId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -606,9 +640,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.SignReferenceRequest", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -622,17 +658,17 @@ namespace SignMate.Infrastructure.Migrations
                     b.Property<DateTime?>("ReviewedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("ReviewedById")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("ReviewedById")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("SignId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("SignId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("UploaderId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UploaderId")
+                        .HasColumnType("int");
 
                     b.Property<string>("VideoUrl")
                         .IsRequired()
@@ -651,9 +687,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.Streak", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CurrentStreak")
                         .HasColumnType("int");
@@ -664,8 +702,8 @@ namespace SignMate.Infrastructure.Migrations
                     b.Property<int>("LongestStreak")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -677,9 +715,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.SubscriptionPlan", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("DurationDays")
                         .HasColumnType("int");
@@ -707,9 +747,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.TeacherComment", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -718,11 +760,11 @@ namespace SignMate.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("TeacherId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("TeacherId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -735,15 +777,17 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.User", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("CenterId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("CenterId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -800,18 +844,20 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.UserAchievement", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("AchievementId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AchievementId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("EarnedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -825,9 +871,11 @@ namespace SignMate.Infrastructure.Migrations
 
             modelBuilder.Entity("SignMate.Domain.Entities.UserSubscription", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
@@ -838,18 +886,21 @@ namespace SignMate.Infrastructure.Migrations
                     b.Property<string>("PaymentReference")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("PlanId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("PlanId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PlanId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.HasIndex("UserId", "PlanId", "IsActive");
 
@@ -1174,8 +1225,8 @@ namespace SignMate.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("SignMate.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                        .WithOne("UserSubscriptions")
+                        .HasForeignKey("SignMate.Domain.Entities.UserSubscription", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1249,6 +1300,9 @@ namespace SignMate.Infrastructure.Migrations
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("Streak");
+
+                    b.Navigation("UserSubscriptions")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

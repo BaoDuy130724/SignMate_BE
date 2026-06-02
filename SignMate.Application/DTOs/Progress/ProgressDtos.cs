@@ -5,7 +5,7 @@ namespace SignMate.Application.DTOs.Progress;
 public class UpdateLessonProgressRequest
 {
     [Required]
-    public Guid LessonId { get; set; }
+    public int LessonId { get; set; }
 
     [Required]
     public string Status { get; set; } = null!;
@@ -16,7 +16,7 @@ public class UpdateLessonProgressRequest
 public class UpdateSignProgressRequest
 {
     [Required]
-    public Guid SignId { get; set; }
+    public int SignId { get; set; }
 
     public bool IsMastered { get; set; }
 }

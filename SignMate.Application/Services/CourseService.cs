@@ -7,13 +7,13 @@ namespace SignMate.Application.Services;
 
 public class CourseService : ICourseService
 {
-    private readonly ISignMateDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CourseService(ISignMateDbContext db) => _db = db;
+    public CourseService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
     public async Task<List<CourseDto>> GetCoursesAsync(string? search, string? level, bool includeUnpublished = false)
     {
-        var query = _db.Courses.AsNoTracking().AsQueryable();
+        var query = _unitOfWork.Repository<Course>().Query().AsNoTracking();
 
         if (!includeUnpublished)
             query = query.Where(c => c.IsPublished);
@@ -31,14 +31,15 @@ public class CourseService : ICourseService
                 Id = c.Id, Title = c.Title, Description = c.Description,
                 ThumbnailUrl = c.ThumbnailUrl, Level = c.Level.ToString(),
                 IsPublished = c.IsPublished, CreatedBy = c.CreatedBy,
-                CreatedAt = c.CreatedAt, LessonCount = c.Lessons.Count
+                CreatedAt = c.CreatedAt, LessonCount = c.Lessons.Count,
+                Topic = c.Lessons.OrderBy(l => l.OrderIndex).Select(l => l.Topic).FirstOrDefault() ?? "Chung"
             })
             .ToListAsync();
     }
 
-    public async Task<CourseDetailDto?> GetCourseByIdAsync(Guid id)
+    public async Task<CourseDetailDto?> GetCourseByIdAsync(int id)
     {
-        return await _db.Courses
+        return await _unitOfWork.Repository<Course>().Query()
             .AsNoTracking()
             .Include(c => c.Lessons.OrderBy(l => l.OrderIndex))
             .Where(c => c.Id == id)
@@ -48,6 +49,7 @@ public class CourseService : ICourseService
                 ThumbnailUrl = c.ThumbnailUrl, Level = c.Level.ToString(),
                 IsPublished = c.IsPublished, CreatedBy = c.CreatedBy,
                 CreatedAt = c.CreatedAt, LessonCount = c.Lessons.Count,
+                Topic = c.Lessons.OrderBy(l => l.OrderIndex).Select(l => l.Topic).FirstOrDefault() ?? "Chung",
                 Lessons = c.Lessons.OrderBy(l => l.OrderIndex).Select(l => new LessonDto
                 {
                     Id = l.Id, CourseId = l.CourseId, Title = l.Title,
@@ -59,33 +61,33 @@ public class CourseService : ICourseService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<CourseDto> CreateCourseAsync(CreateCourseRequest request, Guid createdBy)
+    public async Task<CourseDto> CreateCourseAsync(CreateCourseRequest request, int createdBy)
     {
         if (!Enum.TryParse<CourseLevel>(request.Level, true, out var level))
             throw new ArgumentException($"Invalid level: {request.Level}");
 
         var course = new Course
         {
-            Id = Guid.NewGuid(), Title = request.Title, Description = request.Description,
+            Id = 0, Title = request.Title, Description = request.Description,
             ThumbnailUrl = request.ThumbnailUrl, Level = level,
             IsPublished = false, CreatedBy = createdBy, CreatedAt = DateTime.UtcNow
         };
 
-        _db.Courses.Add(course);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.Repository<Course>().AddAsync(course);
+        await _unitOfWork.SaveChangesAsync();
 
         return new CourseDto
         {
             Id = course.Id, Title = course.Title, Description = course.Description,
             ThumbnailUrl = course.ThumbnailUrl, Level = course.Level.ToString(),
             IsPublished = course.IsPublished, CreatedBy = course.CreatedBy,
-            CreatedAt = course.CreatedAt, LessonCount = 0
+            CreatedAt = course.CreatedAt, LessonCount = 0, Topic = "Chung"
         };
     }
 
-    public async Task<CourseDto?> UpdateCourseAsync(Guid id, UpdateCourseRequest request)
+    public async Task<CourseDto?> UpdateCourseAsync(int id, UpdateCourseRequest request)
     {
-        var course = await _db.Courses.FindAsync(id);
+        var course = await _unitOfWork.Repository<Course>().GetByIdAsync(id);
         if (course == null) return null;
 
         if (request.Title != null) course.Title = request.Title;
@@ -95,7 +97,13 @@ public class CourseService : ICourseService
         if (request.Level != null && Enum.TryParse<CourseLevel>(request.Level, true, out var lvl))
             course.Level = lvl;
 
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
+
+        var topic = await _unitOfWork.Repository<Lesson>().Query()
+            .Where(l => l.CourseId == id)
+            .OrderBy(l => l.OrderIndex)
+            .Select(l => l.Topic)
+            .FirstOrDefaultAsync() ?? "Chung";
 
         return new CourseDto
         {
@@ -103,23 +111,24 @@ public class CourseService : ICourseService
             ThumbnailUrl = course.ThumbnailUrl, Level = course.Level.ToString(),
             IsPublished = course.IsPublished, CreatedBy = course.CreatedBy,
             CreatedAt = course.CreatedAt,
-            LessonCount = await _db.Lessons.CountAsync(l => l.CourseId == id)
+            LessonCount = await _unitOfWork.Repository<Lesson>().Query().CountAsync(l => l.CourseId == id),
+            Topic = topic
         };
     }
 
-    public async Task DeleteCourseAsync(Guid id)
+    public async Task DeleteCourseAsync(int id)
     {
-        var course = await _db.Courses.FindAsync(id);
+        var course = await _unitOfWork.Repository<Course>().GetByIdAsync(id);
         if (course != null)
         {
-            _db.Courses.Remove(course);
-            await _db.SaveChangesAsync();
+            _unitOfWork.Repository<Course>().Delete(course);
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 
-    public async Task<List<LessonDto>> GetLessonsByCourseAsync(Guid courseId)
+    public async Task<List<LessonDto>> GetLessonsByCourseAsync(int courseId)
     {
-        return await _db.Lessons
+        return await _unitOfWork.Repository<Lesson>().Query()
             .AsNoTracking()
             .Where(l => l.CourseId == courseId)
             .OrderBy(l => l.OrderIndex)
@@ -133,9 +142,9 @@ public class CourseService : ICourseService
             .ToListAsync();
     }
 
-    public async Task<LessonDetailDto?> GetLessonByIdAsync(Guid lessonId)
+    public async Task<LessonDetailDto?> GetLessonByIdAsync(int lessonId)
     {
-        return await _db.Lessons
+        return await _unitOfWork.Repository<Lesson>().Query()
             .AsNoTracking()
             .Include(l => l.Signs.OrderBy(s => s.OrderIndex))
             .Where(l => l.Id == lessonId)
@@ -155,17 +164,17 @@ public class CourseService : ICourseService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<LessonDto> CreateLessonAsync(Guid courseId, CreateLessonRequest request)
+    public async Task<LessonDto> CreateLessonAsync(int courseId, CreateLessonRequest request)
     {
         var lesson = new Lesson
         {
-            Id = Guid.NewGuid(), CourseId = courseId, Title = request.Title,
+            Id = 0, CourseId = courseId, Title = request.Title,
             Topic = request.Topic, OrderIndex = request.OrderIndex,
             VideoUrl = request.VideoUrl, Description = request.Description,
             DurationSeconds = request.DurationSeconds, IsPublished = false
         };
-        _db.Lessons.Add(lesson);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.Repository<Lesson>().AddAsync(lesson);
+        await _unitOfWork.SaveChangesAsync();
 
         return new LessonDto
         {
@@ -175,9 +184,9 @@ public class CourseService : ICourseService
         };
     }
 
-    public async Task<LessonDto?> UpdateLessonAsync(Guid lessonId, UpdateLessonRequest request)
+    public async Task<LessonDto?> UpdateLessonAsync(int lessonId, UpdateLessonRequest request)
     {
-        var lesson = await _db.Lessons.FindAsync(lessonId);
+        var lesson = await _unitOfWork.Repository<Lesson>().GetByIdAsync(lessonId);
         if (lesson == null) return null;
 
         if (request.Title != null) lesson.Title = request.Title;
@@ -188,34 +197,34 @@ public class CourseService : ICourseService
         if (request.DurationSeconds.HasValue) lesson.DurationSeconds = request.DurationSeconds.Value;
         if (request.IsPublished.HasValue) lesson.IsPublished = request.IsPublished.Value;
 
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         return new LessonDto
         {
             Id = lesson.Id, CourseId = lesson.CourseId, Title = lesson.Title, Topic = lesson.Topic,
             OrderIndex = lesson.OrderIndex, VideoUrl = lesson.VideoUrl, Description = lesson.Description,
             DurationSeconds = lesson.DurationSeconds, IsPublished = lesson.IsPublished,
-            SignCount = await _db.SignProgresses.CountAsync(sp => sp.Sign.LessonId == lessonId) // Approximate or just signs table
+            SignCount = await _unitOfWork.Repository<Sign>().Query().CountAsync(s => s.LessonId == lessonId)
         };
     }
 
-    public async Task DeleteLessonAsync(Guid lessonId)
+    public async Task DeleteLessonAsync(int lessonId)
     {
-        var lesson = await _db.Lessons.FindAsync(lessonId);
+        var lesson = await _unitOfWork.Repository<Lesson>().GetByIdAsync(lessonId);
         if (lesson != null)
         {
-            _db.Lessons.Remove(lesson);
-            await _db.SaveChangesAsync();
+            _unitOfWork.Repository<Lesson>().Delete(lesson);
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 
     public async Task<bool> SetSignReferenceAsync(SetReferenceRequest request)
     {
-        var sign = await _db.Signs.FindAsync(request.SignId);
+        var sign = await _unitOfWork.Repository<Sign>().GetByIdAsync(request.SignId);
         if (sign == null) return false;
 
         sign.ReferenceKeypointData = request.ReferenceKeypointData;
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return true;
     }
 }

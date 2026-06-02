@@ -2,7 +2,7 @@ namespace SignMate.Domain.Entities;
 
 public class SubscriptionPlan
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string Name { get; set; } = null!;
     public decimal PriceVnd { get; set; }
     public int DurationDays { get; set; }

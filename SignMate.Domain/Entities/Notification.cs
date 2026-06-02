@@ -2,8 +2,8 @@ namespace SignMate.Domain.Entities;
 
 public class Notification
 {
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }
+    public int Id { get; set; }
+    public int UserId { get; set; }
     public string Title { get; set; } = null!;
     public string Body { get; set; } = null!;
     public string Type { get; set; } = null!;

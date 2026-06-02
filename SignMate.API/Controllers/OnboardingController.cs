@@ -22,7 +22,7 @@ public class OnboardingController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse), 400)]
     public async Task<IActionResult> Submit([FromBody] OnboardingRequest request)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var res = await _mediator.Send(new SubmitOnboardingCommand(userId, request));
         return res.Success ? Ok(res) : BadRequest(res);
     }

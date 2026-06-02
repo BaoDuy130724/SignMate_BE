@@ -2,10 +2,10 @@ namespace SignMate.Domain.Entities;
 
 public class LessonAssignment
 {
-    public Guid Id { get; set; }
-    public Guid ClassId { get; set; }
-    public Guid LessonId { get; set; }
-    public Guid AssignedBy { get; set; }
+    public int Id { get; set; }
+    public int ClassId { get; set; }
+    public int LessonId { get; set; }
+    public int AssignedBy { get; set; }
     public DateTime AssignedAt { get; set; }
     public DateTime? DueDate { get; set; }
 

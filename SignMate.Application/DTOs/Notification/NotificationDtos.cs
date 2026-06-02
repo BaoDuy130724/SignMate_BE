@@ -2,7 +2,7 @@ namespace SignMate.Application.DTOs.Notification;
 
 public class NotificationDto
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string Title { get; set; } = null!;
     public string Body { get; set; } = null!;
     public string Type { get; set; } = null!;

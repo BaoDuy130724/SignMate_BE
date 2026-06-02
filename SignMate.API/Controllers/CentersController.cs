@@ -28,13 +28,13 @@ public class CentersController : ControllerBase
         return CreatedAtAction(nameof(GetCenters), new { id = center.Id }, center);
     }
 
-    [HttpGet("{id:guid}/dashboard")]
-    public async Task<IActionResult> GetDashboard(Guid id)
+    [HttpGet("{id:int}/dashboard")]
+    public async Task<IActionResult> GetDashboard(int id)
         => Ok(await _centerService.GetCenterDashboardAsync(id));
 
-    [HttpPost("{id:guid}/admin")]
+    [HttpPost("{id:int}/admin")]
     [Authorize(Roles = "SuperAdmin")]
-    public async Task<IActionResult> CreateCenterAdmin(Guid id, [FromBody] CreateCenterAdminRequest request)
+    public async Task<IActionResult> CreateCenterAdmin(int id, [FromBody] CreateCenterAdminRequest request)
     {
         try
         {
@@ -47,14 +47,14 @@ public class CentersController : ControllerBase
         }
     }
 
-    [HttpGet("{id:guid}/teachers")]
+    [HttpGet("{id:int}/teachers")]
     [Authorize(Roles = "CenterAdmin")]
-    public async Task<IActionResult> GetTeachers(Guid id)
+    public async Task<IActionResult> GetTeachers(int id)
         => Ok(await _centerService.GetCenterTeachersAsync(id));
 
-    [HttpPost("{id:guid}/teachers")]
+    [HttpPost("{id:int}/teachers")]
     [Authorize(Roles = "CenterAdmin")]
-    public async Task<IActionResult> CreateTeacher(Guid id, [FromBody] CreateCenterAdminRequest request)
+    public async Task<IActionResult> CreateTeacher(int id, [FromBody] CreateCenterAdminRequest request)
     {
         try
         {
@@ -67,14 +67,14 @@ public class CentersController : ControllerBase
         }
     }
 
-    [HttpGet("{id:guid}/students")]
+    [HttpGet("{id:int}/students")]
     [Authorize(Roles = "CenterAdmin")]
-    public async Task<IActionResult> GetStudents(Guid id)
+    public async Task<IActionResult> GetStudents(int id)
         => Ok(await _centerService.GetCenterStudentsAsync(id));
 
-    [HttpPost("{id:guid}/students")]
+    [HttpPost("{id:int}/students")]
     [Authorize(Roles = "CenterAdmin")]
-    public async Task<IActionResult> CreateStudent(Guid id, [FromBody] CreateCenterAdminRequest request)
+    public async Task<IActionResult> CreateStudent(int id, [FromBody] CreateCenterAdminRequest request)
     {
         try
         {

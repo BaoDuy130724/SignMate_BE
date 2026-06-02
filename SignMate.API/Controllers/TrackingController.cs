@@ -15,12 +15,12 @@ public class TrackingController : ControllerBase
     public TrackingController(IStudentTrackingService trackingService)
         => _trackingService = trackingService;
 
-    [HttpGet("classes/{classId:guid}/students")]
-    public async Task<IActionResult> GetClassStats(Guid classId)
+    [HttpGet("classes/{classId:int}/students")]
+    public async Task<IActionResult> GetClassStats(int classId)
         => Ok(await _trackingService.GetClassTrackingStatsAsync(classId));
 
-    [HttpGet("centers/{centerId:guid}/reports")]
+    [HttpGet("centers/{centerId:int}/reports")]
     [Authorize(Roles = "CenterAdmin")]
-    public async Task<IActionResult> GenerateReport(Guid centerId, [FromQuery] DateTime from, [FromQuery] DateTime to)
+    public async Task<IActionResult> GenerateReport(int centerId, [FromQuery] DateTime from, [FromQuery] DateTime to)
         => Ok(await _trackingService.GenerateTrackingReportAsync(centerId, from, to));
 }

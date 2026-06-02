@@ -50,7 +50,7 @@ public class VocabularyController : ControllerBase
 
     [HttpPost("{signId}/upload-reference")]
     [Authorize(Roles = "Teacher,CenterAdmin")]
-    public async Task<IActionResult> UploadReferenceVideo(Guid signId, IFormFile video)
+    public async Task<IActionResult> UploadReferenceVideo(int signId, IFormFile video)
     {
         if (video == null || video.Length == 0) return BadRequest(new { message = "Empty video file." });
         
@@ -60,15 +60,15 @@ public class VocabularyController : ControllerBase
         try
         {
             // 1. Upload video to temporary local storage / blob
-            var fileName = $"reference_{signId}_{Guid.NewGuid()}.mp4";
+            var fileName = $"reference_{signId}_{0}.mp4";
             using var stream = video.OpenReadStream();
             var videoUrl = await _blobService.UploadAsync(stream, fileName, video.ContentType ?? "video/mp4");
 
             // 2. Create DB Request (Pending)
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var req = new SignReferenceRequest
             {
-                Id = Guid.NewGuid(),
+                Id = 0,
                 SignId = signId,
                 UploaderId = userId,
                 VideoUrl = videoUrl,
@@ -114,7 +114,7 @@ public class VocabularyController : ControllerBase
 
     [HttpPost("requests/{requestId}/approve")]
     [Authorize(Roles = "SuperAdmin")]
-    public async Task<IActionResult> ApproveRequest(Guid requestId)
+    public async Task<IActionResult> ApproveRequest(int requestId)
     {
         var request = await _dbContext.SignReferenceRequests
             .Include(x => x.Sign)
@@ -127,7 +127,7 @@ public class VocabularyController : ControllerBase
         if (string.IsNullOrEmpty(request.ExtractedKeypoints))
             return BadRequest(new { message = "Python AI hasn't returned keypoints yet or failed." });
 
-        var adminId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         // Update exact Sign entity
         request.Sign.ReferenceKeypointData = request.ExtractedKeypoints;
@@ -145,12 +145,12 @@ public class VocabularyController : ControllerBase
 
     [HttpPost("requests/{requestId}/reject")]
     [Authorize(Roles = "SuperAdmin")]
-    public async Task<IActionResult> RejectRequest(Guid requestId, [FromQuery] string reason = "Video không đạt chuẩn")
+    public async Task<IActionResult> RejectRequest(int requestId, [FromQuery] string reason = "Video không đạt chuẩn")
     {
         var request = await _dbContext.SignReferenceRequests.FindAsync(requestId);
         if (request == null) return NotFound();
 
-        var adminId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         
         request.Status = ReferenceRequestStatus.Rejected;
         request.ReviewedById = adminId;

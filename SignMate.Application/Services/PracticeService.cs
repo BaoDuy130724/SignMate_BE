@@ -7,40 +7,42 @@ namespace SignMate.Application.Services;
 
 public class PracticeService : IPracticeService
 {
-    private readonly ISignMateDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IBlobService _blobService;
     private readonly IAIClientService _aiClient;
     private readonly IStreakService _streakService;
     private readonly IGeminiService _geminiService;
 
-    public PracticeService(ISignMateDbContext db, IBlobService blobService,
+    public PracticeService(IUnitOfWork unitOfWork, IBlobService blobService,
         IAIClientService aiClient, IStreakService streakService, IGeminiService geminiService)
     {
-        _db = db;
+        _unitOfWork = unitOfWork;
         _blobService = blobService;
         _aiClient = aiClient;
         _streakService = streakService;
         _geminiService = geminiService;
     }
 
-    public async Task<StartSessionResponse> StartSessionAsync(Guid userId, StartSessionRequest request)
+    public async Task<StartSessionResponse> StartSessionAsync(int userId, StartSessionRequest request)
     {
-        _ = await _db.Signs.FindAsync(request.SignId) ?? throw new ArgumentException("Sign not found.");
+        _ = await _unitOfWork.Repository<Sign>().GetByIdAsync(request.SignId) 
+            ?? throw new ArgumentException("Sign not found.");
 
         var session = new PracticeSession
         {
-            Id = Guid.NewGuid(), UserId = userId,
+            Id = 0, UserId = userId,
             SignId = request.SignId, StartedAt = DateTime.UtcNow, TotalAttempts = 0
         };
 
-        _db.PracticeSessions.Add(session);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.Repository<PracticeSession>().AddAsync(session);
+        await _unitOfWork.SaveChangesAsync();
         return new StartSessionResponse { SessionId = session.Id };
     }
 
-    public async Task<AttemptResponse> SubmitAttemptAsync(Guid userId, Guid sessionId, Stream videoStream, string fileName)
+    public async Task<AttemptResponse> SubmitAttemptAsync(int userId, int sessionId, Stream videoStream, string fileName)
     {
-        var session = await _db.PracticeSessions.Include(s => s.Sign)
+        var session = await _unitOfWork.Repository<PracticeSession>().Query()
+            .Include(s => s.Sign)
             .FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId)
             ?? throw new ArgumentException("Session not found.");
 
@@ -53,18 +55,18 @@ public class PracticeService : IPracticeService
 
         var attempt = new PracticeAttempt
         {
-            Id = Guid.NewGuid(), SessionId = sessionId,
+            Id = 0, SessionId = sessionId,
             VideoClipUrl = videoUrl, RecordedAt = DateTime.UtcNow,
             OverallScore = aiResult.OverallScore
         };
-        _db.PracticeAttempts.Add(attempt);
+        await _unitOfWork.Repository<PracticeAttempt>().AddAsync(attempt);
 
         foreach (var fb in aiResult.Feedbacks)
         {
             if (!Enum.TryParse<FeedbackType>(fb.Type, true, out var fbType)) continue;
-            _db.AIFeedbacks.Add(new AIFeedback
+            await _unitOfWork.Repository<AIFeedback>().AddAsync(new AIFeedback
             {
-                Id = Guid.NewGuid(), AttemptId = attempt.Id,
+                Id = 0, AttemptId = attempt.Id,
                 FeedbackType = fbType, Score = fb.Score,
                 Message = fb.Message, KeypointData = aiResult.KeypointData,
                 CreatedAt = DateTime.UtcNow
@@ -73,18 +75,18 @@ public class PracticeService : IPracticeService
 
         session.TotalAttempts++;
 
-        var signProgress = await _db.SignProgresses
+        var signProgress = await _unitOfWork.Repository<SignProgress>().Query()
             .FirstOrDefaultAsync(sp => sp.UserId == userId && sp.SignId == session.SignId);
 
         if (signProgress == null)
         {
             signProgress = new SignProgress
             {
-                Id = Guid.NewGuid(), UserId = userId, SignId = session.SignId,
+                Id = 0, UserId = userId, SignId = session.SignId,
                 AttemptCount = 1, IsMastered = aiResult.OverallScore >= 0.8f,
                 LastPracticedAt = DateTime.UtcNow
             };
-            _db.SignProgresses.Add(signProgress);
+            await _unitOfWork.Repository<SignProgress>().AddAsync(signProgress);
         }
         else
         {
@@ -94,7 +96,7 @@ public class PracticeService : IPracticeService
         }
 
         await _streakService.RecordActivityAsync(userId);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         return new AttemptResponse
         {
@@ -107,19 +109,19 @@ public class PracticeService : IPracticeService
         };
     }
 
-    public async Task EndSessionAsync(Guid userId, Guid sessionId)
+    public async Task EndSessionAsync(int userId, int sessionId)
     {
-        var session = await _db.PracticeSessions
+        var session = await _unitOfWork.Repository<PracticeSession>().Query()
             .FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId)
             ?? throw new ArgumentException("Session not found.");
 
         session.EndedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<List<PracticeHistoryDto>> GetHistoryAsync(Guid userId, Guid signId)
+    public async Task<List<PracticeHistoryDto>> GetHistoryAsync(int userId, int signId)
     {
-        return await _db.PracticeSessions
+        return await _unitOfWork.Repository<PracticeSession>().Query()
             .Where(s => s.UserId == userId && s.SignId == signId)
             .OrderByDescending(s => s.StartedAt)
             .Select(s => new PracticeHistoryDto
@@ -138,9 +140,10 @@ public class PracticeService : IPracticeService
             .ToListAsync();
     }
 
-    public async Task<AttemptResponse> ReportResultAsync(Guid userId, ReportResultRequest request)
+    public async Task<AttemptResponse> ReportResultAsync(int userId, ReportResultRequest request)
     {
-        var session = await _db.PracticeSessions.Include(s => s.Sign)
+        var session = await _unitOfWork.Repository<PracticeSession>().Query()
+            .Include(s => s.Sign)
             .FirstOrDefaultAsync(s => s.Id == request.SessionId && s.UserId == userId)
             ?? throw new ArgumentException("Session not found.");
 
@@ -149,19 +152,19 @@ public class PracticeService : IPracticeService
 
         var attempt = new PracticeAttempt
         {
-            Id = Guid.NewGuid(), SessionId = request.SessionId,
+            Id = 0, SessionId = request.SessionId,
             VideoClipUrl = string.Empty, // No video uploaded in this flow
             RecordedAt = DateTime.UtcNow,
             OverallScore = request.OverallScore
         };
-        _db.PracticeAttempts.Add(attempt);
+        await _unitOfWork.Repository<PracticeAttempt>().AddAsync(attempt);
 
         foreach (var fb in request.Feedbacks)
         {
             if (!Enum.TryParse<FeedbackType>(fb.Type, true, out var fbType)) continue;
-            _db.AIFeedbacks.Add(new AIFeedback
+            await _unitOfWork.Repository<AIFeedback>().AddAsync(new AIFeedback
             {
-                Id = Guid.NewGuid(), AttemptId = attempt.Id,
+                Id = 0, AttemptId = attempt.Id,
                 FeedbackType = fbType, Score = fb.Score,
                 Message = fb.Message, KeypointData = null,
                 CreatedAt = DateTime.UtcNow
@@ -170,18 +173,18 @@ public class PracticeService : IPracticeService
 
         session.TotalAttempts++;
 
-        var signProgress = await _db.SignProgresses
+        var signProgress = await _unitOfWork.Repository<SignProgress>().Query()
             .FirstOrDefaultAsync(sp => sp.UserId == userId && sp.SignId == session.SignId);
 
         if (signProgress == null)
         {
             signProgress = new SignProgress
             {
-                Id = Guid.NewGuid(), UserId = userId, SignId = session.SignId,
+                Id = 0, UserId = userId, SignId = session.SignId,
                 AttemptCount = 1, IsMastered = request.OverallScore >= 0.8f,
                 LastPracticedAt = DateTime.UtcNow
             };
-            _db.SignProgresses.Add(signProgress);
+            await _unitOfWork.Repository<SignProgress>().AddAsync(signProgress);
         }
         else
         {
@@ -191,17 +194,17 @@ public class PracticeService : IPracticeService
         }
 
         await _streakService.RecordActivityAsync(userId);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         // --- Gemini AI Feedback (Pro plan only) ---
         string? geminiFeedback = null;
-        var activeSub = await _db.UserSubscriptions
+        var activeSub = await _unitOfWork.Repository<UserSubscription>().Query()
             .Include(s => s.Plan)
             .FirstOrDefaultAsync(s => s.UserId == userId && s.IsActive && s.EndDate > DateTime.UtcNow);
 
         if (activeSub?.Plan.Type == PlanType.Pro)
         {
-            var previousAttempt = await _db.PracticeAttempts
+            var previousAttempt = await _unitOfWork.Repository<PracticeAttempt>().Query()
                 .Where(a => a.SessionId == request.SessionId && a.Id != attempt.Id)
                 .OrderByDescending(a => a.RecordedAt)
                 .FirstOrDefaultAsync();

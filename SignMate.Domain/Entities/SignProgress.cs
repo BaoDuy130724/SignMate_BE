@@ -2,9 +2,9 @@ namespace SignMate.Domain.Entities;
 
 public class SignProgress
 {
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }
-    public Guid SignId { get; set; }
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public int SignId { get; set; }
     public bool IsMastered { get; set; }
     public int AttemptCount { get; set; }
     public DateTime? LastPracticedAt { get; set; }

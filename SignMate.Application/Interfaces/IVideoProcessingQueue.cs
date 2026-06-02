@@ -4,6 +4,6 @@ namespace SignMate.Application.Interfaces;
 
 public interface IVideoProcessingQueue
 {
-    ValueTask QueueBackgroundWorkItemAsync(Guid signReferenceRequestId);
-    ValueTask<Guid> DequeueAsync(CancellationToken cancellationToken);
+    ValueTask QueueBackgroundWorkItemAsync(int signReferenceRequestId);
+    ValueTask<int> DequeueAsync(CancellationToken cancellationToken);
 }

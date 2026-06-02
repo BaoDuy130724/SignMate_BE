@@ -27,7 +27,7 @@ public class SubscriptionController : ControllerBase
     [HttpPost("subscription/subscribe")]
     public async Task<IActionResult> Subscribe([FromBody] SubscribeRequest request)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         if (string.IsNullOrEmpty(ipAddress) || ipAddress == "::1")
@@ -111,16 +111,16 @@ public class SubscriptionController : ControllerBase
     [HttpGet("subscription/me")]
     public async Task<IActionResult> GetMySubscription()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var sub = await _subService.GetMySubscriptionAsync(userId);
         return sub == null ? NotFound() : Ok(sub);
     }
 
-    private async Task<Guid?> FindSubscriptionByTxnRef(string txnRef)
+    private async Task<int?> FindSubscriptionByTxnRef(string txnRef)
     {
-        if (string.IsNullOrEmpty(txnRef) || txnRef.Length < 32) return null;
+        if (string.IsNullOrEmpty(txnRef)) return null;
 
-        if (Guid.TryParseExact(txnRef, "N", out var subId))
+        if (int.TryParse(txnRef, out var subId))
             return await Task.FromResult(subId);
 
         return null;

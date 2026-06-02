@@ -13,29 +13,29 @@ public class LessonsController : ControllerBase
 
     public LessonsController(ICourseService courseService) => _courseService = courseService;
 
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetLesson(Guid id)
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetLesson(int id)
     {
         var lesson = await _courseService.GetLessonByIdAsync(id);
         return lesson == null ? NotFound() : Ok(lesson);
     }
 
     [Authorize(Roles = "SuperAdmin")]
-    [HttpPost("course/{courseId:guid}")]
-    public async Task<IActionResult> CreateLesson(Guid courseId, [FromBody] CreateLessonRequest request)
+    [HttpPost("course/{courseId:int}")]
+    public async Task<IActionResult> CreateLesson(int courseId, [FromBody] CreateLessonRequest request)
         => Ok(await _courseService.CreateLessonAsync(courseId, request));
 
     [Authorize(Roles = "SuperAdmin")]
-    [HttpPut("{id:guid}")]
-    public async Task<IActionResult> UpdateLesson(Guid id, [FromBody] UpdateLessonRequest request)
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> UpdateLesson(int id, [FromBody] UpdateLessonRequest request)
     {
         var lesson = await _courseService.UpdateLessonAsync(id, request);
         return lesson == null ? NotFound() : Ok(lesson);
     }
 
     [Authorize(Roles = "SuperAdmin")]
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> DeleteLesson(Guid id)
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteLesson(int id)
     {
         await _courseService.DeleteLessonAsync(id);
         return NoContent();

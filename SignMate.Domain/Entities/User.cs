@@ -2,7 +2,7 @@ namespace SignMate.Domain.Entities;
 
 public class User
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string Email { get; set; } = null!;
     public string PasswordHash { get; set; } = null!;
     public string FullName { get; set; } = null!;
@@ -11,7 +11,7 @@ public class User
     public string? Level { get; set; }
     public bool IsOnboarded { get; set; }
     public int XpPoints { get; set; }
-    public Guid? CenterId { get; set; }
+    public int? CenterId { get; set; }
     public Center? Center { get; set; }
     public string? PasswordResetToken { get; set; }
     public DateTime? PasswordResetExpiry { get; set; }
@@ -22,6 +22,7 @@ public class User
     public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
     public ICollection<Enrollment> Enrollments { get; set; } = [];
     public ICollection<PracticeSession> PracticeSessions { get; set; } = [];
+    public UserSubscription UserSubscriptions { get; set; }
     public Streak? Streak { get; set; }
 }
 

@@ -20,7 +20,7 @@ public class EnrollmentsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Enroll([FromBody] EnrollRequest request)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         if (await _db.Enrollments.AnyAsync(e => e.UserId == userId && e.CourseId == request.CourseId))
             return Conflict(new { message = "Already enrolled." });
@@ -30,7 +30,7 @@ public class EnrollmentsController : ControllerBase
 
         var enrollment = new Enrollment
         {
-            Id = Guid.NewGuid(), UserId = userId,
+            Id = 0, UserId = userId,
             CourseId = request.CourseId, EnrolledAt = DateTime.UtcNow
         };
 
@@ -42,7 +42,7 @@ public class EnrollmentsController : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> GetMyEnrollments()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         var enrollments = await _db.Enrollments
             .Include(e => e.Course).ThenInclude(c => c.Lessons)

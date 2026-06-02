@@ -4,33 +4,48 @@ namespace SignMate.Application.DTOs.Class;
 
 public class ClassDto
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string Name { get; set; } = null!;
-    public Guid TeacherId { get; set; }
+    public int TeacherId { get; set; }
     public string? TeacherName { get; set; }
     public int StudentCount { get; set; }
+    public string Schedule { get; set; } = "";
+    public string Status { get; set; } = "Active";
+    public List<ClassStudentDetailDto> Students { get; set; } = [];
+}
+
+/// <summary>
+/// Student detail nested inside ClassDto — matches Mobile's ClassModel which expects
+/// a 'students' list with UserModel fields (id, fullName, email, practiceAccuracy).
+/// </summary>
+public class ClassStudentDetailDto
+{
+    public int Id { get; set; }
+    public string FullName { get; set; } = null!;
+    public string Email { get; set; } = null!;
+    public int PracticeAccuracy { get; set; }
 }
 
 public class CreateClassRequest
 {
     public string Name { get; set; } = null!;
-    public Guid TeacherId { get; set; }
+    public int TeacherId { get; set; }
 }
 
 public class AddStudentsRequest
 {
-    public List<Guid> StudentIds { get; set; } = [];
+    public List<int> StudentIds { get; set; } = [];
 }
 
 public class AssignLessonRequest
 {
-    public Guid LessonId { get; set; }
+    public int LessonId { get; set; }
     public DateTime? DueDate { get; set; }
 }
 
 public class ClassStudentDto
 {
-    public Guid StudentId { get; set; }
+    public int StudentId { get; set; }
     public string FullName { get; set; } = null!;
     public string Email { get; set; } = null!;
 }

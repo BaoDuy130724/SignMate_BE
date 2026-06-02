@@ -2,7 +2,7 @@ namespace SignMate.Domain.Entities;
 
 public class B2BContactLead
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string CenterName { get; set; } = null!;
     public string ContactPerson { get; set; } = null!;
     public string Phone { get; set; } = null!;

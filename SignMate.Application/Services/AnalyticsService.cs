@@ -1,24 +1,29 @@
 using Microsoft.EntityFrameworkCore;
 using SignMate.Application.DTOs.Analytics;
 using SignMate.Application.Interfaces;
+using SignMate.Domain.Entities;
 
 namespace SignMate.Application.Services;
 
-public class AnalyticsService(ISignMateDbContext db) : IAnalyticsService
+public class AnalyticsService : IAnalyticsService
 {
+    private readonly IUnitOfWork _unitOfWork;
+
+    public AnalyticsService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+
     public async Task<GlobalAnalyticsDto> GetGlobalAnalyticsAsync()
     {
-        var totalUsers = await db.Users.CountAsync();
-        var totalCenters = await db.Centers.CountAsync();
-        var b2bUsers = await db.Users.CountAsync(u => u.CenterId != null);
+        var totalUsers = await _unitOfWork.Repository<User>().Query().CountAsync();
+        var totalCenters = await _unitOfWork.Repository<Center>().Query().CountAsync();
+        var b2bUsers = await _unitOfWork.Repository<User>().Query().CountAsync(u => u.CenterId != null);
         
         // Activity stats
-        var totalSessions = await db.PracticeSessions.CountAsync();
-        var totalSuccess = await db.PracticeAttempts.CountAsync(a => a.OverallScore >= 0.8f);
+        var totalSessions = await _unitOfWork.Repository<PracticeSession>().Query().CountAsync();
+        var totalSuccess = await _unitOfWork.Repository<PracticeAttempt>().Query().CountAsync(a => a.OverallScore >= 0.8f);
         
         // Growth (Last 30 Days)
         var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
-        var userDates = await db.Users
+        var userDates = await _unitOfWork.Repository<User>().Query()
             .Where(u => u.CreatedAt >= thirtyDaysAgo)
             .Select(u => u.CreatedAt)
             .ToListAsync();
@@ -37,7 +42,7 @@ public class AnalyticsService(ISignMateDbContext db) : IAnalyticsService
         };
         
         // Top Courses
-        var topCourses = await db.Courses
+        var topCourses = await _unitOfWork.Repository<Course>().Query()
             .OrderByDescending(c => c.Enrollments.Count)
             .Take(5)
             .Select(c => new BarChartDataDto { Name = c.Title, Value = c.Enrollments.Count })

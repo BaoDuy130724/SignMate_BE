@@ -10,12 +10,12 @@ public enum ReferenceRequestStatus
 
 public class SignReferenceRequest
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     
-    public Guid SignId { get; set; }
+    public int SignId { get; set; }
     public Sign Sign { get; set; } = null!;
     
-    public Guid UploaderId { get; set; }
+    public int UploaderId { get; set; }
     public User Uploader { get; set; } = null!;
     
     public string VideoUrl { get; set; } = null!;
@@ -24,7 +24,7 @@ public class SignReferenceRequest
     public ReferenceRequestStatus Status { get; set; } = ReferenceRequestStatus.Pending;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
-    public Guid? ReviewedById { get; set; }
+    public int? ReviewedById { get; set; }
     public User? ReviewedBy { get; set; }
     public DateTime? ReviewedAt { get; set; }
     public string? ReviewComment { get; set; }

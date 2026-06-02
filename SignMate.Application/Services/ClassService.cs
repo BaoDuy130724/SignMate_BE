@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SignMate.Application.DTOs.Class;
+using SignMate.Application.DTOs.User;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 
@@ -7,48 +8,63 @@ namespace SignMate.Application.Services;
 
 public class ClassService : IClassService
 {
-    private readonly ISignMateDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ClassService(ISignMateDbContext db) => _db = db;
+    public ClassService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
-    public async Task<List<ClassDto>> GetClassesAsync(Guid centerId)
+    public async Task<List<ClassDto>> GetClassesAsync(int centerId)
     {
-        return await _db.Classes
+        return await _unitOfWork.Repository<Class>().Query()
             .Where(c => c.CenterId == centerId)
             .Select(c => new ClassDto
             {
                 Id = c.Id, Name = c.Name, TeacherId = c.TeacherId,
-                TeacherName = c.Teacher.FullName, StudentCount = c.ClassStudents.Count
+                TeacherName = c.Teacher.FullName, StudentCount = c.ClassStudents.Count,
+                Students = c.ClassStudents.Select(cs => new ClassStudentDetailDto
+                {
+                    Id = cs.Student.Id,
+                    FullName = cs.Student.FullName,
+                    Email = cs.Student.Email,
+                    PracticeAccuracy = cs.Student.PracticeSessions
+                        .SelectMany(ps => ps.Attempts)
+                        .Any()
+                        ? (int)(cs.Student.PracticeSessions
+                            .SelectMany(ps => ps.Attempts)
+                            .Average(a => a.OverallScore) * 100)
+                        : 0
+                }).ToList()
             }).ToListAsync();
     }
 
-    public async Task<ClassDto> CreateClassAsync(Guid centerId, CreateClassRequest request)
+    public async Task<ClassDto> CreateClassAsync(int centerId, CreateClassRequest request)
     {
         var c = new Class
         {
-            Id = Guid.NewGuid(), CenterId = centerId,
+            Id = 0, CenterId = centerId,
             Name = request.Name, TeacherId = request.TeacherId, CreatedAt = DateTime.UtcNow
         };
-        _db.Classes.Add(c);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.Repository<Class>().AddAsync(c);
+        await _unitOfWork.SaveChangesAsync();
         return new ClassDto { Id = c.Id, Name = c.Name, TeacherId = c.TeacherId };
     }
 
-    public async Task AddStudentsAsync(Guid classId, AddStudentsRequest request)
+    public async Task AddStudentsAsync(int classId, AddStudentsRequest request)
     {
         foreach (var sid in request.StudentIds)
         {
-            if (!await _db.ClassStudents.AnyAsync(cs => cs.ClassId == classId && cs.StudentId == sid))
+            if (!await _unitOfWork.Repository<ClassStudent>().Query()
+                .AnyAsync(cs => cs.ClassId == classId && cs.StudentId == sid))
             {
-                _db.ClassStudents.Add(new ClassStudent { ClassId = classId, StudentId = sid });
+                await _unitOfWork.Repository<ClassStudent>().AddAsync(
+                    new ClassStudent { ClassId = classId, StudentId = sid });
             }
         }
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<List<ClassStudentDto>> GetClassStudentsAsync(Guid classId)
+    public async Task<List<ClassStudentDto>> GetClassStudentsAsync(int classId)
     {
-        return await _db.ClassStudents
+        return await _unitOfWork.Repository<ClassStudent>().Query()
             .Where(cs => cs.ClassId == classId)
             .Select(cs => new ClassStudentDto
             {
@@ -56,13 +72,13 @@ public class ClassService : IClassService
             }).ToListAsync();
     }
 
-    public async Task AssignLessonAsync(Guid classId, Guid teacherId, AssignLessonRequest request)
+    public async Task AssignLessonAsync(int classId, int teacherId, AssignLessonRequest request)
     {
-        _db.LessonAssignments.Add(new LessonAssignment
+        await _unitOfWork.Repository<LessonAssignment>().AddAsync(new LessonAssignment
         {
-            Id = Guid.NewGuid(), ClassId = classId, LessonId = request.LessonId,
+            Id = 0, ClassId = classId, LessonId = request.LessonId,
             AssignedBy = teacherId, AssignedAt = DateTime.UtcNow, DueDate = request.DueDate
         });
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 }

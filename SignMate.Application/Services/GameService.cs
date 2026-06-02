@@ -7,40 +7,40 @@ namespace SignMate.Application.Services;
 
 public class GameService : IGameService
 {
-    private readonly ISignMateDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IStreakService _streakService;
 
-    public GameService(ISignMateDbContext db, IStreakService streakService)
+    public GameService(IUnitOfWork unitOfWork, IStreakService streakService)
     {
-        _db = db;
+        _unitOfWork = unitOfWork;
         _streakService = streakService;
     }
 
-    public async Task<Guid> StartGameAsync(Guid userId, StartGameRequest request)
+    public async Task<int> StartGameAsync(int userId, StartGameRequest request)
     {
         var session = new GameSession
         {
-            Id = Guid.NewGuid(), UserId = userId, GameType = request.GameType,
+            Id = 0, UserId = userId, GameType = request.GameType,
             PlayedAt = DateTime.UtcNow, XpEarned = 0
         };
-        _db.GameSessions.Add(session);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.Repository<GameSession>().AddAsync(session);
+        await _unitOfWork.SaveChangesAsync();
         return session.Id;
     }
 
-    public async Task<GameResultResponse> CompleteGameAsync(Guid userId, CompleteGameRequest request)
+    public async Task<GameResultResponse> CompleteGameAsync(int userId, CompleteGameRequest request)
     {
-        var session = await _db.GameSessions.FindAsync(request.SessionId);
+        var session = await _unitOfWork.Repository<GameSession>().GetByIdAsync(request.SessionId);
         if (session != null && session.UserId == userId)
         {
             session.XpEarned = request.Score; // simple mapping
         }
 
-        var user = await _db.Users.FindAsync(userId);
+        var user = await _unitOfWork.Repository<User>().GetByIdAsync(userId);
         if (user != null) user.XpPoints += request.Score;
 
         await _streakService.RecordActivityAsync(userId);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         var streak = await _streakService.GetStreakAsync(userId);
 

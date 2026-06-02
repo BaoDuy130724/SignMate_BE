@@ -17,14 +17,14 @@ public class NotificationsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetNotifications([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await _notificationService.GetNotificationsAsync(userId, page, pageSize));
     }
 
-    [HttpPut("{id:guid}/read")]
-    public async Task<IActionResult> MarkAsRead(Guid id)
+    [HttpPut("{id:int}/read")]
+    public async Task<IActionResult> MarkAsRead(int id)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         await _notificationService.MarkAsReadAsync(userId, id);
         return NoContent();
     }

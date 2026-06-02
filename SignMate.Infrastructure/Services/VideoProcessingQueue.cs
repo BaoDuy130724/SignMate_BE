@@ -5,7 +5,7 @@ namespace SignMate.Infrastructure.Services;
 
 public class VideoProcessingQueue : IVideoProcessingQueue
 {
-    private readonly Channel<Guid> _queue;
+    private readonly Channel<int> _queue;
 
     public VideoProcessingQueue()
     {
@@ -14,15 +14,15 @@ public class VideoProcessingQueue : IVideoProcessingQueue
         {
             FullMode = BoundedChannelFullMode.Wait
         };
-        _queue = Channel.CreateBounded<Guid>(options);
+        _queue = Channel.CreateBounded<int>(options);
     }
 
-    public async ValueTask QueueBackgroundWorkItemAsync(Guid signReferenceRequestId)
+    public async ValueTask QueueBackgroundWorkItemAsync(int signReferenceRequestId)
     {
         await _queue.Writer.WriteAsync(signReferenceRequestId);
     }
 
-    public async ValueTask<Guid> DequeueAsync(CancellationToken cancellationToken)
+    public async ValueTask<int> DequeueAsync(CancellationToken cancellationToken)
     {
         var workItem = await _queue.Reader.ReadAsync(cancellationToken);
         return workItem;

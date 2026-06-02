@@ -8,10 +8,10 @@ public record LoginCommand(LoginRequest Request) : IRequest<TokenResponse>;
 public record RegisterCommand(RegisterRequest Request) : IRequest<TokenResponse>;
 public record SendRegisterOtpCommand(SendOtpRequest Request) : IRequest<Unit>;
 public record RefreshCommand(string RefreshToken) : IRequest<TokenResponse>;
-public record LogoutCommand(Guid UserId, string RefreshToken) : IRequest<Unit>;
+public record LogoutCommand(int UserId, string RefreshToken) : IRequest<Unit>;
 public record ForgotPasswordCommand(ForgotPasswordRequest Request) : IRequest<Unit>;
 public record ResetPasswordCommand(ResetPasswordRequest Request) : IRequest<Unit>;
-public record ChangePasswordCommand(Guid UserId, ChangePasswordRequest Request) : IRequest<Unit>;
+public record ChangePasswordCommand(int UserId, ChangePasswordRequest Request) : IRequest<Unit>;
 
 public class AuthCQRSHandlers : 
     IRequestHandler<LoginCommand, TokenResponse>,

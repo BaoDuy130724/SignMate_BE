@@ -6,20 +6,21 @@ namespace SignMate.Application.Services;
 
 public class StreakService : IStreakService
 {
-    private readonly ISignMateDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public StreakService(ISignMateDbContext db) => _db = db;
+    public StreakService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
-    public async Task RecordActivityAsync(Guid userId)
+    public async Task RecordActivityAsync(int userId)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var streak = await _db.Streaks.FirstOrDefaultAsync(s => s.UserId == userId);
+        var streak = await _unitOfWork.Repository<Streak>().Query()
+            .FirstOrDefaultAsync(s => s.UserId == userId);
 
         if (streak == null)
         {
-            _db.Streaks.Add(new Streak
+            await _unitOfWork.Repository<Streak>().AddAsync(new Streak
             {
-                Id = Guid.NewGuid(), UserId = userId,
+                Id = 0, UserId = userId,
                 CurrentStreak = 1, LongestStreak = 1, LastActiveDate = today
             });
         }
@@ -37,11 +38,12 @@ public class StreakService : IStreakService
             streak.LastActiveDate = today;
         }
 
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<Streak?> GetStreakAsync(Guid userId)
+    public async Task<Streak?> GetStreakAsync(int userId)
     {
-        return await _db.Streaks.FirstOrDefaultAsync(s => s.UserId == userId);
+        return await _unitOfWork.Repository<Streak>().Query()
+            .FirstOrDefaultAsync(s => s.UserId == userId);
     }
 }

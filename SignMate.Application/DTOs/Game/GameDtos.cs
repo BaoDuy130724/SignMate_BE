@@ -7,7 +7,7 @@ public class StartGameRequest
 
 public class CompleteGameRequest
 {
-    public Guid SessionId { get; set; }
+    public int SessionId { get; set; }
     public int Score { get; set; }
 }
 

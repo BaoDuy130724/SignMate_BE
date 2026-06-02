@@ -4,6 +4,6 @@ namespace SignMate.Application.Interfaces;
 
 public interface IStreakService
 {
-    Task RecordActivityAsync(Guid userId);
-    Task<Streak?> GetStreakAsync(Guid userId);
+    Task RecordActivityAsync(int userId);
+    Task<Streak?> GetStreakAsync(int userId);
 }

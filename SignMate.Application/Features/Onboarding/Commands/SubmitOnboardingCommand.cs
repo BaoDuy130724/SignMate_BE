@@ -7,7 +7,7 @@ using SignMate.Domain.Entities;
 
 namespace SignMate.Application.Features.Onboarding.Commands;
 
-public record SubmitOnboardingCommand(Guid UserId, OnboardingRequest Request) : IRequest<ApiResponse<OnboardingResponse>>;
+public record SubmitOnboardingCommand(int UserId, OnboardingRequest Request) : IRequest<ApiResponse<OnboardingResponse>>;
 
 public class SubmitOnboardingCommandValidator : AbstractValidator<SubmitOnboardingCommand>
 {

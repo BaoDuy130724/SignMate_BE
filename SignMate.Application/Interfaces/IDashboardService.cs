@@ -4,6 +4,6 @@ namespace SignMate.Application.Interfaces;
 
 public interface IDashboardService
 {
-    Task<DashboardSummaryDto> GetDashboardSummaryAsync(Guid userId);
-    Task<ProgressStatsDto> GetProgressStatsAsync(Guid userId);
+    Task<DashboardSummaryDto> GetDashboardSummaryAsync(int userId);
+    Task<ProgressStatsDto> GetProgressStatsAsync(int userId);
 }

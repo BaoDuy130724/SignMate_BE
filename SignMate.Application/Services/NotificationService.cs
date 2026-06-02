@@ -1,18 +1,21 @@
 using Microsoft.EntityFrameworkCore;
 using SignMate.Application.DTOs.Notification;
 using SignMate.Application.Interfaces;
+using SignMate.Domain.Entities;
 
 namespace SignMate.Application.Services;
 
 public class NotificationService : INotificationService
 {
-    private readonly ISignMateDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public NotificationService(ISignMateDbContext db) => _db = db;
+    public NotificationService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
-    public async Task<NotificationPagedResponse> GetNotificationsAsync(Guid userId, int page, int pageSize)
+    public async Task<NotificationPagedResponse> GetNotificationsAsync(int userId, int page, int pageSize)
     {
-        var query = _db.Notifications.Where(n => n.UserId == userId).OrderByDescending(n => n.CreatedAt);
+        var query = _unitOfWork.Repository<Notification>().Query()
+            .Where(n => n.UserId == userId)
+            .OrderByDescending(n => n.CreatedAt);
         var totalCount = await query.CountAsync();
 
         var items = await query
@@ -30,15 +33,15 @@ public class NotificationService : INotificationService
         };
     }
 
-    public async Task MarkAsReadAsync(Guid userId, Guid notificationId)
+    public async Task MarkAsReadAsync(int userId, int notificationId)
     {
-        var notification = await _db.Notifications
+        var notification = await _unitOfWork.Repository<Notification>().Query()
             .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId);
 
         if (notification != null)
         {
             notification.IsRead = true;
-            await _db.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

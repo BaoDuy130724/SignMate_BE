@@ -48,7 +48,7 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public async Task<IActionResult> Logout([FromBody] RefreshRequest request)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         await _mediator.Send(new LogoutCommand(userId, request.RefreshToken));
         return Ok(ApiResponse.SuccessResult("Logged out successfully."));
     }
@@ -71,7 +71,7 @@ public class AuthController : ControllerBase
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         await _mediator.Send(new ChangePasswordCommand(userId, request));
         return Ok(ApiResponse.SuccessResult("Password changed successfully."));
     }

@@ -2,9 +2,9 @@ namespace SignMate.Domain.Entities;
 
 public class UserSubscription
 {
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }
-    public Guid PlanId { get; set; }
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public int PlanId { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public bool IsActive { get; set; }

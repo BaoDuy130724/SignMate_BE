@@ -11,7 +11,7 @@ public class StudentTrackingService : IStudentTrackingService
 
     public StudentTrackingService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
-    public async Task<List<StudentTrackingStatsDto>> GetClassTrackingStatsAsync(Guid classId)
+    public async Task<List<StudentTrackingStatsDto>> GetClassTrackingStatsAsync(int classId)
     {
         var students = await _unitOfWork.Repository<ClassStudent>().Query()
             .Where(cs => cs.ClassId == classId)
@@ -38,7 +38,7 @@ public class StudentTrackingService : IStudentTrackingService
         return result;
     }
 
-    public Task<TrackingReportResponse> GenerateTrackingReportAsync(Guid centerId, DateTime from, DateTime to)
+    public Task<TrackingReportResponse> GenerateTrackingReportAsync(int centerId, DateTime from, DateTime to)
     {
         return Task.FromResult(new TrackingReportResponse
         {

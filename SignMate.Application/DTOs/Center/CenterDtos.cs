@@ -2,7 +2,7 @@ namespace SignMate.Application.DTOs.Center;
 
 public class CenterDto
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string Name { get; set; } = null!;
     public string ContactPerson { get; set; } = null!;
     public string Phone { get; set; } = null!;

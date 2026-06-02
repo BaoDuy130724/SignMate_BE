@@ -30,7 +30,7 @@ public class BlobService : IBlobService
         if (_container == null)
             return $"https://placeholder.blob.core.windows.net/signmate-videos/{fileName}";
 
-        var blobName = $"{Guid.NewGuid()}/{fileName}";
+        var blobName = $"{0}/{fileName}";
         var blobClient = _container.GetBlobClient(blobName);
 
         await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = contentType });

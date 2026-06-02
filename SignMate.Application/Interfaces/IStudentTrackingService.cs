@@ -4,6 +4,6 @@ namespace SignMate.Application.Interfaces;
 
 public interface IStudentTrackingService
 {
-    Task<List<StudentTrackingStatsDto>> GetClassTrackingStatsAsync(Guid classId);
-    Task<TrackingReportResponse> GenerateTrackingReportAsync(Guid centerId, DateTime from, DateTime to);
+    Task<List<StudentTrackingStatsDto>> GetClassTrackingStatsAsync(int classId);
+    Task<TrackingReportResponse> GenerateTrackingReportAsync(int centerId, DateTime from, DateTime to);
 }

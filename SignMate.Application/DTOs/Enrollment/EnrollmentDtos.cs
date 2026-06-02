@@ -5,13 +5,13 @@ namespace SignMate.Application.DTOs.Enrollment;
 public class EnrollRequest
 {
     [Required]
-    public Guid CourseId { get; set; }
+    public int CourseId { get; set; }
 }
 
 public class EnrollmentDto
 {
-    public Guid Id { get; set; }
-    public Guid CourseId { get; set; }
+    public int Id { get; set; }
+    public int CourseId { get; set; }
     public string CourseTitle { get; set; } = null!;
     public string? CourseThumbnailUrl { get; set; }
     public string CourseLevel { get; set; } = null!;

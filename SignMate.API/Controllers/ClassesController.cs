@@ -7,7 +7,7 @@ using SignMate.Application.Interfaces;
 namespace SignMate.API.Controllers;
 
 [ApiController]
-[Route("api/centers/{centerId:guid}/classes")]
+[Route("api/centers/{centerId:int}/classes")]
 [Authorize(Roles = "CenterAdmin,Teacher")]
 public class ClassesController : ControllerBase
 {
@@ -17,34 +17,34 @@ public class ClassesController : ControllerBase
         => _classService = classService;
 
     [HttpGet]
-    public async Task<IActionResult> GetClasses(Guid centerId)
+    public async Task<IActionResult> GetClasses(int centerId)
         => Ok(await _classService.GetClassesAsync(centerId));
 
     [HttpPost]
     [Authorize(Roles = "CenterAdmin")]
-    public async Task<IActionResult> CreateClass(Guid centerId, [FromBody] CreateClassRequest request)
+    public async Task<IActionResult> CreateClass(int centerId, [FromBody] CreateClassRequest request)
     {
         var c = await _classService.CreateClassAsync(centerId, request);
         return Created("", c);
     }
 
-    [HttpPost("{classId:guid}/students")]
+    [HttpPost("{classId:int}/students")]
     [Authorize(Roles = "CenterAdmin")]
-    public async Task<IActionResult> AddStudents(Guid centerId, Guid classId, [FromBody] AddStudentsRequest request)
+    public async Task<IActionResult> AddStudents(int centerId, int classId, [FromBody] AddStudentsRequest request)
     {
         await _classService.AddStudentsAsync(classId, request);
         return NoContent();
     }
 
-    [HttpGet("{classId:guid}/students")]
-    public async Task<IActionResult> GetStudents(Guid centerId, Guid classId)
+    [HttpGet("{classId:int}/students")]
+    public async Task<IActionResult> GetStudents(int centerId, int classId)
         => Ok(await _classService.GetClassStudentsAsync(classId));
 
-    [HttpPost("{classId:guid}/lessons")]
+    [HttpPost("{classId:int}/lessons")]
     [Authorize(Roles = "CenterAdmin,Teacher")]
-    public async Task<IActionResult> AssignLesson(Guid centerId, Guid classId, [FromBody] AssignLessonRequest request)
+    public async Task<IActionResult> AssignLesson(int centerId, int classId, [FromBody] AssignLessonRequest request)
     {
-        var teacherId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var teacherId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         await _classService.AssignLessonAsync(classId, teacherId, request);
         return NoContent();
     }

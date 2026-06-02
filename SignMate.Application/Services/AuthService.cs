@@ -42,7 +42,7 @@ public class AuthService : IAuthService
 
         var user = new User
         {
-            Id = Guid.NewGuid(),
+            Id = 0,
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             FullName = request.FullName,
@@ -55,7 +55,7 @@ public class AuthService : IAuthService
 
         await _unitOfWork.Repository<Streak>().AddAsync(new Streak
         {
-            Id = Guid.NewGuid(),
+            Id = 0,
             UserId = user.Id,
             CurrentStreak = 0,
             LongestStreak = 0,
@@ -94,7 +94,7 @@ public class AuthService : IAuthService
         return tokens;
     }
 
-    public async Task LogoutAsync(Guid userId, string refreshToken)
+    public async Task LogoutAsync(int userId, string refreshToken)
     {
         var stored = await _unitOfWork.Repository<RefreshToken>().Query()
             .FirstOrDefaultAsync(r => r.Token == refreshToken && r.UserId == userId && !r.IsRevoked);
@@ -131,7 +131,7 @@ public class AuthService : IAuthService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
+    public async Task ChangePasswordAsync(int userId, ChangePasswordRequest request)
     {
         var user = await _unitOfWork.Repository<User>().GetByIdAsync(userId) 
             ?? throw new UnauthorizedAccessException("User not found.");
@@ -168,7 +168,7 @@ public class AuthService : IAuthService
         var refreshTokenStr = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         await _unitOfWork.Repository<RefreshToken>().AddAsync(new RefreshToken
         {
-            Id = Guid.NewGuid(),
+            Id = 0,
             UserId = user.Id,
             Token = refreshTokenStr,
             ExpiresAt = DateTime.UtcNow.AddDays(refreshDays),

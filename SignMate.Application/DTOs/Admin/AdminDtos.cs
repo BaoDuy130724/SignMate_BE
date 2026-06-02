@@ -7,5 +7,8 @@ public class SystemDashboardDto
     public int ActiveCenters { get; set; }
     public double ConversionRate { get; set; } // Free -> Paid %
     public int PremiumUsers { get; set; }
+    public int BasicUsers { get; set; }
+    public int FreeUsers { get; set; }
+    public int B2CUsers { get; set; }
     public double RetentionRate { get; set; }
 }

@@ -4,6 +4,6 @@ namespace SignMate.Application.Interfaces;
 
 public interface INotificationService
 {
-    Task<NotificationPagedResponse> GetNotificationsAsync(Guid userId, int page, int pageSize);
-    Task MarkAsReadAsync(Guid userId, Guid notificationId);
+    Task<NotificationPagedResponse> GetNotificationsAsync(int userId, int page, int pageSize);
+    Task MarkAsReadAsync(int userId, int notificationId);
 }

@@ -8,42 +8,45 @@ namespace SignMate.Application.Services;
 
 public class CenterService : ICenterService
 {
-    private readonly ISignMateDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CenterService(ISignMateDbContext db) => _db = db;
+    public CenterService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
     public async Task<List<CenterDto>> GetCentersAsync()
     {
-        return await _db.Centers.Select(c => new CenterDto
-        {
-            Id = c.Id, Name = c.Name, ContactPerson = c.ContactPerson,
-            Phone = c.Phone, Email = c.Email, MaxSeats = c.MaxSeats, IsActive = c.IsActive
-        }).ToListAsync();
+        return await _unitOfWork.Repository<Center>().Query()
+            .Select(c => new CenterDto
+            {
+                Id = c.Id, Name = c.Name, ContactPerson = c.ContactPerson,
+                Phone = c.Phone, Email = c.Email, MaxSeats = c.MaxSeats, IsActive = c.IsActive
+            }).ToListAsync();
     }
 
     public async Task<CenterDto> CreateCenterAsync(CenterDto centerDto)
     {
         var center = new Center
         {
-            Id = Guid.NewGuid(), Name = centerDto.Name, ContactPerson = centerDto.ContactPerson,
+            Id = 0, Name = centerDto.Name, ContactPerson = centerDto.ContactPerson,
             Phone = centerDto.Phone, Email = centerDto.Email,
             MaxSeats = centerDto.MaxSeats, IsActive = true, CreatedAt = DateTime.UtcNow
         };
-        _db.Centers.Add(center);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.Repository<Center>().AddAsync(center);
+        await _unitOfWork.SaveChangesAsync();
         centerDto.Id = center.Id;
         return centerDto;
     }
 
-    public async Task<CenterDashboardDto> GetCenterDashboardAsync(Guid centerId)
+    public async Task<CenterDashboardDto> GetCenterDashboardAsync(int centerId)
     {
-        var center = await _db.Centers.FindAsync(centerId);
+        var center = await _unitOfWork.Repository<Center>().GetByIdAsync(centerId);
         if (center == null) throw new InvalidOperationException("Center not found");
 
-        var students = await _db.Users.Where(u => u.CenterId == centerId && u.Role == UserRole.Student).ToListAsync();
+        var students = await _unitOfWork.Repository<User>().Query()
+            .Where(u => u.CenterId == centerId && u.Role == UserRole.Student)
+            .ToListAsync();
         var studentIds = students.Select(u => u.Id).ToList();
         
-        var attempts = await _db.PracticeSessions
+        var attempts = await _unitOfWork.Repository<PracticeSession>().Query()
             .Where(s => studentIds.Contains(s.UserId))
             .SelectMany(s => s.Attempts)
             .ToListAsync();
@@ -51,7 +54,7 @@ public class CenterService : ICenterService
         double avgAcc = attempts.Any() ? attempts.Average(a => a.OverallScore) * 100 : 0;
 
         // Calculate total practice minutes from sessions
-        var sessions = await _db.PracticeSessions
+        var sessions = await _unitOfWork.Repository<PracticeSession>().Query()
             .Where(s => studentIds.Contains(s.UserId) && s.EndedAt != null)
             .ToListAsync();
         int totalMinutes = sessions.Sum(s => (int)(s.EndedAt! - s.StartedAt).Value.TotalMinutes);
@@ -72,15 +75,16 @@ public class CenterService : ICenterService
         };
     }
 
-    public async Task CreateCenterAdminAsync(Guid centerId, CreateCenterAdminRequest request)
+    public async Task CreateCenterAdminAsync(int centerId, CreateCenterAdminRequest request)
     {
-        var center = await _db.Centers.FindAsync(centerId) ?? throw new InvalidOperationException("Trung tâm không tồn tại.");
-        if (await _db.Users.AnyAsync(u => u.Email == request.Email))
+        var center = await _unitOfWork.Repository<Center>().GetByIdAsync(centerId) 
+            ?? throw new InvalidOperationException("Trung tâm không tồn tại.");
+        if (await _unitOfWork.Repository<User>().Query().AnyAsync(u => u.Email == request.Email))
             throw new InvalidOperationException("Email đã được sử dụng.");
 
         var user = new User
         {
-            Id = Guid.NewGuid(),
+            Id = 0,
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             FullName = request.FullName,
@@ -90,21 +94,21 @@ public class CenterService : ICenterService
             UpdatedAt = DateTime.UtcNow
         };
 
-        _db.Users.Add(user);
+        await _unitOfWork.Repository<User>().AddAsync(user);
         
-        _db.Streaks.Add(new Streak
+        await _unitOfWork.Repository<Streak>().AddAsync(new Streak
         {
-            Id = Guid.NewGuid(), UserId = user.Id,
+            Id = 0, UserId = user.Id,
             CurrentStreak = 0, LongestStreak = 0,
             LastActiveDate = DateOnly.FromDateTime(DateTime.UtcNow)
         });
 
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<List<UserProfileDto>> GetCenterTeachersAsync(Guid centerId)
+    public async Task<List<UserProfileDto>> GetCenterTeachersAsync(int centerId)
     {
-        return await _db.Users
+        return await _unitOfWork.Repository<User>().Query()
             .Where(u => u.CenterId == centerId && u.Role == UserRole.Teacher)
             .Select(u => new UserProfileDto
             {
@@ -114,15 +118,16 @@ public class CenterService : ICenterService
             }).ToListAsync();
     }
 
-    public async Task CreateTeacherAsync(Guid centerId, CreateCenterAdminRequest request)
+    public async Task CreateTeacherAsync(int centerId, CreateCenterAdminRequest request)
     {
-        var center = await _db.Centers.FindAsync(centerId) ?? throw new InvalidOperationException("Trung tâm không tồn tại.");
-        if (await _db.Users.AnyAsync(u => u.Email == request.Email))
+        var center = await _unitOfWork.Repository<Center>().GetByIdAsync(centerId) 
+            ?? throw new InvalidOperationException("Trung tâm không tồn tại.");
+        if (await _unitOfWork.Repository<User>().Query().AnyAsync(u => u.Email == request.Email))
             throw new InvalidOperationException("Email đã được sử dụng.");
 
         var user = new User
         {
-            Id = Guid.NewGuid(),
+            Id = 0,
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             FullName = request.FullName,
@@ -132,21 +137,21 @@ public class CenterService : ICenterService
             UpdatedAt = DateTime.UtcNow
         };
 
-        _db.Users.Add(user);
+        await _unitOfWork.Repository<User>().AddAsync(user);
         
-        _db.Streaks.Add(new Streak
+        await _unitOfWork.Repository<Streak>().AddAsync(new Streak
         {
-            Id = Guid.NewGuid(), UserId = user.Id,
+            Id = 0, UserId = user.Id,
             CurrentStreak = 0, LongestStreak = 0,
             LastActiveDate = DateOnly.FromDateTime(DateTime.UtcNow)
         });
 
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<List<UserProfileDto>> GetCenterStudentsAsync(Guid centerId)
+    public async Task<List<UserProfileDto>> GetCenterStudentsAsync(int centerId)
     {
-        return await _db.Users
+        return await _unitOfWork.Repository<User>().Query()
             .Where(u => u.CenterId == centerId && u.Role == UserRole.Student)
             .Select(u => new UserProfileDto
             {
@@ -156,15 +161,16 @@ public class CenterService : ICenterService
             }).ToListAsync();
     }
 
-    public async Task CreateStudentAsync(Guid centerId, CreateCenterAdminRequest request)
+    public async Task CreateStudentAsync(int centerId, CreateCenterAdminRequest request)
     {
-        var center = await _db.Centers.FindAsync(centerId) ?? throw new InvalidOperationException("Trung tâm không tồn tại.");
-        if (await _db.Users.AnyAsync(u => u.Email == request.Email))
+        var center = await _unitOfWork.Repository<Center>().GetByIdAsync(centerId) 
+            ?? throw new InvalidOperationException("Trung tâm không tồn tại.");
+        if (await _unitOfWork.Repository<User>().Query().AnyAsync(u => u.Email == request.Email))
             throw new InvalidOperationException("Email đã được sử dụng.");
 
         var user = new User
         {
-            Id = Guid.NewGuid(),
+            Id = 0,
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             FullName = request.FullName,
@@ -174,15 +180,15 @@ public class CenterService : ICenterService
             UpdatedAt = DateTime.UtcNow
         };
 
-        _db.Users.Add(user);
+        await _unitOfWork.Repository<User>().AddAsync(user);
         
-        _db.Streaks.Add(new Streak
+        await _unitOfWork.Repository<Streak>().AddAsync(new Streak
         {
-            Id = Guid.NewGuid(), UserId = user.Id,
+            Id = 0, UserId = user.Id,
             CurrentStreak = 0, LongestStreak = 0,
             LastActiveDate = DateOnly.FromDateTime(DateTime.UtcNow)
         });
 
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 }

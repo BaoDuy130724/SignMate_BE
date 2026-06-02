@@ -2,7 +2,7 @@ namespace SignMate.Application.DTOs.StudentTracking;
 
 public class StudentTrackingStatsDto
 {
-    public Guid StudentId { get; set; }
+    public int StudentId { get; set; }
     public string FullName { get; set; } = null!;
     public double AccuracyPercent { get; set; }
     public List<string> WeakTopics { get; set; } = [];

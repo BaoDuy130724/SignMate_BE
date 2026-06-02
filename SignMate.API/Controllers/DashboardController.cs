@@ -18,14 +18,14 @@ public class DashboardController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetSummary()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await _dashboardService.GetDashboardSummaryAsync(userId));
     }
 
     [HttpGet("progress")]
     public async Task<IActionResult> GetProgressStats()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await _dashboardService.GetProgressStatsAsync(userId));
     }
 }

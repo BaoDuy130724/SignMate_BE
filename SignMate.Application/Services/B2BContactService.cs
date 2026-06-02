@@ -6,22 +6,22 @@ namespace SignMate.Application.Services;
 
 public class B2BContactService : IB2BContactService
 {
-    private readonly ISignMateDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public B2BContactService(ISignMateDbContext db) => _db = db;
+    public B2BContactService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
     public async Task<B2BContactLeadDto> SubmitContactFormAsync(CreateB2BContactRequest request)
     {
         var lead = new B2BContactLead
         {
-            Id = Guid.NewGuid(), CenterName = request.CenterName,
+            Id = 0, CenterName = request.CenterName,
             ContactPerson = request.ContactPerson, Phone = request.Phone, 
             Email = request.Email, NumberOfLearners = request.NumberOfLearners,
             Status = ContactStatus.New, CreatedAt = DateTime.UtcNow
         };
 
-        _db.B2BContactLeads.Add(lead);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.Repository<B2BContactLead>().AddAsync(lead);
+        await _unitOfWork.SaveChangesAsync();
 
         return new B2BContactLeadDto
         {

@@ -12,7 +12,7 @@ public class DashboardSummaryDto
 
 public class DeadlineDto
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Teacher { get; set; } = string.Empty;
     public string Duedate { get; set; } = string.Empty;

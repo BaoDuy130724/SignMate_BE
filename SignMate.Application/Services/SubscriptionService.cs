@@ -7,18 +7,18 @@ namespace SignMate.Application.Services;
 
 public class SubscriptionService : ISubscriptionService
 {
-    private readonly ISignMateDbContext _db;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IVnPayService _vnPay;
 
-    public SubscriptionService(ISignMateDbContext db, IVnPayService vnPay)
+    public SubscriptionService(IUnitOfWork unitOfWork, IVnPayService vnPay)
     {
-        _db = db;
+        _unitOfWork = unitOfWork;
         _vnPay = vnPay;
     }
 
     public async Task<List<SubscriptionPlanDto>> GetPlansAsync()
     {
-        return await _db.SubscriptionPlans
+        return await _unitOfWork.Repository<SubscriptionPlan>().Query()
             .AsNoTracking()
             .Select(p => new SubscriptionPlanDto
             {
@@ -28,9 +28,9 @@ public class SubscriptionService : ISubscriptionService
             }).ToListAsync();
     }
 
-    public async Task<SubscribeResponse> SubscribeAsync(Guid userId, SubscribeRequest request, string ipAddress)
+    public async Task<SubscribeResponse> SubscribeAsync(int userId, SubscribeRequest request, string ipAddress)
     {
-        var plan = await _db.SubscriptionPlans.FindAsync(request.PlanId);
+        var plan = await _unitOfWork.Repository<SubscriptionPlan>().GetByIdAsync(request.PlanId);
         if (plan == null)
             return new SubscribeResponse { Success = false, Message = "Plan not found" };
 
@@ -44,15 +44,15 @@ public class SubscriptionService : ISubscriptionService
         // Paid plan — create pending subscription + VNPay URL
         var sub = new UserSubscription
         {
-            Id = Guid.NewGuid(),
+            Id = 0,
             UserId = userId,
             PlanId = plan.Id,
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(plan.DurationDays),
             IsActive = false // Pending payment
         };
-        _db.UserSubscriptions.Add(sub);
-        await _db.SaveChangesAsync();
+        await _unitOfWork.Repository<UserSubscription>().AddAsync(sub);
+        await _unitOfWork.SaveChangesAsync();
 
         var returnUrl = request.ReturnUrl ?? "http://localhost:5184/api/subscription/vnpay-return";
 
@@ -73,15 +73,15 @@ public class SubscriptionService : ISubscriptionService
         };
     }
 
-    public async Task<bool> ConfirmPaymentAsync(Guid subscriptionId)
+    public async Task<bool> ConfirmPaymentAsync(int subscriptionId)
     {
-        var sub = await _db.UserSubscriptions
+        var sub = await _unitOfWork.Repository<UserSubscription>().Query()
             .FirstOrDefaultAsync(s => s.Id == subscriptionId);
 
         if (sub == null || sub.IsActive) return false;
 
         // Deactivate other subs for this user
-        var others = await _db.UserSubscriptions
+        var others = await _unitOfWork.Repository<UserSubscription>().Query()
             .Where(s => s.UserId == sub.UserId && s.IsActive)
             .ToListAsync();
         foreach (var oth in others) oth.IsActive = false;
@@ -89,19 +89,19 @@ public class SubscriptionService : ISubscriptionService
         // Activate the paid subscription
         sub.IsActive = true;
         sub.StartDate = DateTime.UtcNow;
-        sub.EndDate = DateTime.UtcNow.AddDays(
-            (await _db.SubscriptionPlans.FindAsync(sub.PlanId))?.DurationDays ?? 30
-        );
 
-        await _db.SaveChangesAsync();
+        var plan = await _unitOfWork.Repository<SubscriptionPlan>().GetByIdAsync(sub.PlanId);
+        sub.EndDate = DateTime.UtcNow.AddDays(plan?.DurationDays ?? 30);
+
+        await _unitOfWork.SaveChangesAsync();
         return true;
     }
 
-    public async Task<MySubscriptionDto?> GetMySubscriptionAsync(Guid userId)
+    public async Task<MySubscriptionDto?> GetMySubscriptionAsync(int userId)
     {
-        return await _db.UserSubscriptions
+        return await _unitOfWork.Repository<UserSubscription>().Query()
             .AsNoTracking()
-            .Where(s => s.UserId == userId && s.IsActive)
+            .Where(s => s.UserId == userId && s.IsActive && s.EndDate >= DateTime.UtcNow)
             .Select(s => new MySubscriptionDto
             {
                 PlanId = s.PlanId, PlanName = s.Plan.Name, PlanType = s.Plan.Type.ToString(),
@@ -109,9 +109,9 @@ public class SubscriptionService : ISubscriptionService
             }).FirstOrDefaultAsync();
     }
 
-    public async Task<bool> HasAccessToProFeaturesAsync(Guid userId)
+    public async Task<bool> HasAccessToProFeaturesAsync(int userId)
     {
-        var sub = await _db.UserSubscriptions
+        var sub = await _unitOfWork.Repository<UserSubscription>().Query()
             .AsNoTracking()
             .Include(s => s.Plan)
             .Where(s => s.UserId == userId && s.IsActive && s.EndDate > DateTime.UtcNow)
@@ -122,7 +122,7 @@ public class SubscriptionService : ISubscriptionService
 
     public async Task<List<SubscriptionListItemDto>> GetAllSubscriptionsAsync()
     {
-        return await _db.UserSubscriptions
+        return await _unitOfWork.Repository<UserSubscription>().Query()
             .Include(s => s.User)
                 .ThenInclude(u => u.Center)
             .Include(s => s.Plan)
@@ -141,20 +141,20 @@ public class SubscriptionService : ISubscriptionService
             }).ToListAsync();
     }
 
-    private async Task ActivateSubscription(Guid userId, SubscriptionPlan plan)
+    private async Task ActivateSubscription(int userId, SubscriptionPlan plan)
     {
-        var others = await _db.UserSubscriptions
+        var others = await _unitOfWork.Repository<UserSubscription>().Query()
             .Where(s => s.UserId == userId && s.IsActive)
             .ToListAsync();
         foreach (var oth in others) oth.IsActive = false;
 
-        _db.UserSubscriptions.Add(new UserSubscription
+        await _unitOfWork.Repository<UserSubscription>().AddAsync(new UserSubscription
         {
-            Id = Guid.NewGuid(), UserId = userId, PlanId = plan.Id,
+            Id = 0, UserId = userId, PlanId = plan.Id,
             StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(plan.DurationDays),
             IsActive = true
         });
 
-        await _db.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 }

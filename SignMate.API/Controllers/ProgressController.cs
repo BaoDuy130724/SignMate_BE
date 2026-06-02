@@ -20,7 +20,7 @@ public class ProgressController : ControllerBase
     [HttpPut("lesson")]
     public async Task<IActionResult> UpdateLessonProgress([FromBody] UpdateLessonProgressRequest request)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         if (!Enum.TryParse<LessonStatus>(request.Status, true, out var status))
             return BadRequest(new { message = $"Invalid status: {request.Status}" });
@@ -39,7 +39,7 @@ public class ProgressController : ControllerBase
         {
             progress = new LessonProgress
             {
-                Id = Guid.NewGuid(), EnrollmentId = enrollment.Id,
+                Id = 0, EnrollmentId = enrollment.Id,
                 UserId = userId, LessonId = request.LessonId,
                 Status = status, WatchDurationSeconds = request.WatchDurationSeconds,
                 LastWatchedAt = DateTime.UtcNow
@@ -72,7 +72,7 @@ public class ProgressController : ControllerBase
     [HttpPut("sign")]
     public async Task<IActionResult> UpdateSignProgress([FromBody] UpdateSignProgressRequest request)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         var sign = await _db.Signs.FindAsync(request.SignId);
         if (sign == null) return NotFound(new { message = "Sign not found." });
@@ -84,7 +84,7 @@ public class ProgressController : ControllerBase
         {
             progress = new SignProgress
             {
-                Id = Guid.NewGuid(), UserId = userId, SignId = request.SignId,
+                Id = 0, UserId = userId, SignId = request.SignId,
                 IsMastered = request.IsMastered, AttemptCount = 1,
                 LastPracticedAt = DateTime.UtcNow
             };

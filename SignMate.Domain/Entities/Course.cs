@@ -2,13 +2,13 @@ namespace SignMate.Domain.Entities;
 
 public class Course
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string? ThumbnailUrl { get; set; }
     public CourseLevel Level { get; set; }
     public bool IsPublished { get; set; }
-    public Guid CreatedBy { get; set; }
+    public int CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public ICollection<Lesson> Lessons { get; set; } = [];

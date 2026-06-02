@@ -4,15 +4,16 @@ namespace SignMate.Application.DTOs.Course;
 
 public class CourseDto
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string? ThumbnailUrl { get; set; }
     public string Level { get; set; } = null!;
     public bool IsPublished { get; set; }
-    public Guid CreatedBy { get; set; }
+    public int CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public int LessonCount { get; set; }
+    public string Topic { get; set; } = "Chung";
 }
 
 public class CourseDetailDto : CourseDto
@@ -43,8 +44,8 @@ public class UpdateCourseRequest
 
 public class LessonDto
 {
-    public Guid Id { get; set; }
-    public Guid CourseId { get; set; }
+    public int Id { get; set; }
+    public int CourseId { get; set; }
     public string Title { get; set; } = null!;
     public string? Topic { get; set; }
     public int OrderIndex { get; set; }
@@ -62,7 +63,7 @@ public class LessonDetailDto : LessonDto
 
 public class SignDto
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string Word { get; set; } = null!;
     public string VideoUrl { get; set; } = null!;
     public string? ThumbnailUrl { get; set; }

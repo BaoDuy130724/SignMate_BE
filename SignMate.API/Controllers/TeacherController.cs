@@ -19,33 +19,33 @@ public class TeacherController : ControllerBase
     [HttpPost("comments")]
     public async Task<IActionResult> AddComment([FromBody] CreateCommentRequest request)
     {
-        var teacherId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var teacherId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var comment = await _teacherService.AddCommentAsync(teacherId, request);
         return Created("", comment);
     }
 
-    [HttpGet("students/{studentId:guid}/comments")]
-    public async Task<IActionResult> GetStudentComments(Guid studentId)
+    [HttpGet("students/{studentId:int}/comments")]
+    public async Task<IActionResult> GetStudentComments(int studentId)
         => Ok(await _teacherService.GetStudentCommentsAsync(studentId));
 
     [HttpGet("dashboard")]
     public async Task<IActionResult> GetDashboard()
     {
-        var teacherId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var teacherId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await _teacherService.GetTeacherDashboardAsync(teacherId));
     }
 
     [HttpGet("classes")]
     public async Task<IActionResult> GetClasses()
     {
-        var teacherId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var teacherId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await _teacherService.GetTeacherClassesAsync(teacherId));
     }
 
     [HttpGet("students")]
     public async Task<IActionResult> GetStudents()
     {
-        var teacherId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var teacherId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await _teacherService.GetTeacherStudentsAsync(teacherId));
     }
 }

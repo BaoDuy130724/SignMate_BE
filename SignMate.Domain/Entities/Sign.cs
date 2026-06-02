@@ -2,8 +2,8 @@ namespace SignMate.Domain.Entities;
 
 public class Sign
 {
-    public Guid Id { get; set; }
-    public Guid LessonId { get; set; }
+    public int Id { get; set; }
+    public int LessonId { get; set; }
     public string Word { get; set; } = null!;
     public string VideoUrl { get; set; } = null!;
     public string? ThumbnailUrl { get; set; }
