@@ -1,66 +1,38 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SignMate.Application.DTOs.Enrollment;
-using SignMate.Application.Interfaces;
-using SignMate.Domain.Entities;
+using SignMate.Application.Features.Enrollments.Commands.Enroll;
+using SignMate.Application.Features.Enrollments.Queries.GetMyEnrollments;
 
 namespace SignMate.API.Controllers;
 
-[ApiController]
+/// <summary>
+/// Quản lý việc đăng ký khóa học của học viên.
+/// </summary>
 [Route("api/enrollments")]
 [Authorize]
-public class EnrollmentsController : ControllerBase
+public class EnrollmentsController : BaseApiController
 {
-    private readonly ISignMateDbContext _db;
-
-    public EnrollmentsController(ISignMateDbContext db) => _db = db;
-
+    /// <summary>
+    /// Đăng ký học viên hiện tại vào một khóa học. <c>POST /api/enrollments</c>.
+    /// </summary>
     [HttpPost]
     public async Task<IActionResult> Enroll([FromBody] EnrollRequest request)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        if (await _db.Enrollments.AnyAsync(e => e.UserId == userId && e.CourseId == request.CourseId))
-            return Conflict(new { message = "Already enrolled." });
-
-        var course = await _db.Courses.FindAsync(request.CourseId);
-        if (course == null) return NotFound(new { message = "Course not found." });
-
-        var enrollment = new Enrollment
-        {
-            Id = 0, UserId = userId,
-            CourseId = request.CourseId, EnrolledAt = DateTime.UtcNow
-        };
-
-        _db.Enrollments.Add(enrollment);
-        await _db.SaveChangesAsync();
-        return Created("", new { enrollmentId = enrollment.Id });
+        var result = await Mediator.Send(new EnrollCommand(userId, request));
+        return Created(result, "Đăng ký khóa học thành công.");
     }
 
+    /// <summary>
+    /// Danh sách khóa học đã đăng ký kèm tiến độ của học viên hiện tại. <c>GET /api/enrollments/me</c>.
+    /// </summary>
     [HttpGet("me")]
     public async Task<IActionResult> GetMyEnrollments()
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        var enrollments = await _db.Enrollments
-            .Include(e => e.Course).ThenInclude(c => c.Lessons)
-            .Include(e => e.LessonProgresses)
-            .Where(e => e.UserId == userId)
-            .OrderByDescending(e => e.EnrolledAt)
-            .Select(e => new EnrollmentDto
-            {
-                Id = e.Id, CourseId = e.CourseId,
-                CourseTitle = e.Course.Title,
-                CourseThumbnailUrl = e.Course.ThumbnailUrl,
-                CourseLevel = e.Course.Level.ToString(),
-                EnrolledAt = e.EnrolledAt, CompletedAt = e.CompletedAt,
-                TotalLessons = e.Course.Lessons.Count,
-                CompletedLessons = e.LessonProgresses.Count(lp => lp.Status == LessonStatus.Completed)
-            })
-            .ToListAsync();
-
-        return Ok(enrollments);
+        var result = await Mediator.Send(new GetMyEnrollmentsQuery(userId));
+        return Success(result);
     }
 }

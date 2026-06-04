@@ -1,89 +1,75 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SignMate.Application.DTOs.Center;
-using SignMate.Application.Interfaces;
+using SignMate.Application.Features.Center.Commands.CreateCenter;
+using SignMate.Application.Features.Center.Commands.CreateCenterUser;
+using SignMate.Application.Features.Center.Queries.GetCenterDashboard;
+using SignMate.Application.Features.Center.Queries.GetCenterMembers;
+using SignMate.Application.Features.Center.Queries.GetCenters;
+using SignMate.Domain.Entities;
 
 namespace SignMate.API.Controllers;
 
-[ApiController]
+/// <summary>
+/// Quản lý trung tâm: thông tin trung tâm, dashboard giám sát, tài khoản admin/giáo viên/học viên.
+/// </summary>
 [Route("api/centers")]
 [Authorize(Roles = "SuperAdmin,CenterAdmin")]
-public class CentersController : ControllerBase
+public class CentersController : BaseApiController
 {
-    private readonly ICenterService _centerService;
-
-    public CentersController(ICenterService centerService)
-        => _centerService = centerService;
-
+    /// <summary>Danh sách trung tâm. <c>GET /api/centers</c>.</summary>
     [HttpGet]
     [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> GetCenters()
-        => Ok(await _centerService.GetCentersAsync());
+        => Success(await Mediator.Send(new GetCentersQuery()));
 
+    /// <summary>Tạo trung tâm mới. <c>POST /api/centers</c>.</summary>
     [HttpPost]
     [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> CreateCenter([FromBody] CenterDto request)
-    {
-        var center = await _centerService.CreateCenterAsync(request);
-        return CreatedAtAction(nameof(GetCenters), new { id = center.Id }, center);
-    }
+        => Created(await Mediator.Send(new CreateCenterCommand(request)), "Tạo trung tâm thành công.");
 
+    /// <summary>Dashboard giám sát trung tâm. <c>GET /api/centers/{id}/dashboard</c>.</summary>
     [HttpGet("{id:int}/dashboard")]
     public async Task<IActionResult> GetDashboard(int id)
-        => Ok(await _centerService.GetCenterDashboardAsync(id));
+        => Success(await Mediator.Send(new GetCenterDashboardQuery(id)));
 
+    /// <summary>Tạo tài khoản CenterAdmin. <c>POST /api/centers/{id}/admin</c>.</summary>
     [HttpPost("{id:int}/admin")]
     [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> CreateCenterAdmin(int id, [FromBody] CreateCenterAdminRequest request)
     {
-        try
-        {
-            await _centerService.CreateCenterAdminAsync(id, request);
-            return Ok();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        await Mediator.Send(new CreateCenterUserCommand(id, UserRole.CenterAdmin, request));
+        return Success("Tạo quản trị viên trung tâm thành công.");
     }
 
+    /// <summary>Danh sách giáo viên của trung tâm. <c>GET /api/centers/{id}/teachers</c>.</summary>
     [HttpGet("{id:int}/teachers")]
     [Authorize(Roles = "CenterAdmin")]
     public async Task<IActionResult> GetTeachers(int id)
-        => Ok(await _centerService.GetCenterTeachersAsync(id));
+        => Success(await Mediator.Send(new GetCenterMembersQuery(id, UserRole.Teacher)));
 
+    /// <summary>Tạo tài khoản giáo viên. <c>POST /api/centers/{id}/teachers</c>.</summary>
     [HttpPost("{id:int}/teachers")]
     [Authorize(Roles = "CenterAdmin")]
     public async Task<IActionResult> CreateTeacher(int id, [FromBody] CreateCenterAdminRequest request)
     {
-        try
-        {
-            await _centerService.CreateTeacherAsync(id, request);
-            return Ok(new { message = "Tạo giáo viên thành công." });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        await Mediator.Send(new CreateCenterUserCommand(id, UserRole.Teacher, request));
+        return Success("Tạo giáo viên thành công.");
     }
 
+    /// <summary>Danh sách học viên của trung tâm. <c>GET /api/centers/{id}/students</c>.</summary>
     [HttpGet("{id:int}/students")]
     [Authorize(Roles = "CenterAdmin")]
     public async Task<IActionResult> GetStudents(int id)
-        => Ok(await _centerService.GetCenterStudentsAsync(id));
+        => Success(await Mediator.Send(new GetCenterMembersQuery(id, UserRole.Student)));
 
+    /// <summary>Tạo tài khoản học viên. <c>POST /api/centers/{id}/students</c>.</summary>
     [HttpPost("{id:int}/students")]
     [Authorize(Roles = "CenterAdmin")]
     public async Task<IActionResult> CreateStudent(int id, [FromBody] CreateCenterAdminRequest request)
     {
-        try
-        {
-            await _centerService.CreateStudentAsync(id, request);
-            return Ok(new { message = "Tạo học viên thành công." });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        await Mediator.Send(new CreateCenterUserCommand(id, UserRole.Student, request));
+        return Success("Tạo học viên thành công.");
     }
 }

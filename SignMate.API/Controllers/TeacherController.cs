@@ -2,50 +2,62 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SignMate.Application.DTOs.Teacher;
-using SignMate.Application.Interfaces;
+using SignMate.Application.Features.Teacher.Commands.AddComment;
+using SignMate.Application.Features.Teacher.Queries.GetClasses;
+using SignMate.Application.Features.Teacher.Queries.GetDashboard;
+using SignMate.Application.Features.Teacher.Queries.GetStudentComments;
+using SignMate.Application.Features.Teacher.Queries.GetStudents;
 
 namespace SignMate.API.Controllers;
 
-[ApiController]
+/// <summary>
+/// Tính năng hỗ trợ giảng dạy cho giáo viên: dashboard, lớp học, học sinh, nhận xét.
+/// </summary>
 [Route("api/teacher")]
 [Authorize(Roles = "CenterAdmin,Teacher")]
-public class TeacherController : ControllerBase
+public class TeacherController : BaseApiController
 {
-    private readonly ITeacherService _teacherService;
-
-    public TeacherController(ITeacherService teacherService)
-        => _teacherService = teacherService;
-
+    /// <summary>Gửi nhận xét cho học viên. <c>POST /api/teacher/comments</c>.</summary>
     [HttpPost("comments")]
     public async Task<IActionResult> AddComment([FromBody] CreateCommentRequest request)
     {
         var teacherId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var comment = await _teacherService.AddCommentAsync(teacherId, request);
-        return Created("", comment);
+        var result = await Mediator.Send(new AddCommentCommand(teacherId, request));
+        return Created(result, "Gửi nhận xét thành công.");
     }
 
+    /// <summary>Nhận xét đã gửi cho một học viên. <c>GET /api/teacher/students/{studentId}/comments</c>.</summary>
     [HttpGet("students/{studentId:int}/comments")]
     public async Task<IActionResult> GetStudentComments(int studentId)
-        => Ok(await _teacherService.GetStudentCommentsAsync(studentId));
+    {
+        var result = await Mediator.Send(new GetStudentCommentsQuery(studentId));
+        return Success(result);
+    }
 
+    /// <summary>Số liệu tổng quan của giáo viên. <c>GET /api/teacher/dashboard</c>.</summary>
     [HttpGet("dashboard")]
     public async Task<IActionResult> GetDashboard()
     {
         var teacherId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        return Ok(await _teacherService.GetTeacherDashboardAsync(teacherId));
+        var result = await Mediator.Send(new GetTeacherDashboardQuery(teacherId));
+        return Success(result);
     }
 
+    /// <summary>Danh sách lớp phụ trách. <c>GET /api/teacher/classes</c>.</summary>
     [HttpGet("classes")]
     public async Task<IActionResult> GetClasses()
     {
         var teacherId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        return Ok(await _teacherService.GetTeacherClassesAsync(teacherId));
+        var result = await Mediator.Send(new GetTeacherClassesQuery(teacherId));
+        return Success(result);
     }
 
+    /// <summary>Danh sách học viên quản lý. <c>GET /api/teacher/students</c>.</summary>
     [HttpGet("students")]
     public async Task<IActionResult> GetStudents()
     {
         var teacherId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        return Ok(await _teacherService.GetTeacherStudentsAsync(teacherId));
+        var result = await Mediator.Send(new GetTeacherStudentsQuery(teacherId));
+        return Success(result);
     }
 }

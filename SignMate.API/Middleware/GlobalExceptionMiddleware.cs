@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using FluentValidation;
+using SignMate.Application.Common.Exceptions;
 using SignMate.Application.DTOs.Common;
 
 namespace SignMate.API.Middleware;
@@ -32,16 +33,25 @@ public class GlobalExceptionMiddleware
     {
         var (statusCode, message, errors) = ex switch
         {
+            // ── FluentValidation: gom toàn bộ lỗi field ────────────────────
             ValidationException valEx => (
-                HttpStatusCode.BadRequest, 
-                "Validation failed.", 
-                valEx.Errors.Select(e => e.ErrorMessage).ToList()
+                HttpStatusCode.BadRequest,
+                "Dữ liệu không hợp lệ.",
+                valEx.Errors.Select(e => e.ErrorMessage).Distinct().ToList()
             ),
+
+            // ── Exception nghiệp vụ có chủ đích (ưu tiên khớp trước) ────────
+            BadRequestException => (HttpStatusCode.BadRequest, ex.Message, (List<string>?)null),
+            NotFoundException => (HttpStatusCode.NotFound, ex.Message, (List<string>?)null),
+            ConflictException => (HttpStatusCode.Conflict, ex.Message, (List<string>?)null),
+            ForbiddenException => (HttpStatusCode.Forbidden, ex.Message, (List<string>?)null),
+
+            // ── Fallback cho exception khung/hệ thống (giữ tương thích) ─────
             ArgumentException => (HttpStatusCode.BadRequest, ex.Message, (List<string>?)null),
             UnauthorizedAccessException => (HttpStatusCode.Unauthorized, ex.Message, (List<string>?)null),
             InvalidOperationException => (HttpStatusCode.Conflict, ex.Message, (List<string>?)null),
             KeyNotFoundException => (HttpStatusCode.NotFound, ex.Message, (List<string>?)null),
-            _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.", (List<string>?)null)
+            _ => (HttpStatusCode.InternalServerError, "Đã xảy ra lỗi không mong muốn.", (List<string>?)null)
         };
 
         if (statusCode == HttpStatusCode.InternalServerError)

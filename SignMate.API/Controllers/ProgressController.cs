@@ -1,103 +1,34 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SignMate.Application.DTOs.Progress;
-using SignMate.Application.Interfaces;
-using SignMate.Domain.Entities;
+using SignMate.Application.Features.Progress.Commands.UpdateLessonProgress;
+using SignMate.Application.Features.Progress.Commands.UpdateSignProgress;
 
 namespace SignMate.API.Controllers;
 
-[ApiController]
+/// <summary>
+/// Cập nhật tiến độ học tập của người dùng: tiến độ bài học và tiến độ luyện ký hiệu.
+/// </summary>
 [Route("api/progress")]
 [Authorize]
-public class ProgressController : ControllerBase
+public class ProgressController : BaseApiController
 {
-    private readonly ISignMateDbContext _db;
-
-    public ProgressController(ISignMateDbContext db) => _db = db;
-
+    /// <summary>Cập nhật tiến độ một bài học. <c>PUT /api/progress/lesson</c>.</summary>
     [HttpPut("lesson")]
     public async Task<IActionResult> UpdateLessonProgress([FromBody] UpdateLessonProgressRequest request)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        if (!Enum.TryParse<LessonStatus>(request.Status, true, out var status))
-            return BadRequest(new { message = $"Invalid status: {request.Status}" });
-
-        var lesson = await _db.Lessons.FindAsync(request.LessonId);
-        if (lesson == null) return NotFound(new { message = "Lesson not found." });
-
-        var enrollment = await _db.Enrollments
-            .FirstOrDefaultAsync(e => e.UserId == userId && e.CourseId == lesson.CourseId);
-        if (enrollment == null) return BadRequest(new { message = "Not enrolled in this course." });
-
-        var progress = await _db.LessonProgresses
-            .FirstOrDefaultAsync(lp => lp.UserId == userId && lp.LessonId == request.LessonId);
-
-        if (progress == null)
-        {
-            progress = new LessonProgress
-            {
-                Id = 0, EnrollmentId = enrollment.Id,
-                UserId = userId, LessonId = request.LessonId,
-                Status = status, WatchDurationSeconds = request.WatchDurationSeconds,
-                LastWatchedAt = DateTime.UtcNow
-            };
-            _db.LessonProgresses.Add(progress);
-        }
-        else
-        {
-            progress.Status = status;
-            progress.WatchDurationSeconds += request.WatchDurationSeconds;
-            progress.LastWatchedAt = DateTime.UtcNow;
-        }
-
-        if (status == LessonStatus.Completed)
-        {
-            var totalLessons = await _db.Lessons.CountAsync(l => l.CourseId == lesson.CourseId);
-            var completedLessons = await _db.LessonProgresses
-                .CountAsync(lp => lp.UserId == userId
-                    && lp.Enrollment.CourseId == lesson.CourseId
-                    && lp.Status == LessonStatus.Completed);
-
-            if (completedLessons >= totalLessons)
-                enrollment.CompletedAt = DateTime.UtcNow;
-        }
-
-        await _db.SaveChangesAsync();
-        return Ok(new { message = "Progress updated." });
+        await Mediator.Send(new UpdateLessonProgressCommand(userId, request));
+        return Success("Đã cập nhật tiến độ bài học.");
     }
 
+    /// <summary>Cập nhật tiến độ luyện một ký hiệu. <c>PUT /api/progress/sign</c>.</summary>
     [HttpPut("sign")]
     public async Task<IActionResult> UpdateSignProgress([FromBody] UpdateSignProgressRequest request)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        var sign = await _db.Signs.FindAsync(request.SignId);
-        if (sign == null) return NotFound(new { message = "Sign not found." });
-
-        var progress = await _db.SignProgresses
-            .FirstOrDefaultAsync(sp => sp.UserId == userId && sp.SignId == request.SignId);
-
-        if (progress == null)
-        {
-            progress = new SignProgress
-            {
-                Id = 0, UserId = userId, SignId = request.SignId,
-                IsMastered = request.IsMastered, AttemptCount = 1,
-                LastPracticedAt = DateTime.UtcNow
-            };
-            _db.SignProgresses.Add(progress);
-        }
-        else
-        {
-            progress.IsMastered = request.IsMastered;
-            progress.AttemptCount++;
-            progress.LastPracticedAt = DateTime.UtcNow;
-        }
-
-        await _db.SaveChangesAsync();
-        return Ok(new { message = "Sign progress updated." });
+        await Mediator.Send(new UpdateSignProgressCommand(userId, request));
+        return Success("Đã cập nhật tiến độ ký hiệu.");
     }
 }

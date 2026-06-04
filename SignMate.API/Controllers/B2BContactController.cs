@@ -1,22 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using SignMate.Application.DTOs.B2BContact;
-using SignMate.Application.Interfaces;
+using SignMate.Application.Features.B2BContact.Commands.SubmitContact;
 
 namespace SignMate.API.Controllers;
 
-[ApiController]
+/// <summary>
+/// Tiếp nhận lead B2B từ biểu mẫu liên hệ doanh nghiệp/trường học của app mobile.
+/// </summary>
 [Route("api/b2b/contact")]
-public class B2BContactController : ControllerBase
+public class B2BContactController : BaseApiController
 {
-    private readonly IB2BContactService _contactService;
-
-    public B2BContactController(IB2BContactService contactService)
-        => _contactService = contactService;
-
+    /// <summary>
+    /// Ghi nhận thông tin khách hàng tiềm năng B2B. <c>POST /api/b2b/contact</c>.
+    /// </summary>
     [HttpPost]
     public async Task<IActionResult> Submit([FromBody] CreateB2BContactRequest request)
     {
-        var lead = await _contactService.SubmitContactFormAsync(request);
-        return Created("", lead);
+        var lead = await Mediator.Send(new SubmitContactCommand(request));
+        return Created(lead, "Đã gửi thông tin liên hệ thành công. Chúng tôi sẽ phản hồi trong 24 giờ.");
     }
 }

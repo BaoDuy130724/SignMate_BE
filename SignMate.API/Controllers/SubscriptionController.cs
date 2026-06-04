@@ -2,27 +2,29 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SignMate.Application.DTOs.Subscription;
-using SignMate.Application.Interfaces;
+using SignMate.Application.Features.Subscription.Commands.ProcessVnPayCallback;
+using SignMate.Application.Features.Subscription.Commands.Subscribe;
+using SignMate.Application.Features.Subscription.Queries.GetAllSubscriptions;
+using SignMate.Application.Features.Subscription.Queries.GetMySubscription;
+using SignMate.Application.Features.Subscription.Queries.GetPlans;
 
 namespace SignMate.API.Controllers;
 
-[ApiController]
+/// <summary>
+/// Quản lý gói dịch vụ &amp; thanh toán: xem gói, đăng ký, callback VNPay, gói hiện tại của người dùng.
+/// </summary>
 [Route("api")]
-public class SubscriptionController : ControllerBase
+public class SubscriptionController : BaseApiController
 {
-    private readonly ISubscriptionService _subService;
-    private readonly IVnPayService _vnPayService;
-
-    public SubscriptionController(ISubscriptionService subService, IVnPayService vnPayService)
-    {
-        _subService = subService;
-        _vnPayService = vnPayService;
-    }
-
+    /// <summary>Danh sách gói cước. <c>GET /api/plans</c>.</summary>
     [HttpGet("plans")]
     public async Task<IActionResult> GetPlans()
-        => Ok(await _subService.GetPlansAsync());
+    {
+        var result = await Mediator.Send(new GetPlansQuery());
+        return Success(result);
+    }
 
+    /// <summary>Đăng ký một gói cước. <c>POST /api/subscription/subscribe</c>.</summary>
     [Authorize]
     [HttpPost("subscription/subscribe")]
     public async Task<IActionResult> Subscribe([FromBody] SubscribeRequest request)
@@ -31,103 +33,86 @@ public class SubscriptionController : ControllerBase
 
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         if (string.IsNullOrEmpty(ipAddress) || ipAddress == "::1")
-        {
             ipAddress = "127.0.0.1";
-        }
 
-        var res = await _subService.SubscribeAsync(userId, request, ipAddress);
-        return res.Success ? Ok(res) : BadRequest(new { message = res.Message });
+        var result = await Mediator.Send(new SubscribeCommand(userId, request, ipAddress));
+        return Success(result, result.Message);
     }
+
     /// <summary>
-    /// VNPay redirect callback — user returns here after payment.
+    /// VNPay redirect callback — người dùng quay lại sau khi thanh toán. Trả về HTML để Flutter
+    /// WebView phát hiện kết quả (đây là contract bên ngoài nên không bọc ApiResponse).
+    /// <c>GET /api/subscription/vnpay-return</c>.
     /// </summary>
     [HttpGet("subscription/vnpay-return")]
     public async Task<IActionResult> VnPayReturn()
     {
-        var vnpayParams = HttpContext.Request.Query
-            .ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
+        var parameters = HttpContext.Request.Query.ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
+        var outcome = await Mediator.Send(new ProcessVnPayCallbackCommand(parameters));
 
-        var result = _vnPayService.ValidateCallback(vnpayParams);
+        if (!outcome.IsValid)
+            return BadRequest(new { message = "Chữ ký VNPay không hợp lệ." });
 
-        if (!result.IsValid)
-            return BadRequest(new { message = "Invalid VNPay signature" });
-
-        if (result.IsSuccess)
-        {
-            // Find subscription by TxnRef pattern
-            var txnRef = vnpayParams.GetValueOrDefault("vnp_TxnRef") ?? "";
-            var sub = await FindSubscriptionByTxnRef(txnRef);
-
-            if (sub.HasValue)
-                await _subService.ConfirmPaymentAsync(sub.Value);
-        }
-
-        // Return a simple HTML page that the Flutter WebView can detect
-        var status = result.IsSuccess ? "success" : "failed";
-        var html = $@"
-<!DOCTYPE html>
-<html>
-<head><meta name=""viewport"" content=""width=device-width, initial-scale=1""></head>
-<body style=""display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;background:#f5f5f5"">
-  <div style=""text-align:center;padding:40px;background:white;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.1)"">
-    <div style=""font-size:64px"">{(result.IsSuccess ? "✅" : "❌")}</div>
-    <h2 style=""color:{(result.IsSuccess ? "#4CAF50" : "#F44336")}"">{(result.IsSuccess ? "Thanh toán thành công!" : "Thanh toán thất bại")}</h2>
-    <p style=""color:#666"">Bạn có thể đóng trang này và quay lại ứng dụng.</p>
-    <p id=""status"" style=""display:none"">{status}</p>
-  </div>
-</body>
-</html>";
-
+        var html = BuildResultHtml(outcome.IsSuccess);
         return Content(html, "text/html");
     }
 
     /// <summary>
-    /// VNPay IPN (server-to-server) — VNPay calls this to confirm payment.
+    /// VNPay IPN (server-to-server) — VNPay gọi để xác nhận thanh toán. Trả về RspCode theo chuẩn VNPay.
+    /// <c>GET /api/subscription/vnpay-ipn</c>.
     /// </summary>
     [HttpGet("subscription/vnpay-ipn")]
     public async Task<IActionResult> VnPayIpn()
     {
-        var vnpayParams = HttpContext.Request.Query
-            .ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
+        var parameters = HttpContext.Request.Query.ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
+        var outcome = await Mediator.Send(new ProcessVnPayCallbackCommand(parameters));
 
-        var result = _vnPayService.ValidateCallback(vnpayParams);
-
-        if (!result.IsValid)
-            return Ok(new { RspCode = "97", Message = "Invalid signature" });
-
-        if (result.IsSuccess)
-        {
-            var txnRef = vnpayParams.GetValueOrDefault("vnp_TxnRef") ?? "";
-            var sub = await FindSubscriptionByTxnRef(txnRef);
-
-            if (sub.HasValue)
-                await _subService.ConfirmPaymentAsync(sub.Value);
-        }
-
-        return Ok(new { RspCode = "00", Message = "Confirm success" });
+        return outcome.IsValid
+            ? Ok(new { RspCode = "00", Message = "Confirm success" })
+            : Ok(new { RspCode = "97", Message = "Invalid signature" });
     }
 
+    /// <summary>Gói cước hiện tại của người dùng. <c>GET /api/subscription/me</c>.</summary>
     [Authorize]
     [HttpGet("subscription/me")]
     public async Task<IActionResult> GetMySubscription()
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var sub = await _subService.GetMySubscriptionAsync(userId);
-        return sub == null ? NotFound() : Ok(sub);
+        var result = await Mediator.Send(new GetMySubscriptionQuery(userId));
+        return Success(result);
     }
 
-    private async Task<int?> FindSubscriptionByTxnRef(string txnRef)
-    {
-        if (string.IsNullOrEmpty(txnRef)) return null;
-
-        if (int.TryParse(txnRef, out var subId))
-            return await Task.FromResult(subId);
-
-        return null;
-    }
-
+    /// <summary>Toàn bộ lượt đăng ký gói (quản trị). <c>GET /api/subscription/all</c>.</summary>
     [Authorize(Roles = "SuperAdmin")]
     [HttpGet("subscription/all")]
     public async Task<IActionResult> GetAllSubscriptions()
-        => Ok(await _subService.GetAllSubscriptionsAsync());
+    {
+        var result = await Mediator.Send(new GetAllSubscriptionsQuery());
+        return Success(result);
+    }
+
+    /// <summary>
+    /// Dựng trang HTML kết quả thanh toán cho WebView của app phát hiện trạng thái.
+    /// </summary>
+    private static string BuildResultHtml(bool isSuccess)
+    {
+        var icon = isSuccess ? "✅" : "❌";
+        var color = isSuccess ? "#4CAF50" : "#F44336";
+        var title = isSuccess ? "Thanh toán thành công!" : "Thanh toán thất bại";
+        var status = isSuccess ? "success" : "failed";
+
+        return $@"
+<!DOCTYPE html>
+<html>
+<head><meta name=""viewport"" content=""width=device-width, initial-scale=1""></head>
+<body style=""display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;background:#f5f5f5"">
+  <div style=""text-align:center;padding:40px;background:white;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.1)"">
+    <div style=""font-size:64px"">{icon}</div>
+    <h2 style=""color:{color}"">{title}</h2>
+    <p style=""color:#666"">Bạn có thể đóng trang này và quay lại ứng dụng.</p>
+    <p id=""status"" style=""display:none"">{status}</p>
+  </div>
+</body>
+</html>";
+    }
 }

@@ -8,6 +8,11 @@ public class EnrollRequest
     public int CourseId { get; set; }
 }
 
+public class EnrollmentResultDto
+{
+    public int EnrollmentId { get; set; }
+}
+
 public class EnrollmentDto
 {
     public int Id { get; set; }

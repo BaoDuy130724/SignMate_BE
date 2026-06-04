@@ -24,6 +24,15 @@ public class SubscribeResponse
     public int? SubscriptionId { get; set; }
 }
 
+public class VnPayCallbackOutcomeDto
+{
+    /// <summary>Chữ ký VNPay hợp lệ hay không.</summary>
+    public bool IsValid { get; set; }
+
+    /// <summary>Giao dịch thành công hay không (vnp_ResponseCode == "00").</summary>
+    public bool IsSuccess { get; set; }
+}
+
 public class MySubscriptionDto
 {
     public int PlanId { get; set; }

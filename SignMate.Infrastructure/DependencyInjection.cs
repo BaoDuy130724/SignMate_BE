@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IBlobService, BlobService>();
         services.AddScoped<IEmailService, MockEmailService>();
         services.AddScoped<IOtpService, OtpService>();
+        services.AddScoped<ITokenService, JwtTokenService>();
         services.AddSingleton<IVnPayService, VnPayService>();
 
         // Background Processing

@@ -35,6 +35,25 @@ builder.Services.AddAuthorization();
 // ── Controllers ────────────────────────────────────────────────
 builder.Services.AddControllers();
 
+// Chuẩn hóa lỗi model-binding/validation tự động của [ApiController] về ApiResponse,
+// tránh trả ValidationProblemDetails mặc định không đồng nhất với phần còn lại của hệ thống.
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .Where(kvp => kvp.Value?.Errors.Count > 0)
+            .SelectMany(kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage))
+            .Where(msg => !string.IsNullOrWhiteSpace(msg))
+            .ToList();
+
+        var apiResponse = SignMate.Application.DTOs.Common.ApiResponse
+            .FailureResult("Dữ liệu không hợp lệ.", errors);
+
+        return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(apiResponse);
+    };
+});
+
 // ── Response Compression ───────────────────────────────────────
 builder.Services.AddResponseCompression(opts =>
 {
