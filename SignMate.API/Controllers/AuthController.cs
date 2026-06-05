@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SignMate.Application.DTOs.Auth;
 using SignMate.Application.Features.Auth.Commands.ChangePassword;
 using SignMate.Application.Features.Auth.Commands.ForgotPassword;
@@ -21,6 +22,7 @@ namespace SignMate.API.Controllers;
 public class AuthController : BaseApiController
 {
     /// <summary>Gửi OTP xác thực email khi đăng ký. <c>POST /api/auth/send-register-otp</c>.</summary>
+    [EnableRateLimiting("otp")]
     [HttpPost("send-register-otp")]
     public async Task<IActionResult> SendRegisterOtp([FromBody] SendOtpRequest request)
     {
@@ -29,6 +31,7 @@ public class AuthController : BaseApiController
     }
 
     /// <summary>Tạo tài khoản mới sau khi xác thực OTP. <c>POST /api/auth/register</c>.</summary>
+    [EnableRateLimiting("auth")]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
@@ -37,6 +40,7 @@ public class AuthController : BaseApiController
     }
 
     /// <summary>Đăng nhập bằng email + mật khẩu. <c>POST /api/auth/login</c>.</summary>
+    [EnableRateLimiting("auth")]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -63,6 +67,7 @@ public class AuthController : BaseApiController
     }
 
     /// <summary>Yêu cầu OTP khôi phục mật khẩu. <c>POST /api/auth/forgot-password</c>.</summary>
+    [EnableRateLimiting("otp")]
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
@@ -71,6 +76,7 @@ public class AuthController : BaseApiController
     }
 
     /// <summary>Đặt lại mật khẩu bằng OTP. <c>POST /api/auth/reset-password</c>.</summary>
+    [EnableRateLimiting("auth")]
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {

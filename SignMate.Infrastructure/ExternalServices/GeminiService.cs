@@ -19,7 +19,7 @@ public class GeminiService : IGeminiService
         _http = http;
         _http.Timeout = TimeSpan.FromSeconds(10);
         _apiKey = config["Gemini:ApiKey"] ?? "";
-        _model = config["Gemini:Model"] ?? "gemini-2.0-flash";
+        _model = config["Gemini:Model"] ?? "gemini-2.5-flash";
         _logger = logger;
     }
 

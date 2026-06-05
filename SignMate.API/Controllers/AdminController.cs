@@ -1,26 +1,18 @@
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SignMate.Application.DTOs.Admin;
-using SignMate.Application.DTOs.Common;
-using SignMate.Application.Features.Admin;
+using SignMate.Application.Features.Admin.Queries.GetSystemDashboard;
 
 namespace SignMate.API.Controllers;
 
-[ApiController]
+/// <summary>
+/// Quản trị hệ thống cấp cao (SuperAdmin): dashboard tổng quan vận hành toàn nền tảng.
+/// </summary>
 [Route("api/admin")]
 [Authorize(Roles = "SuperAdmin")]
-public class AdminController : ControllerBase
+public class AdminController : BaseApiController
 {
-    private readonly IMediator _mediator;
-
-    public AdminController(IMediator mediator)
-        => _mediator = mediator;
-
+    /// <summary>Dashboard tổng quan hệ thống. <c>GET /api/admin/dashboard</c>.</summary>
     [HttpGet("dashboard")]
     public async Task<IActionResult> GetDashboard()
-    {
-        var result = await _mediator.Send(new GetSystemDashboardQuery());
-        return Ok(ApiResponse<SystemDashboardDto>.SuccessResult(result, "Dashboard loaded successfully."));
-    }
+        => Success(await Mediator.Send(new GetSystemDashboardQuery()), "Dashboard loaded successfully.");
 }

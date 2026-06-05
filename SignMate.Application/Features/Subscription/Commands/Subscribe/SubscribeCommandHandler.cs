@@ -11,21 +11,17 @@ namespace SignMate.Application.Features.Subscription.Commands.Subscribe;
 /// Handler cho <see cref="SubscribeCommand"/>:
 /// <list type="bullet">
 /// <item>Gói Free (giá 0đ): hủy gói active cũ và kích hoạt gói mới ngay lập tức.</item>
-/// <item>Gói trả phí: tạo bản ghi <see cref="UserSubscription"/> ở trạng thái chờ (IsActive=false)
-/// và sinh link thanh toán VNPay; gói chỉ được kích hoạt khi callback thanh toán thành công.</item>
+/// <item>Gói trả phí: <b>tạm vô hiệu hóa</b> — cổng VNPay sandbox đã được gỡ, sẽ thay bằng PayOS.
+/// Hiện trả về 503 (đang bảo trì). Logic VNPay cũ được giữ lại dạng comment bên dưới để tham chiếu.</item>
 /// </list>
 /// </summary>
 public class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, SubscribeResponse>
 {
-    private const string DefaultReturnUrl = "http://localhost:5184/api/subscription/vnpay-return";
-
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IVnPayService _vnPayService;
 
-    public SubscribeCommandHandler(IUnitOfWork unitOfWork, IVnPayService vnPayService)
+    public SubscribeCommandHandler(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _vnPayService = vnPayService;
     }
 
     /// <inheritdoc />
@@ -51,7 +47,13 @@ public class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, Subscri
             return new SubscribeResponse { Success = true, Message = "Đã kích hoạt gói miễn phí." };
         }
 
-        // ── Gói trả phí: tạo bản ghi chờ + link VNPay ────────────────
+        // ── Gói trả phí: TẠM VÔ HIỆU HÓA (chờ tích hợp PayOS) ─────────
+        throw new ServiceUnavailableException(
+            "Thanh toán gói trả phí đang tạm bảo trì để nâng cấp cổng thanh toán. Vui lòng thử lại sau.");
+
+        /* === VNPay (giữ lại để tham chiếu khi làm PayOS) =============
+        const string DefaultReturnUrl = "http://localhost:5184/api/subscription/vnpay-return";
+
         var pendingSub = new UserSubscription
         {
             UserId = command.UserId,
@@ -79,5 +81,6 @@ public class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, Subscri
             PaymentUrl = paymentUrl,
             SubscriptionId = pendingSub.Id
         };
+        ============================================================= */
     }
 }

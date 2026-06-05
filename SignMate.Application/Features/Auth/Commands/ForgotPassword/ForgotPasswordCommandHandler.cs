@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using SignMate.Application.Common.Exceptions;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 
@@ -28,7 +29,18 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
             .AnyAsync(u => u.Email == command.Request.Email, cancellationToken);
 
         if (userExists)
-            await _otpService.GenerateAndSendOtpAsync(command.Request.Email, "ResetPassword");
+        {
+            try
+            {
+                await _otpService.GenerateAndSendOtpAsync(command.Request.Email, "ResetPassword");
+            }
+            catch (TooManyRequestsException)
+            {
+                // Đang trong thời gian cooldown — người dùng đã nhận mã gần đây. Giữ phản hồi
+                // trung lập (không lộ email tồn tại) thay vì ném 429. Spam diện rộng đã được
+                // chặn ở rate limiter theo IP.
+            }
+        }
 
         return Unit.Value;
     }

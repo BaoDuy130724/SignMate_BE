@@ -11,8 +11,8 @@ namespace SignMate.Application.Features.Auth.Commands.Register;
 /// <summary>
 /// Handler cho <see cref="RegisterCommand"/>: xác thực OTP, tạo <see cref="User"/> kèm bản ghi
 /// <see cref="Streak"/> khởi tạo, rồi phát hành token đăng nhập.
-/// User, Streak và RefreshToken được tạo trong cùng một <c>SaveChangesAsync</c> — EF gói chúng
-/// trong một transaction nên đảm bảo Atomicity (hoặc tạo trọn vẹn, hoặc không gì cả).
+/// Lưu hai bước: (1) ghi User + Streak để DB cấp <c>Id</c> identity, (2) phát hành &amp; lưu refresh token.
+/// Phải tách như vậy vì JWT nhúng <c>user.Id</c> — không thể phát hành token khi Id chưa được sinh.
 /// </summary>
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, TokenResponse>
 {
@@ -60,9 +60,12 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, TokenResp
             LastActiveDate = DateOnly.FromDateTime(DateTime.UtcNow)
         });
 
-        var tokens = await TokenIssuer.IssueAsync(_unitOfWork, _tokenService, user);
+        // Lưu trước để DB cấp giá trị Id (identity) cho user — BẮT BUỘC trước khi phát hành token,
+        // vì JWT nhúng user.Id vào claim NameIdentifier. Phát hành token khi Id còn 0 sẽ tạo JWT lỗi.
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Một SaveChanges duy nhất ghi User + Streak + RefreshToken trong cùng transaction của EF.
+        // Giờ user.Id đã có giá trị thật → token mang đúng định danh; lưu lần hai cho refresh token.
+        var tokens = await TokenIssuer.IssueAsync(_unitOfWork, _tokenService, user);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return tokens;
     }

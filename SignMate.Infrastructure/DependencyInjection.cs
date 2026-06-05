@@ -32,10 +32,19 @@ public static class DependencyInjection
         services.AddHttpClient<IAIClientService, AIClientService>();
         services.AddHttpClient<IGeminiService, GeminiService>();
         services.AddScoped<IBlobService, BlobService>();
-        services.AddScoped<IEmailService, MockEmailService>();
+
+        // Email: gửi thật qua SMTP khi đã cấu hình "Email:Host"; nếu chưa thì rơi về Mock (chỉ log).
+        services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+        var smtpHost = configuration[$"{EmailSettings.SectionName}:Host"];
+        if (string.IsNullOrWhiteSpace(smtpHost))
+            services.AddScoped<IEmailService, MockEmailService>();
+        else
+            services.AddScoped<IEmailService, SmtpEmailService>();
+
         services.AddScoped<IOtpService, OtpService>();
         services.AddScoped<ITokenService, JwtTokenService>();
-        services.AddSingleton<IVnPayService, VnPayService>();
+        // VNPay tạm vô hiệu hóa (sẽ thay bằng PayOS). Giữ lại VnPayService để tham chiếu.
+        // services.AddSingleton<IVnPayService, VnPayService>();
 
         // Background Processing
         services.AddSingleton<IVideoProcessingQueue, VideoProcessingQueue>();

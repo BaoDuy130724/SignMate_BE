@@ -45,6 +45,8 @@ public class GlobalExceptionMiddleware
             NotFoundException => (HttpStatusCode.NotFound, ex.Message, (List<string>?)null),
             ConflictException => (HttpStatusCode.Conflict, ex.Message, (List<string>?)null),
             ForbiddenException => (HttpStatusCode.Forbidden, ex.Message, (List<string>?)null),
+            TooManyRequestsException => (HttpStatusCode.TooManyRequests, ex.Message, (List<string>?)null),
+            ServiceUnavailableException => (HttpStatusCode.ServiceUnavailable, ex.Message, (List<string>?)null),
 
             // ── Fallback cho exception khung/hệ thống (giữ tương thích) ─────
             ArgumentException => (HttpStatusCode.BadRequest, ex.Message, (List<string>?)null),

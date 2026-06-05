@@ -1,3 +1,6 @@
+// VNPay tạm vô hiệu hóa (sẽ thay bằng PayOS). Handler bị loại khỏi biên dịch để DI không
+// yêu cầu IVnPayService lúc startup. Giữ nguyên code để tham chiếu khi tích hợp cổng mới.
+#if false
 using MediatR;
 using SignMate.Application.DTOs.Subscription;
 using SignMate.Application.Features.Subscription.Common;
@@ -60,3 +63,4 @@ public class ProcessVnPayCallbackCommandHandler
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
+#endif

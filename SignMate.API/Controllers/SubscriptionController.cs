@@ -2,7 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SignMate.Application.DTOs.Subscription;
-using SignMate.Application.Features.Subscription.Commands.ProcessVnPayCallback;
+// VNPay tạm vô hiệu hóa (sẽ thay bằng PayOS): using ...Commands.ProcessVnPayCallback;
 using SignMate.Application.Features.Subscription.Commands.Subscribe;
 using SignMate.Application.Features.Subscription.Queries.GetAllSubscriptions;
 using SignMate.Application.Features.Subscription.Queries.GetMySubscription;
@@ -39,6 +39,10 @@ public class SubscriptionController : BaseApiController
         return Success(result, result.Message);
     }
 
+    // ── VNPay callback endpoints TẠM VÔ HIỆU HÓA (chờ tích hợp PayOS) ─────────────
+    // Handler ProcessVnPayCallback + VnPayService vẫn còn trong code để tham chiếu.
+    // Khi gắn PayOS, thay 2 endpoint dưới đây bằng return/webhook tương ứng của PayOS.
+    /*
     /// <summary>
     /// VNPay redirect callback — người dùng quay lại sau khi thanh toán. Trả về HTML để Flutter
     /// WebView phát hiện kết quả (đây là contract bên ngoài nên không bọc ApiResponse).
@@ -71,6 +75,7 @@ public class SubscriptionController : BaseApiController
             ? Ok(new { RspCode = "00", Message = "Confirm success" })
             : Ok(new { RspCode = "97", Message = "Invalid signature" });
     }
+    */
 
     /// <summary>Gói cước hiện tại của người dùng. <c>GET /api/subscription/me</c>.</summary>
     [Authorize]
@@ -91,6 +96,7 @@ public class SubscriptionController : BaseApiController
         return Success(result);
     }
 
+    /* VNPay tạm vô hiệu hóa — giữ lại helper dựng HTML kết quả để tham chiếu khi làm PayOS.
     /// <summary>
     /// Dựng trang HTML kết quả thanh toán cho WebView của app phát hiện trạng thái.
     /// </summary>
@@ -115,4 +121,5 @@ public class SubscriptionController : BaseApiController
 </body>
 </html>";
     }
+    */
 }
