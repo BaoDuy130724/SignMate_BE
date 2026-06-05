@@ -21,7 +21,9 @@ public class AIClientService : IAIClientService
         {
             video_url = videoUrl,
             sign_id = signId,
-            reference_keypoints = referenceKeypoints ?? ""
+            // Python /analyze expects `reference_url`; it accepts either an inline JSON
+            // array of keypoints (what we store in Sign.ReferenceKeypointData) or a URL.
+            reference_url = referenceKeypoints ?? ""
         };
 
         var response = await _http.PostAsJsonAsync($"{_aiBaseUrl}/analyze", payload);
