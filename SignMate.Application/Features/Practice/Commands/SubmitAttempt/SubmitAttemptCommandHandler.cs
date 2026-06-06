@@ -19,13 +19,15 @@ public class SubmitAttemptCommandHandler : IRequestHandler<SubmitAttemptCommand,
     private readonly IUnitOfWork _unitOfWork;
     private readonly IBlobService _blobService;
     private readonly IAIClientService _aiClient;
+    private readonly IGeminiService _geminiService;
 
     public SubmitAttemptCommandHandler(
-        IUnitOfWork unitOfWork, IBlobService blobService, IAIClientService aiClient)
+        IUnitOfWork unitOfWork, IBlobService blobService, IAIClientService aiClient, IGeminiService geminiService)
     {
         _unitOfWork = unitOfWork;
         _blobService = blobService;
         _aiClient = aiClient;
+        _geminiService = geminiService;
     }
 
     /// <inheritdoc />
@@ -82,13 +84,50 @@ public class SubmitAttemptCommandHandler : IRequestHandler<SubmitAttemptCommand,
             throw;
         }
 
+        // Sau commit: nếu là gói Pro thì sinh phản hồi chi tiết bằng Gemini (thao tác ngoài transaction).
+        var geminiFeedback = await TryGenerateGeminiFeedbackAsync(
+            command.UserId, session, aiResult, attempt.Id, cancellationToken);
+
         return new AttemptResponse
         {
             AttemptId = attempt.Id,
             OverallScore = aiResult.OverallScore,
             Feedbacks = aiResult.Feedbacks
                 .Select(f => new FeedbackDto { Type = f.Type, Score = f.Score, Message = f.Message })
-                .ToList()
+                .ToList(),
+            GeminiFeedback = geminiFeedback
         };
+    }
+
+    /// <summary>
+    /// Sinh phản hồi chi tiết bằng Gemini cho người dùng gói Pro (đối chiếu điểm lượt thử liền trước).
+    /// Trả về null nếu người dùng không thuộc gói Pro — đúng phân tầng UC-06 (Pro → detailed).
+    /// </summary>
+    private async Task<string?> TryGenerateGeminiFeedbackAsync(
+        int userId, PracticeSession session, AIAnalysisResult aiResult,
+        int currentAttemptId, CancellationToken cancellationToken)
+    {
+        var activeSub = await _unitOfWork.Repository<UserSubscription>().Query()
+            .Include(s => s.Plan)
+            .FirstOrDefaultAsync(s => s.UserId == userId && s.IsActive && s.EndDate > DateTime.UtcNow, cancellationToken);
+
+        if (activeSub?.Plan.Type != PlanType.Pro)
+            return null;
+
+        var previousAttempt = await _unitOfWork.Repository<PracticeAttempt>().Query()
+            .Where(a => a.SessionId == session.Id && a.Id != currentAttemptId)
+            .OrderByDescending(a => a.RecordedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var context = new GeminiFeedbackContext
+        {
+            SignWord = session.Sign.Word,
+            OverallScore = aiResult.OverallScore,
+            DtwFeedbacks = aiResult.Feedbacks,
+            AttemptNumber = session.TotalAttempts,
+            PreviousScore = previousAttempt?.OverallScore
+        };
+
+        return await _geminiService.GenerateDetailedFeedbackAsync(context);
     }
 }
