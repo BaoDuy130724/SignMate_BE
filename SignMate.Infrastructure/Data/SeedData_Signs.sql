@@ -10,7 +10,7 @@ SET IDENTITY_INSERT [dbo].[Signs] ON;
 INSERT INTO [dbo].[Signs](
     [Id], [LessonId], [Word], [VideoUrl], [ThumbnailUrl], [Description], [OrderIndex], [ReferenceKeypointData]
 ) VALUES (
-    1, 1, 'BanTenGi', '', '', '', 1, '/dataset/BanTenGi.mp4.json'
+    1, 1, 'BanTenGi', '/dataset/BanTenGi.mp4', '', '', 1, '/dataset/BanTenGi.mp4.json'
 );
 
 -- =====================================
@@ -19,7 +19,7 @@ INSERT INTO [dbo].[Signs](
 INSERT INTO [dbo].[Signs](
     [Id], [LessonId], [Word], [VideoUrl], [ThumbnailUrl], [Description], [OrderIndex], [ReferenceKeypointData]
 ) VALUES (
-    2, 1, 'CamDiec', '', '', '', 2, '/dataset/CamDiec.mp4.json'
+    2, 1, 'CamDiec', '/dataset/CamDiec.mp4', '', '', 2, '/dataset/CamDiec.mp4.json'
 );
 
 -- =====================================
@@ -28,7 +28,7 @@ INSERT INTO [dbo].[Signs](
 INSERT INTO [dbo].[Signs](
     [Id], [LessonId], [Word], [VideoUrl], [ThumbnailUrl], [Description], [OrderIndex], [ReferenceKeypointData]
 ) VALUES (
-    3, 1, 'CamOn', '', '', '', 3, '/dataset/CamOn.mp4.json'
+    3, 1, 'CamOn', '/dataset/CamOn.mp4', '', '', 3, '/dataset/CamOn.mp4.json'
 );
 
 -- =====================================
@@ -37,7 +37,7 @@ INSERT INTO [dbo].[Signs](
 INSERT INTO [dbo].[Signs](
     [Id], [LessonId], [Word], [VideoUrl], [ThumbnailUrl], [Description], [OrderIndex], [ReferenceKeypointData]
 ) VALUES (
-    4, 1, 'Co', '', '', '', 4, '/dataset/Co.mp4.json'
+    4, 1, 'Co', '/dataset/Co.mp4', '', '', 4, '/dataset/Co.mp4.json'
 );
 
 -- =====================================
@@ -46,7 +46,7 @@ INSERT INTO [dbo].[Signs](
 INSERT INTO [dbo].[Signs](
     [Id], [LessonId], [Word], [VideoUrl], [ThumbnailUrl], [Description], [OrderIndex], [ReferenceKeypointData]
 ) VALUES (
-    5, 1, 'Gi', '', '', '', 5, '/dataset/Gi.mp4.json'
+    5, 1, 'Gi', '/dataset/Gi.mp4', '', '', 5, '/dataset/Gi.mp4.json'
 );
 
 -- =====================================
@@ -55,7 +55,7 @@ INSERT INTO [dbo].[Signs](
 INSERT INTO [dbo].[Signs](
     [Id], [LessonId], [Word], [VideoUrl], [ThumbnailUrl], [Description], [OrderIndex], [ReferenceKeypointData]
 ) VALUES (
-    6, 1, 'KhoeKhong', '', '', '', 6, '/dataset/KhoeKhong.mp4.json'
+    6, 1, 'KhoeKhong', '/dataset/KhoeKhong.mp4', '', '', 6, '/dataset/KhoeKhong.mp4.json'
 );
 
 -- =====================================
@@ -64,7 +64,7 @@ INSERT INTO [dbo].[Signs](
 INSERT INTO [dbo].[Signs](
     [Id], [LessonId], [Word], [VideoUrl], [ThumbnailUrl], [Description], [OrderIndex], [ReferenceKeypointData]
 ) VALUES (
-    7, 1, 'Khong', '', '', '', 7, '/dataset/Khong.mp4.json'
+    7, 1, 'Khong', '/dataset/Khong.mp4', '', '', 7, '/dataset/Khong.mp4.json'
 );
 
 -- =====================================
@@ -73,7 +73,7 @@ INSERT INTO [dbo].[Signs](
 INSERT INTO [dbo].[Signs](
     [Id], [LessonId], [Word], [VideoUrl], [ThumbnailUrl], [Description], [OrderIndex], [ReferenceKeypointData]
 ) VALUES (
-    8, 1, 'Nghe', '', '', '', 8, '/dataset/Nghe.mp4.json'
+    8, 1, 'Nghe', '/dataset/Nghe.mp4', '', '', 8, '/dataset/Nghe.mp4.json'
 );
 
 -- =====================================
@@ -82,7 +82,7 @@ INSERT INTO [dbo].[Signs](
 INSERT INTO [dbo].[Signs](
     [Id], [LessonId], [Word], [VideoUrl], [ThumbnailUrl], [Description], [OrderIndex], [ReferenceKeypointData]
 ) VALUES (
-    9, 1, 'Ten', '', '', '', 9, '/dataset/Ten.mp4.json'
+    9, 1, 'Ten', '/dataset/Ten.mp4', '', '', 9, '/dataset/Ten.mp4.json'
 );
 
 -- =====================================
@@ -91,7 +91,7 @@ INSERT INTO [dbo].[Signs](
 INSERT INTO [dbo].[Signs](
     [Id], [LessonId], [Word], [VideoUrl], [ThumbnailUrl], [Description], [OrderIndex], [ReferenceKeypointData]
 ) VALUES (
-    10, 1, 'ToiBiBenh', '', '', '', 10, '/dataset/ToiBiBenh.mp4.json'
+    10, 1, 'ToiBiBenh', '/dataset/ToiBiBenh.mp4', '', '', 10, '/dataset/ToiBiBenh.mp4.json'
 );
 
 -- =====================================
@@ -100,7 +100,7 @@ INSERT INTO [dbo].[Signs](
 INSERT INTO [dbo].[Signs](
     [Id], [LessonId], [Word], [VideoUrl], [ThumbnailUrl], [Description], [OrderIndex], [ReferenceKeypointData]
 ) VALUES (
-    11, 1, 'ToiBinhThuong', '', '', '', 11, '/dataset/ToiBinhThuong.mp4.json'
+    11, 1, 'ToiBinhThuong', '/dataset/ToiBinhThuong.mp4', '', '', 11, '/dataset/ToiBinhThuong.mp4.json'
 );
 
 -- =====================================
@@ -109,7 +109,7 @@ INSERT INTO [dbo].[Signs](
 INSERT INTO [dbo].[Signs](
     [Id], [LessonId], [Word], [VideoUrl], [ThumbnailUrl], [Description], [OrderIndex], [ReferenceKeypointData]
 ) VALUES (
-    12, 1, 'ToiKhoe', '', '', '', 12, '/dataset/ToiKhoe.mp4.json'
+    12, 1, 'ToiKhoe', '/dataset/ToiKhoe.mp4', '', '', 12, '/dataset/ToiKhoe.mp4.json'
 );
 
 SET IDENTITY_INSERT [dbo].[Signs] OFF;

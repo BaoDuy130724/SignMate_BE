@@ -60,14 +60,6 @@ public class VnPayService : IVnPayService
         var secureHash = HmacSha512(_hashSecret, queryString);
 
         var finalUrl = $"{_baseUrl}?{queryString}&vnp_SecureHash={secureHash}";
-
-        try
-        {
-            System.IO.File.AppendAllText("vnpay_debug.log",
-                $"\n[{DateTime.Now}] CreatePaymentUrl:\n- QueryString (= SignData):\n{queryString}\n- SecureHash:\n{secureHash}\n- FinalURL:\n{finalUrl}\n");
-        }
-        catch { }
-
         return finalUrl;
     }
 

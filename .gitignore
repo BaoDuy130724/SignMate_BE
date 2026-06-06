@@ -69,3 +69,6 @@ appsettings.*.local.json
 
 # Video user upload lúc chạy (BlobService fallback tự tạo lại thư mục này)
 SignMate.API/wwwroot/uploads/
+
+# Video mẫu phục vụ tĩnh (nặng) — giữ keypoint .mp4.json, bỏ .mp4; copy thủ công vào wwwroot/dataset khi deploy
+SignMate.API/wwwroot/dataset/*.mp4
