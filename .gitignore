@@ -66,3 +66,6 @@ nunit-*.xml
 *.local.json
 appsettings.Local.json
 appsettings.*.local.json
+
+# Video user upload lúc chạy (BlobService fallback tự tạo lại thư mục này)
+SignMate.API/wwwroot/uploads/
