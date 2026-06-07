@@ -4,6 +4,10 @@ using SignMate.Infrastructure.Data;
 
 namespace SignMate.API.Controllers;
 
+/// <summary>
+/// Endpoint tiện ích để nạp (seed) bộ dữ liệu chuẩn vào database — dùng khi dựng môi trường
+/// dev/demo. Bao bọc <see cref="DatabaseSeeder"/> qua HTTP để khỏi phải chạy tay.
+/// </summary>
 [ApiController]
 [Route("api/seed")]
 public class SeedController : ControllerBase
