@@ -32,6 +32,12 @@ public class CreateClassRequest
     public int TeacherId { get; set; }
 }
 
+public class UpdateClassRequest
+{
+    public string Name { get; set; } = null!;
+    public int TeacherId { get; set; }
+}
+
 public class AddStudentsRequest
 {
     public List<int> StudentIds { get; set; } = [];

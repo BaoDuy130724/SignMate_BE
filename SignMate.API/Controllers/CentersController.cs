@@ -1,14 +1,19 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SignMate.Application.DTOs.Center;
+using SignMate.Application.DTOs.User;
 using SignMate.Application.Features.Center.Commands.CreateCenter;
 using SignMate.Application.Features.Center.Commands.CreateCenterUser;
 using SignMate.Application.Features.Center.Commands.DeleteCenter;
 using SignMate.Application.Features.Center.Commands.UpdateCenter;
+using SignMate.Application.Features.Center.Commands.UpdateCenterMember;
+using SignMate.Application.Features.Center.Commands.DeleteCenterMember;
 using SignMate.Application.Features.Center.Queries.GetCenterDashboard;
 using SignMate.Application.Features.Center.Queries.GetCenterMembers;
+using SignMate.Application.Features.Center.Queries.GetCenterMember;
 using SignMate.Application.Features.Center.Queries.GetCenters;
 using SignMate.Domain.Entities;
+using System.Security.Claims;
 
 namespace SignMate.API.Controllers;
 
@@ -58,6 +63,36 @@ public class CentersController : BaseApiController
     {
         await Mediator.Send(new CreateCenterUserCommand(id, UserRole.CenterAdmin, request));
         return Success("Tạo quản trị viên trung tâm thành công.");
+    }
+
+    /// <summary>Chi tiết thành viên của trung tâm. <c>GET /api/centers/{id}/members/{userId}</c>.</summary>
+    [HttpGet("{id:int}/members/{userId:int}")]
+    [Authorize(Roles = "CenterAdmin")]
+    public async Task<IActionResult> GetCenterMember(int id, int userId)
+    {
+        var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await Mediator.Send(new GetCenterMemberQuery(id, userId, currentUserId));
+        return Success(result);
+    }
+
+    /// <summary>Cập nhật thành viên của trung tâm. <c>PUT /api/centers/{id}/members/{userId}</c>.</summary>
+    [HttpPut("{id:int}/members/{userId:int}")]
+    [Authorize(Roles = "CenterAdmin")]
+    public async Task<IActionResult> UpdateCenterMember(int id, int userId, [FromBody] UpdateCenterMemberRequest request)
+    {
+        var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await Mediator.Send(new UpdateCenterMemberCommand(id, userId, currentUserId, request));
+        return Success(result, "Cập nhật thành viên thành công.");
+    }
+
+    /// <summary>Gỡ thành viên khỏi trung tâm. <c>DELETE /api/centers/{id}/members/{userId}</c>.</summary>
+    [HttpDelete("{id:int}/members/{userId:int}")]
+    [Authorize(Roles = "CenterAdmin")]
+    public async Task<IActionResult> DeleteCenterMember(int id, int userId)
+    {
+        var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await Mediator.Send(new DeleteCenterMemberCommand(id, userId, currentUserId));
+        return Success("Xóa thành viên thành công.");
     }
 
     /// <summary>Danh sách giáo viên của trung tâm. <c>GET /api/centers/{id}/teachers</c>.</summary>

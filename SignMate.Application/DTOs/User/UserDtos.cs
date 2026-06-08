@@ -26,6 +26,12 @@ public class UpdateProfileRequest
     public string? AvatarUrl { get; set; }
 }
 
+public class UpdateCenterMemberRequest
+{
+    [Required, MaxLength(200)]
+    public string FullName { get; set; } = null!;
+}
+
 /// <summary>Tạo người dùng mới do SuperAdmin thực hiện (không qua OTP).</summary>
 public class CreateUserRequest
 {

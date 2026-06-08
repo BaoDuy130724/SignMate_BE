@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SignMate.Application.DTOs.Teacher;
 using SignMate.Application.Features.Teacher.Commands.AddComment;
+using SignMate.Application.Features.Teacher.Commands.UpdateComment;
+using SignMate.Application.Features.Teacher.Commands.DeleteComment;
 using SignMate.Application.Features.Teacher.Queries.GetClasses;
 using SignMate.Application.Features.Teacher.Queries.GetDashboard;
 using SignMate.Application.Features.Teacher.Queries.GetStudentComments;
@@ -24,6 +26,26 @@ public class TeacherController : BaseApiController
         var teacherId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var result = await Mediator.Send(new AddCommentCommand(teacherId, request));
         return Created(result, "Gửi nhận xét thành công.");
+    }
+
+    /// <summary>Cập nhật nhận xét. <c>PUT /api/teacher/comments/{id}</c>.</summary>
+    [HttpPut("comments/{id:int}")]
+    [Authorize(Roles = "Teacher")]
+    public async Task<IActionResult> UpdateComment(int id, [FromBody] UpdateCommentRequest request)
+    {
+        var teacherId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await Mediator.Send(new UpdateCommentCommand(teacherId, id, request));
+        return Success(result, "Cập nhật nhận xét thành công.");
+    }
+
+    /// <summary>Xóa nhận xét. <c>DELETE /api/teacher/comments/{id}</c>.</summary>
+    [HttpDelete("comments/{id:int}")]
+    [Authorize(Roles = "Teacher")]
+    public async Task<IActionResult> DeleteComment(int id)
+    {
+        var teacherId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await Mediator.Send(new DeleteCommentCommand(teacherId, id));
+        return Success("Xóa nhận xét thành công.");
     }
 
     /// <summary>Nhận xét đã gửi cho một học viên. <c>GET /api/teacher/students/{studentId}/comments</c>.</summary>

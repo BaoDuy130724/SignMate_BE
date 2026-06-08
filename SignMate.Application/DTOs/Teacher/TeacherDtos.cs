@@ -16,6 +16,11 @@ public class CreateCommentRequest
     public string Content { get; set; } = null!;
 }
 
+public class UpdateCommentRequest
+{
+    public string Content { get; set; } = null!;
+}
+
 public class TeacherDashboardDto
 {
     public int TotalClasses { get; set; }
