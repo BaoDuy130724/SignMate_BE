@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using SignMate.Application.DTOs.Center;
 using SignMate.Application.Features.Center.Commands.CreateCenter;
 using SignMate.Application.Features.Center.Commands.CreateCenterUser;
+using SignMate.Application.Features.Center.Commands.DeleteCenter;
+using SignMate.Application.Features.Center.Commands.UpdateCenter;
 using SignMate.Application.Features.Center.Queries.GetCenterDashboard;
 using SignMate.Application.Features.Center.Queries.GetCenterMembers;
 using SignMate.Application.Features.Center.Queries.GetCenters;
@@ -28,6 +30,21 @@ public class CentersController : BaseApiController
     [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> CreateCenter([FromBody] CenterDto request)
         => Created(await Mediator.Send(new CreateCenterCommand(request)), "Tạo trung tâm thành công.");
+
+    /// <summary>Cập nhật trung tâm. <c>PUT /api/centers/{id}</c>.</summary>
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> UpdateCenter(int id, [FromBody] CenterDto request)
+        => Success(await Mediator.Send(new UpdateCenterCommand(id, request)), "Cập nhật trung tâm thành công.");
+
+    /// <summary>Xóa trung tâm. <c>DELETE /api/centers/{id}</c>.</summary>
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> DeleteCenter(int id)
+    {
+        await Mediator.Send(new DeleteCenterCommand(id));
+        return Success("Xóa trung tâm thành công.");
+    }
 
     /// <summary>Dashboard giám sát trung tâm. <c>GET /api/centers/{id}/dashboard</c>.</summary>
     [HttpGet("{id:int}/dashboard")]
