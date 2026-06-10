@@ -25,4 +25,31 @@ internal static class SubscriptionActivation
         foreach (var sub in actives)
             sub.IsActive = false;
     }
+
+    /// <summary>
+    /// Tự động gán gói B2B cho một học viên thuộc trung tâm.
+    /// Hủy các gói cũ trước rồi tạo gói B2B mới (chưa SaveChanges — caller bao transaction).
+    /// Không làm gì nếu không tìm thấy gói B2B trong hệ thống.
+    /// </summary>
+    public static async Task AutoAssignB2BAsync(
+        IUnitOfWork unitOfWork, User user, CancellationToken cancellationToken)
+    {
+        var b2bPlan = await unitOfWork.Repository<SubscriptionPlan>().Query()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Type == PlanType.B2B, cancellationToken);
+
+        if (b2bPlan is null) return;
+
+        await DeactivateActiveSubscriptionsAsync(unitOfWork, user.Id, cancellationToken);
+
+        var now = DateTime.UtcNow;
+        await unitOfWork.Repository<UserSubscription>().AddAsync(new UserSubscription
+        {
+            User = user,
+            PlanId = b2bPlan.Id,
+            StartDate = now,
+            EndDate = now.AddYears(10), // không hết hạn thực tế — gắn với center
+            IsActive = true
+        });
+    }
 }

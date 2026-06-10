@@ -21,6 +21,10 @@ public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, List<Us
     {
         var usersQuery = _unitOfWork.Repository<User>().Query().AsNoTracking();
 
+        // CenterAdmin chỉ thấy user trong center của mình.
+        if (query.CallerCenterId.HasValue)
+            usersQuery = usersQuery.Where(u => u.CenterId == query.CallerCenterId.Value);
+
         // Lọc theo vai trò nếu client truyền giá trị hợp lệ.
         if (!string.IsNullOrWhiteSpace(query.Role)
             && Enum.TryParse<UserRole>(query.Role, ignoreCase: true, out var parsedRole))

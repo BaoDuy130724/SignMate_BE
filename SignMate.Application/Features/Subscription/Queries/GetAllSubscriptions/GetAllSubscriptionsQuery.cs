@@ -4,6 +4,8 @@ using SignMate.Application.DTOs.Subscription;
 namespace SignMate.Application.Features.Subscription.Queries.GetAllSubscriptions;
 
 /// <summary>
-/// Truy vấn toàn bộ lượt đăng ký gói (dành cho SuperAdmin) — <c>GET /api/subscription/all</c>.
+/// Truy vấn danh sách subscription — <c>GET /api/subscription/all</c>.
+/// SuperAdmin thấy tất cả; CenterAdmin chỉ thấy subscription của student trong center mình.
 /// </summary>
-public record GetAllSubscriptionsQuery : IQuery<List<SubscriptionListItemDto>>;
+/// <param name="CallerCenterId">Id trung tâm của caller; null = SuperAdmin (toàn bộ).</param>
+public record GetAllSubscriptionsQuery(int? CallerCenterId = null) : IQuery<List<SubscriptionListItemDto>>;

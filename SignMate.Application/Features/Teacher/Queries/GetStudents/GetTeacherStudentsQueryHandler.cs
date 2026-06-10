@@ -20,7 +20,8 @@ public class GetTeacherStudentsQueryHandler : IRequestHandler<GetTeacherStudents
     {
         return await _unitOfWork.Repository<ClassStudent>().Query()
             .AsNoTracking()
-            .Where(cs => cs.Class.TeacherId == query.TeacherId)
+            .Where(cs => cs.Class.TeacherId == query.TeacherId
+                      && cs.Student.CenterId == cs.Class.CenterId)
             .Select(cs => new ClassStudentDto
             {
                 StudentId = cs.StudentId,

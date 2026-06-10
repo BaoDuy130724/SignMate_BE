@@ -33,7 +33,8 @@ public class JwtTokenService : ITokenService
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, user.FullName),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
+            new Claim(ClaimTypes.Role, user.Role.ToString()),
+            new Claim("centerId", user.CenterId?.ToString() ?? "")
         };
 
         var jwt = new JwtSecurityToken(claims: claims, expires: expiresAt, signingCredentials: credentials);

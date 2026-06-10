@@ -22,7 +22,7 @@ namespace SignMate.API.Controllers;
 public class UsersController : BaseApiController
 {
     /// <summary>
-    /// Danh sách người dùng cho quản trị viên, lọc theo vai trò. <c>GET /api/users</c>.
+    /// Danh sách người dùng cho SuperAdmin. <c>GET /api/users</c>.
     /// </summary>
     [HttpGet]
     [Authorize(Roles = "SuperAdmin")]
@@ -120,4 +120,5 @@ public class UsersController : BaseApiController
         var result = await Mediator.Send(new GetMyAchievementsQuery(userId));
         return Success(result);
     }
+
 }

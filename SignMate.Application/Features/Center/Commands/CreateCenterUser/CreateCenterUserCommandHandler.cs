@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SignMate.Application.Common.Exceptions;
+using SignMate.Application.Features.Subscription.Common;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 using CenterEntity = SignMate.Domain.Entities.Center;
@@ -50,6 +51,10 @@ public class CreateCenterUserCommandHandler : IRequestHandler<CreateCenterUserCo
             LongestStreak = 0,
             LastActiveDate = DateOnly.FromDateTime(DateTime.UtcNow)
         });
+
+        // Học viên thuộc trung tâm → tự động gán gói B2B.
+        if (command.Role == UserRole.Student)
+            await SubscriptionActivation.AutoAssignB2BAsync(_unitOfWork, user, cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Unit.Value;

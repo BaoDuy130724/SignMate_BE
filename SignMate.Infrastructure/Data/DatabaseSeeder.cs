@@ -51,6 +51,7 @@ public static class DatabaseSeeder
         }
 
         await SeedSignsAsync(context);
+        await SeedPracticeSessionsAndAttemptsAsync(context);
     }
 
     // ── Gói cước ─────────────────────────────────────────────────────────────
@@ -116,9 +117,9 @@ public static class DatabaseSeeder
     {
         var centers = new List<Center>
         {
-            new() { Name = "Trung tâm VSL Hà Nội", ContactPerson = "Nguyễn Văn A", Email = "contact@vslhanoi.edu.vn", Phone = "0123456789", IsActive = true },
-            new() { Name = "Trung tâm VSL TP.HCM", ContactPerson = "Trần Thị B", Email = "hcm@vsl.edu.vn", Phone = "0987654321", IsActive = true },
-            new() { Name = "Trung tâm VSL Đà Nẵng", ContactPerson = "Lê Văn C", Email = "danang@vsl.edu.vn", Phone = "0112233445", IsActive = true }
+            new() { Name = "Trung tâm VSL Hà Nội", ContactPerson = "Nguyễn Văn A", Email = "contact@vslhanoi.edu.vn", Phone = "0123456789", MaxSeats = 50, IsActive = true },
+            new() { Name = "Trung tâm VSL TP.HCM", ContactPerson = "Trần Thị B", Email = "hcm@vsl.edu.vn", Phone = "0987654321", MaxSeats = 100, IsActive = true },
+            new() { Name = "Trung tâm VSL Đà Nẵng", ContactPerson = "Lê Văn C", Email = "danang@vsl.edu.vn", Phone = "0112233445", MaxSeats = 30, IsActive = true }
         };
         context.Centers.AddRange(centers);
         await context.SaveChangesAsync();
@@ -316,5 +317,50 @@ public static class DatabaseSeeder
 
         var sql = await File.ReadAllTextAsync(sqlFile);
         await context.Database.ExecuteSqlRawAsync(sql);
+    }
+
+    private static async Task SeedPracticeSessionsAndAttemptsAsync(SignMateDbContext context)
+    {
+        if (await context.PracticeSessions.AnyAsync()) return;
+
+        var students = await context.Users.Where(u => u.Role == UserRole.Student).ToListAsync();
+        var sign = await context.Signs.FirstOrDefaultAsync();
+        if (students.Count == 0 || sign == null) return;
+
+        var now = DateTime.UtcNow;
+
+        // Session 1: Nguyễn C (student@gmail.com)
+        var session1 = new PracticeSession
+        {
+            UserId = students[0].Id,
+            SignId = sign.Id,
+            StartedAt = now.AddMinutes(-45),
+            EndedAt = now.AddMinutes(-15),
+            TotalAttempts = 2
+        };
+
+        // Session 2: Phạm D (student2@gmail.com)
+        var session2 = new PracticeSession
+        {
+            UserId = students[1].Id,
+            SignId = sign.Id,
+            StartedAt = now.AddMinutes(-20),
+            EndedAt = now.AddMinutes(-5),
+            TotalAttempts = 1
+        };
+
+        await context.PracticeSessions.AddRangeAsync(session1, session2);
+        await context.SaveChangesAsync();
+
+        // Attempts
+        var attempts = new List<PracticeAttempt>
+        {
+            new() { SessionId = session1.Id, VideoClipUrl = "https://signmate.vn/clips/c1.mp4", RecordedAt = now.AddMinutes(-40), OverallScore = 0.85f },
+            new() { SessionId = session1.Id, VideoClipUrl = "https://signmate.vn/clips/c2.mp4", RecordedAt = now.AddMinutes(-30), OverallScore = 0.90f },
+            new() { SessionId = session2.Id, VideoClipUrl = "https://signmate.vn/clips/d1.mp4", RecordedAt = now.AddMinutes(-10), OverallScore = 0.75f }
+        };
+
+        await context.PracticeAttempts.AddRangeAsync(attempts);
+        await context.SaveChangesAsync();
     }
 }

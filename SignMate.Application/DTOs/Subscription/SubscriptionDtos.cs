@@ -43,6 +43,23 @@ public class MySubscriptionDto
     public bool IsActive { get; set; }
 }
 
+public class CreatePlanRequest
+{
+    public string Name { get; set; } = null!;
+    public decimal PriceVnd { get; set; }
+    public int DurationDays { get; set; }
+    public string Type { get; set; } = null!;
+    public string? FeaturesJson { get; set; }
+}
+
+public class UpdatePlanRequest
+{
+    public string? Name { get; set; }
+    public decimal? PriceVnd { get; set; }
+    public int? DurationDays { get; set; }
+    public string? FeaturesJson { get; set; }
+}
+
 public class SubscriptionListItemDto
 {
     public int Id { get; set; }

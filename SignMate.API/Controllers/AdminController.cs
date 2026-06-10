@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SignMate.Application.Features.Admin.Queries.GetSystemDashboard;
@@ -5,7 +6,7 @@ using SignMate.Application.Features.Admin.Queries.GetSystemDashboard;
 namespace SignMate.API.Controllers;
 
 /// <summary>
-/// Quản trị hệ thống cấp cao (SuperAdmin): dashboard tổng quan vận hành toàn nền tảng.
+/// Dashboard tài chính/vận hành toàn hệ thống — chỉ SuperAdmin.
 /// </summary>
 [Route("api/admin")]
 [Authorize(Roles = "SuperAdmin")]

@@ -21,8 +21,13 @@ public class GetAllSubscriptionsQueryHandler
     public async Task<List<SubscriptionListItemDto>> Handle(
         GetAllSubscriptionsQuery query, CancellationToken cancellationToken)
     {
-        return await _unitOfWork.Repository<UserSubscription>().Query()
-            .AsNoTracking()
+        var subscriptionQuery = _unitOfWork.Repository<UserSubscription>().Query().AsNoTracking();
+
+        // CenterAdmin chỉ thấy subscription của student thuộc center mình.
+        if (query.CallerCenterId.HasValue)
+            subscriptionQuery = subscriptionQuery.Where(s => s.User.CenterId == query.CallerCenterId.Value);
+
+        return await subscriptionQuery
             .OrderByDescending(s => s.StartDate)
             .Select(s => new SubscriptionListItemDto
             {

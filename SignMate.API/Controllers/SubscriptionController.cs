@@ -1,9 +1,13 @@
 using System.Security.Claims;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SignMate.Application.DTOs.Subscription;
 // VNPay tạm vô hiệu hóa (sẽ thay bằng PayOS): using ...Commands.ProcessVnPayCallback;
+using SignMate.Application.Features.Subscription.Commands.CreatePlan;
+using SignMate.Application.Features.Subscription.Commands.DeletePlan;
 using SignMate.Application.Features.Subscription.Commands.Subscribe;
+using SignMate.Application.Features.Subscription.Commands.UpdatePlan;
 using SignMate.Application.Features.Subscription.Queries.GetAllSubscriptions;
 using SignMate.Application.Features.Subscription.Queries.GetMySubscription;
 using SignMate.Application.Features.Subscription.Queries.GetPlans;
@@ -87,7 +91,7 @@ public class SubscriptionController : BaseApiController
         return Success(result);
     }
 
-    /// <summary>Toàn bộ lượt đăng ký gói (quản trị). <c>GET /api/subscription/all</c>.</summary>
+    /// <summary>Toàn bộ lượt đăng ký gói — chỉ SuperAdmin. <c>GET /api/subscription/all</c>.</summary>
     [Authorize(Roles = "SuperAdmin")]
     [HttpGet("subscription/all")]
     public async Task<IActionResult> GetAllSubscriptions()
@@ -95,6 +99,36 @@ public class SubscriptionController : BaseApiController
         var result = await Mediator.Send(new GetAllSubscriptionsQuery());
         return Success(result);
     }
+
+    // ── Plan CRUD (SuperAdmin) ─────────────────────────────────────────────────
+
+    /// <summary>Tạo gói cước mới. <c>POST /api/plans</c>.</summary>
+    [Authorize(Roles = "SuperAdmin")]
+    [HttpPost("plans")]
+    public async Task<IActionResult> CreatePlan([FromBody] CreatePlanRequest request)
+    {
+        var result = await Mediator.Send(new CreatePlanCommand(request));
+        return Success(result, "Tạo gói cước thành công.");
+    }
+
+    /// <summary>Cập nhật gói cước. <c>PUT /api/plans/{id}</c>.</summary>
+    [Authorize(Roles = "SuperAdmin")]
+    [HttpPut("plans/{id:int}")]
+    public async Task<IActionResult> UpdatePlan(int id, [FromBody] UpdatePlanRequest request)
+    {
+        var result = await Mediator.Send(new UpdatePlanCommand(id, request));
+        return Success(result, "Cập nhật gói cước thành công.");
+    }
+
+    /// <summary>Xóa gói cước. <c>DELETE /api/plans/{id}</c>.</summary>
+    [Authorize(Roles = "SuperAdmin")]
+    [HttpDelete("plans/{id:int}")]
+    public async Task<IActionResult> DeletePlan(int id)
+    {
+        await Mediator.Send(new DeletePlanCommand(id));
+        return Success(Unit.Value, "Xóa gói cước thành công.");
+    }
+
 
     /* VNPay tạm vô hiệu hóa — giữ lại helper dựng HTML kết quả để tham chiếu khi làm PayOS.
     /// <summary>

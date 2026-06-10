@@ -1,6 +1,7 @@
 using MediatR;
 using SignMate.Application.Common.Exceptions;
 using SignMate.Application.DTOs.User;
+using SignMate.Application.Features.Subscription.Common;
 using SignMate.Application.Features.Users.Common;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
@@ -31,12 +32,31 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserP
             user.AvatarUrl = request.AvatarUrl;
         if (request.Role is not null && Enum.TryParse<UserRole>(request.Role, ignoreCase: true, out var role))
             user.Role = role;
-        // CenterId == 0 là quy ước "gỡ khỏi trung tâm" → set null.
-        if (request.CenterId is not null)
-            user.CenterId = request.CenterId == 0 ? null : request.CenterId;
-        user.UpdatedAt = DateTime.UtcNow;
 
+        // CenterId == 0 là quy ước "gỡ khỏi trung tâm" → set null.
+        bool centerIdChanged = false;
+        int? newCenterId = null;
+        if (request.CenterId is not null)
+        {
+            newCenterId = request.CenterId == 0 ? null : request.CenterId;
+            centerIdChanged = user.CenterId != newCenterId;
+            user.CenterId = newCenterId;
+        }
+
+        user.UpdatedAt = DateTime.UtcNow;
         repo.Update(user);
+
+        // Đồng bộ subscription B2B khi centerId thay đổi cho Student.
+        var currentRole = request.Role is not null && Enum.TryParse<UserRole>(request.Role, ignoreCase: true, out var parsedRole)
+            ? parsedRole : user.Role;
+        if (centerIdChanged && currentRole == UserRole.Student)
+        {
+            if (newCenterId is not null)
+                await SubscriptionActivation.AutoAssignB2BAsync(_unitOfWork, user, cancellationToken);
+            else
+                await SubscriptionActivation.DeactivateActiveSubscriptionsAsync(_unitOfWork, user.Id, cancellationToken);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return await UserProfileBuilder.BuildAsync(_unitOfWork, user, cancellationToken);

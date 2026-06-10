@@ -22,7 +22,8 @@ public class GetTeacherDashboardQueryHandler : IRequestHandler<GetTeacherDashboa
             .CountAsync(c => c.TeacherId == query.TeacherId, cancellationToken);
 
         var totalStudents = await _unitOfWork.Repository<ClassStudent>().Query()
-            .Where(cs => cs.Class.TeacherId == query.TeacherId)
+            .Where(cs => cs.Class.TeacherId == query.TeacherId
+                      && cs.Student.CenterId == cs.Class.CenterId)
             .Select(cs => cs.StudentId)
             .Distinct()
             .CountAsync(cancellationToken);
