@@ -73,12 +73,18 @@ public class GetSystemDashboardQueryHandler : IRequestHandler<GetSystemDashboard
                 .Distinct()
                 .CountAsync(cancellationToken);
 
-            retention = totalUsers > 0 ? (double)activeUsersLastMonth / totalUsers * 100 : 0;
-
+            // Retention: tử số chỉ gồm người có luyện tập (student), nên mẫu số
+            // phải là tổng student — chia cho totalUsers (gồm cả admin/teacher)
+            // sẽ pha loãng, cho retention thấp giả.
             var totalStudents = await _unitOfWork.Repository<User>().Query()
                 .CountAsync(u => u.Role == UserRole.Student, cancellationToken);
+            retention = totalStudents > 0 ? (double)activeUsersLastMonth / totalStudents * 100 : 0;
+
+            // Conversion B2C: paid B2C trên tổng student B2C (free + basic + pro).
+            // Student B2B (có centerId) không thể "convert" nên không thuộc mẫu số.
+            var b2cStudents = premiumUsers + basicUsers + freeUsers;
             var paidB2C = premiumUsers + basicUsers;
-            conversion = totalStudents > 0 ? (double)paidB2C / totalStudents * 100 : 0;
+            conversion = b2cStudents > 0 ? (double)paidB2C / b2cStudents * 100 : 0;
         }
         else
         {

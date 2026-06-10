@@ -34,12 +34,17 @@ public class GetClassTrackingStatsQueryHandler
         var attempts = await _unitOfWork.Repository<PracticeAttempt>().Query()
             .AsNoTracking()
             .Where(a => studentIds.Contains(a.Session.UserId))
-            .Select(a => new { a.Session.UserId, a.OverallScore })
+            .Select(a => new { a.Session.UserId, a.OverallScore, a.RecordedAt })
             .ToListAsync(cancellationToken);
 
+        // FrequencyDays = số NGÀY có luyện tập (distinct theo ngày), không phải tổng số lượt.
         var statsByStudent = attempts
             .GroupBy(a => a.UserId)
-            .ToDictionary(g => g.Key, g => new { Avg = g.Average(x => x.OverallScore), Count = g.Count() });
+            .ToDictionary(g => g.Key, g => new
+            {
+                Avg = g.Average(x => x.OverallScore),
+                Days = g.Select(x => x.RecordedAt.Date).Distinct().Count()
+            });
 
         return students.Select(s =>
         {
@@ -49,7 +54,7 @@ public class GetClassTrackingStatsQueryHandler
                 StudentId = s.StudentId,
                 FullName = s.FullName,
                 AccuracyPercent = stat is null ? 0 : Math.Round(stat.Avg * 100, 1),
-                PracticeFrequencyDays = stat?.Count ?? 0
+                PracticeFrequencyDays = stat?.Days ?? 0
             };
         }).ToList();
     }
