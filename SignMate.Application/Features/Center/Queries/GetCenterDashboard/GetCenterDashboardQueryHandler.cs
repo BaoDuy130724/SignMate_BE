@@ -15,12 +15,22 @@ namespace SignMate.Application.Features.Center.Queries.GetCenterDashboard;
 public class GetCenterDashboardQueryHandler : IRequestHandler<GetCenterDashboardQuery, CenterDashboardDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public GetCenterDashboardQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public GetCenterDashboardQueryHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<CenterDashboardDto> Handle(GetCenterDashboardQuery query, CancellationToken cancellationToken)
     {
+        // Phân quyền multi-tenant (IDOR/BOLA): CenterAdmin chỉ được xem dashboard của trung tâm mình.
+        if (_currentUser.Role == UserRole.CenterAdmin.ToString() && _currentUser.CenterId != query.CenterId)
+        {
+            throw new ForbiddenException("Bạn không có quyền truy cập thông tin của trung tâm khác.");
+        }
         var centerId = query.CenterId;
         var center = await _unitOfWork.Repository<CenterEntity>().GetByIdAsync(centerId)
             ?? throw new NotFoundException(nameof(CenterEntity), centerId);

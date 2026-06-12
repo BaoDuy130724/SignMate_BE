@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using SignMate.Application.Common.Exceptions;
 using SignMate.Application.DTOs.Class;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
@@ -13,15 +14,37 @@ namespace SignMate.Application.Features.Classes.Queries.GetClasses;
 public class GetClassesQueryHandler : IRequestHandler<GetClassesQuery, List<ClassDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public GetClassesQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public GetClassesQueryHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<List<ClassDto>> Handle(GetClassesQuery query, CancellationToken cancellationToken)
     {
-        return await _unitOfWork.Repository<Class>().Query()
+        if (_currentUser.Role == UserRole.CenterAdmin.ToString() && _currentUser.CenterId != query.CenterId)
+        {
+            throw new ForbiddenException("Bạn không có quyền truy cập danh sách lớp của trung tâm khác.");
+        }
+
+        if (_currentUser.Role == UserRole.Teacher.ToString() && _currentUser.CenterId != query.CenterId)
+        {
+            throw new ForbiddenException("Bạn không có quyền truy cập danh sách lớp của trung tâm khác.");
+        }
+
+        var dbQuery = _unitOfWork.Repository<Class>().Query()
             .AsNoTracking()
-            .Where(c => c.CenterId == query.CenterId)
+            .Where(c => c.CenterId == query.CenterId);
+
+        if (_currentUser.Role == UserRole.Teacher.ToString())
+        {
+            dbQuery = dbQuery.Where(c => c.TeacherId == _currentUser.UserId);
+        }
+
+        return await dbQuery
             .Select(c => new ClassDto
             {
                 Id = c.Id,

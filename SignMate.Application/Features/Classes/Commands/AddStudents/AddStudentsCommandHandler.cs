@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using SignMate.Application.Common.Exceptions;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 
@@ -12,12 +13,33 @@ namespace SignMate.Application.Features.Classes.Commands.AddStudents;
 public class AddStudentsCommandHandler : IRequestHandler<AddStudentsCommand, Unit>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public AddStudentsCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public AddStudentsCommandHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<Unit> Handle(AddStudentsCommand command, CancellationToken cancellationToken)
     {
+        var cls = await _unitOfWork.Repository<Class>().Query()
+            .FirstOrDefaultAsync(c => c.Id == command.ClassId, cancellationToken);
+        if (cls == null)
+            throw new NotFoundException("Lớp học không tồn tại.");
+
+        if (_currentUser.Role == UserRole.CenterAdmin.ToString() && cls.CenterId != _currentUser.CenterId)
+        {
+            throw new ForbiddenException("Bạn không có quyền thực hiện thao tác này cho trung tâm khác.");
+        }
+
+        var invalidStudentsCount = await _unitOfWork.Repository<User>().Query()
+            .CountAsync(u => command.Request.StudentIds.Contains(u.Id) && (u.CenterId != cls.CenterId || u.Role != UserRole.Student), cancellationToken);
+        if (invalidStudentsCount > 0)
+        {
+            throw new BadRequestException("Một hoặc nhiều học viên không hợp lệ hoặc không thuộc trung tâm của bạn.");
+        }
         var repo = _unitOfWork.Repository<ClassStudent>();
 
         // Lấy sẵn các học viên đã có trong lớp để lọc trùng trong một truy vấn.

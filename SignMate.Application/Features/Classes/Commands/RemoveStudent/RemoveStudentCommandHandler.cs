@@ -12,12 +12,21 @@ namespace SignMate.Application.Features.Classes.Commands.RemoveStudent;
 public class RemoveStudentCommandHandler : IRequestHandler<RemoveStudentCommand, Unit>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public RemoveStudentCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public RemoveStudentCommandHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<Unit> Handle(RemoveStudentCommand command, CancellationToken cancellationToken)
     {
+        if (_currentUser.Role == UserRole.CenterAdmin.ToString() && _currentUser.CenterId != command.CenterId)
+        {
+            throw new ForbiddenException("Bạn không có quyền thực hiện thao tác này cho trung tâm khác.");
+        }
         var classExists = await _unitOfWork.Repository<Class>().Query()
             .AnyAsync(c => c.Id == command.ClassId && c.CenterId == command.CenterId, cancellationToken);
         if (!classExists)

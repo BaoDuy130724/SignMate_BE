@@ -16,12 +16,23 @@ namespace SignMate.Application.Features.Center.Commands.CreateCenterUser;
 public class CreateCenterUserCommandHandler : IRequestHandler<CreateCenterUserCommand, Unit>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public CreateCenterUserCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public CreateCenterUserCommandHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<Unit> Handle(CreateCenterUserCommand command, CancellationToken cancellationToken)
     {
+        // Phân quyền multi-tenant (IDOR/BOLA): CenterAdmin chỉ được quản lý trung tâm của chính mình.
+        if (_currentUser.Role == UserRole.CenterAdmin.ToString() && _currentUser.CenterId != command.CenterId)
+        {
+            throw new ForbiddenException("Bạn không có quyền quản lý thành viên cho trung tâm khác.");
+        }
+
         var centerExists = await _unitOfWork.Repository<CenterEntity>().Query()
             .AnyAsync(c => c.Id == command.CenterId, cancellationToken);
         if (!centerExists)

@@ -18,6 +18,10 @@ builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, relo
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// ── Context & User Accessor ────────────────────────────────────
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<SignMate.Application.Interfaces.ICurrentUser, SignMate.API.Services.CurrentUser>();
+
 // ── Authentication (JWT) ───────────────────────────────────────
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opt =>

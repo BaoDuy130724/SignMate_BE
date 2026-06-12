@@ -1,4 +1,5 @@
 using MediatR;
+using SignMate.Application.Common.Exceptions;
 using SignMate.Application.DTOs.Class;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
@@ -12,12 +13,27 @@ namespace SignMate.Application.Features.Classes.Commands.CreateClass;
 public class CreateClassCommandHandler : IRequestHandler<CreateClassCommand, ClassDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public CreateClassCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public CreateClassCommandHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<ClassDto> Handle(CreateClassCommand command, CancellationToken cancellationToken)
     {
+        if (_currentUser.Role == UserRole.CenterAdmin.ToString() && _currentUser.CenterId != command.CenterId)
+        {
+            throw new ForbiddenException("Bạn không có quyền tạo lớp học cho trung tâm khác.");
+        }
+
+        var teacher = await _unitOfWork.Repository<User>().GetByIdAsync(command.Request.TeacherId);
+        if (teacher == null || teacher.CenterId != command.CenterId || teacher.Role != UserRole.Teacher)
+        {
+            throw new BadRequestException("Giáo viên chỉ định không hợp lệ hoặc không thuộc trung tâm này.");
+        }
         var newClass = new Class
         {
             CenterId = command.CenterId,

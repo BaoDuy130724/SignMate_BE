@@ -12,12 +12,21 @@ namespace SignMate.Application.Features.Classes.Commands.DeleteClass;
 public class DeleteClassCommandHandler : IRequestHandler<DeleteClassCommand, Unit>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public DeleteClassCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public DeleteClassCommandHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<Unit> Handle(DeleteClassCommand command, CancellationToken cancellationToken)
     {
+        if (_currentUser.Role == UserRole.CenterAdmin.ToString() && _currentUser.CenterId != command.CenterId)
+        {
+            throw new ForbiddenException("Bạn không có quyền xóa lớp học của trung tâm khác.");
+        }
         var cls = await _unitOfWork.Repository<Class>().Query()
             .Include(c => c.ClassStudents)
             .FirstOrDefaultAsync(c => c.Id == command.ClassId && c.CenterId == command.CenterId, cancellationToken)

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using SignMate.Domain.Entities;
 
 namespace SignMate.Infrastructure.Data;
@@ -11,15 +12,15 @@ namespace SignMate.Infrastructure.Data;
 /// </summary>
 public static class DatabaseSeeder
 {
-    /// <summary>Mật khẩu mặc định cho mọi tài khoản seed (đăng nhập thử nhanh).</summary>
-    public const string DefaultPassword = "123456";
+    /// <summary>Mật khẩu mặc định cho các tài khoản demo seed (chỉ chạy ở dev).</summary>
+    public const string DefaultPassword = "SignMateDemo2026!";
 
     /// <summary>
     /// Nạp dữ liệu chuẩn. Khi <paramref name="reset"/> = true sẽ <b>xóa toàn bộ DB hiện tại</b>
     /// rồi tạo lại từ migration (identity reset về 1 → dữ liệu tất định), bảo đảm trạng thái sạch.
     /// Khi false: chỉ áp migration và seed những phần còn thiếu (idempotent).
     /// </summary>
-    public static async Task SeedAsync(SignMateDbContext context, bool reset = false)
+    public static async Task SeedAsync(SignMateDbContext context, IConfiguration config, bool isDevelopment, bool reset = false)
     {
         if (reset)
             await context.Database.EnsureDeletedAsync();
@@ -30,28 +31,68 @@ public static class DatabaseSeeder
         await SeedPlansAsync(context);
         await SeedAchievementsAsync(context);
 
-        // Khối dữ liệu nghiệp vụ chỉ seed khi chưa có người dùng (sau reset thì DB rỗng nên luôn chạy).
+        // Khối dữ liệu nghiệp vụ
         if (!await context.Users.AnyAsync())
         {
-            var centers = await SeedCentersAsync(context);
-            var users = await SeedUsersAsync(context, centers[0].Id);
+            // Luôn seed SuperAdmin trước vì cần cho Courses & Lessons
+            var adminUser = await SeedSuperAdminAsync(context, config);
 
-            var teacher = users.First(u => u.Role == UserRole.Teacher);
-            var students = users.Where(u => u.Role == UserRole.Student).ToList();
-            var admin = users.First(u => u.Role == UserRole.SuperAdmin);
+            if (isDevelopment)
+            {
+                // Chỉ seed dữ liệu demo khi ở môi trường Development
+                var centers = await SeedCentersAsync(context);
+                var users = await SeedDemoUsersAsync(context, centers[0].Id);
 
-            await SeedSubscriptionsAsync(context, students);
-            var classes = await SeedClassesAsync(context, centers[0].Id, teacher.Id, students);
-            var (courses, lessons) = await SeedCoursesAndLessonsAsync(context, admin.Id);
-            await SeedEnrollmentsAndProgressAsync(context, students, courses, lessons);
-            await SeedLessonAssignmentsAsync(context, classes[0].Id, lessons[0].Id, teacher.Id);
-            await SeedNotificationsAsync(context, students[0].Id);
-            await SeedUserAchievementsAsync(context, students[0].Id);
-            await SeedTeacherCommentsAsync(context, teacher.Id, students[0].Id);
+                var teacher = users.First(u => u.Role == UserRole.Teacher);
+                var students = users.Where(u => u.Role == UserRole.Student).ToList();
+
+                await SeedSubscriptionsAsync(context, students);
+                var classes = await SeedClassesAsync(context, centers[0].Id, teacher.Id, students);
+                var (courses, lessons) = await SeedCoursesAndLessonsAsync(context, adminUser.Id);
+                await SeedEnrollmentsAndProgressAsync(context, students, courses, lessons);
+                await SeedLessonAssignmentsAsync(context, classes[0].Id, lessons[0].Id, teacher.Id);
+                await SeedNotificationsAsync(context, students[0].Id);
+                await SeedUserAchievementsAsync(context, students[0].Id);
+                await SeedTeacherCommentsAsync(context, teacher.Id, students[0].Id);
+            }
+            else
+            {
+                // Ở Staging/Production, vẫn seed Courses & Lessons chuẩn (nội dung khóa học hệ thống)
+                await SeedCoursesAndLessonsAsync(context, adminUser.Id);
+            }
         }
 
         await SeedSignsAsync(context);
         await SeedPracticeSessionsAndAttemptsAsync(context);
+    }
+
+    // ── Nạp SuperAdmin bảo mật ───────────────────────────────────────────────
+    private static async Task<User> SeedSuperAdminAsync(SignMateDbContext context, IConfiguration config)
+    {
+        var adminPassword = config["Seed:AdminInitialPassword"];
+        if (string.IsNullOrEmpty(adminPassword))
+        {
+            adminPassword = Guid.NewGuid().ToString("N").Substring(0, 16);
+            Console.WriteLine($"[SECURITY WARNING] Seed:AdminInitialPassword is not configured. Generated a secure SuperAdmin password: {adminPassword}");
+        }
+
+        var hash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
+        var now = DateTime.UtcNow;
+
+        var adminUser = new User
+        {
+            Email = "admin@signmate.vn",
+            PasswordHash = hash,
+            FullName = "Hệ thống Quản trị",
+            Role = UserRole.SuperAdmin,
+            IsOnboarded = true,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        await context.Users.AddAsync(adminUser);
+        await context.SaveChangesAsync();
+        return adminUser;
     }
 
     // ── Gói cước ─────────────────────────────────────────────────────────────
@@ -126,15 +167,14 @@ public static class DatabaseSeeder
         return centers;
     }
 
-    // ── Người dùng theo vai trò + streak ─────────────────────────────────────
-    private static async Task<List<User>> SeedUsersAsync(SignMateDbContext context, int centerId)
+    // ── Người dùng demo vai trò + streak (chỉ chạy ở dev) ─────────────────────
+    private static async Task<List<User>> SeedDemoUsersAsync(SignMateDbContext context, int centerId)
     {
         var hash = BCrypt.Net.BCrypt.HashPassword(DefaultPassword);
         var now = DateTime.UtcNow;
 
         var users = new List<User>
         {
-            new() { Email = "admin@signmate.vn", PasswordHash = hash, FullName = "Hệ thống Quản trị", Role = UserRole.SuperAdmin, IsOnboarded = true, CreatedAt = now, UpdatedAt = now },
             new() { Email = "centeradmin@vslhanoi.edu.vn", PasswordHash = hash, FullName = "Admin Trung tâm", Role = UserRole.CenterAdmin, CenterId = centerId, IsOnboarded = true, CreatedAt = now, UpdatedAt = now },
             new() { Email = "teacher@vslhanoi.edu.vn", PasswordHash = hash, FullName = "Giáo viên Trần B", Role = UserRole.Teacher, CenterId = centerId, IsOnboarded = true, CreatedAt = now, UpdatedAt = now },
             // student[0] — học viên Pro, đã onboard, có tiến độ

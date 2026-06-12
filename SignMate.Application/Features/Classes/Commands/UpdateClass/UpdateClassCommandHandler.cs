@@ -13,12 +13,21 @@ namespace SignMate.Application.Features.Classes.Commands.UpdateClass;
 public class UpdateClassCommandHandler : IRequestHandler<UpdateClassCommand, ClassDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public UpdateClassCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public UpdateClassCommandHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<ClassDto> Handle(UpdateClassCommand command, CancellationToken cancellationToken)
     {
+        if (_currentUser.Role == UserRole.CenterAdmin.ToString() && _currentUser.CenterId != command.CenterId)
+        {
+            throw new ForbiddenException("Bạn không có quyền cập nhật lớp học của trung tâm khác.");
+        }
         var cls = await _unitOfWork.Repository<Class>().Query()
             .FirstOrDefaultAsync(c => c.Id == command.ClassId && c.CenterId == command.CenterId, cancellationToken)
             ?? throw new NotFoundException(nameof(Class), command.ClassId);

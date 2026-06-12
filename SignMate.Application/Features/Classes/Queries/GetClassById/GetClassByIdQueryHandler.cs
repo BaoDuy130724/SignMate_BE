@@ -13,15 +13,37 @@ namespace SignMate.Application.Features.Classes.Queries.GetClassById;
 public class GetClassByIdQueryHandler : IRequestHandler<GetClassByIdQuery, ClassDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public GetClassByIdQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public GetClassByIdQueryHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<ClassDto> Handle(GetClassByIdQuery query, CancellationToken cancellationToken)
     {
-        var classDto = await _unitOfWork.Repository<Class>().Query()
+        if (_currentUser.Role == UserRole.CenterAdmin.ToString() && _currentUser.CenterId != query.CenterId)
+        {
+            throw new ForbiddenException("Bạn không có quyền truy cập dữ liệu của trung tâm khác.");
+        }
+
+        if (_currentUser.Role == UserRole.Teacher.ToString() && _currentUser.CenterId != query.CenterId)
+        {
+            throw new ForbiddenException("Bạn không có quyền truy cập dữ liệu của trung tâm khác.");
+        }
+
+        var dbQuery = _unitOfWork.Repository<Class>().Query()
             .AsNoTracking()
-            .Where(c => c.Id == query.ClassId && c.CenterId == query.CenterId)
+            .Where(c => c.Id == query.ClassId && c.CenterId == query.CenterId);
+
+        if (_currentUser.Role == UserRole.Teacher.ToString())
+        {
+            dbQuery = dbQuery.Where(c => c.TeacherId == _currentUser.UserId);
+        }
+
+        var classDto = await dbQuery
             .Select(c => new ClassDto
             {
                 Id = c.Id,
