@@ -179,8 +179,8 @@ public class SignMateDbContext : DbContext, ISignMateDbContext
         {
             e.HasKey(x => x.Id);
             e.HasIndex(x => new { x.UserId, x.PlanId, x.IsActive });
-            e.HasOne(x => x.User).WithOne(u => u.UserSubscriptions)
-             .HasForeignKey<UserSubscription>(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.User).WithMany(u => u.UserSubscriptions)
+             .HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.Plan).WithMany(p => p.UserSubscriptions)
              .HasForeignKey(x => x.PlanId).OnDelete(DeleteBehavior.Restrict);
         });

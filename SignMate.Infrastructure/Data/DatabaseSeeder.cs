@@ -61,6 +61,17 @@ public static class DatabaseSeeder
                 await SeedCoursesAndLessonsAsync(context, adminUser.Id);
             }
         }
+        else if (!await context.Courses.AnyAsync())
+        {
+            // Trường hợp DB đã có user (do người dùng tự đăng ký trước khi seed) nhưng chưa có khóa học/bài học,
+            // ta vẫn cần seed Courses & Lessons để tránh lỗi ràng buộc khóa ngoại khi seed Signs (cần LessonId = 1).
+            var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Role == UserRole.SuperAdmin) 
+                ?? await context.Users.FirstOrDefaultAsync();
+            if (adminUser != null)
+            {
+                await SeedCoursesAndLessonsAsync(context, adminUser.Id);
+            }
+        }
 
         await SeedSignsAsync(context);
         await SeedPracticeSessionsAndAttemptsAsync(context);

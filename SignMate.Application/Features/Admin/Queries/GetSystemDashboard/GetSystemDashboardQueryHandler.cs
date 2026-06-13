@@ -35,26 +35,26 @@ public class GetSystemDashboardQueryHandler : IRequestHandler<GetSystemDashboard
         var premiumUsers = await _unitOfWork.Repository<User>().Query().CountAsync(u =>
             u.Role == UserRole.Student &&
             u.CenterId == null &&
-            u.UserSubscriptions != null &&
-            u.UserSubscriptions.IsActive &&
-            u.UserSubscriptions.EndDate >= now &&
-            u.UserSubscriptions.Plan.Type == PlanType.Pro, cancellationToken);
+            u.UserSubscriptions.Any(s =>
+                s.IsActive &&
+                s.EndDate >= now &&
+                s.Plan.Type == PlanType.Pro), cancellationToken);
 
         var basicUsers = await _unitOfWork.Repository<User>().Query().CountAsync(u =>
             u.Role == UserRole.Student &&
             u.CenterId == null &&
-            u.UserSubscriptions != null &&
-            u.UserSubscriptions.IsActive &&
-            u.UserSubscriptions.EndDate >= now &&
-            u.UserSubscriptions.Plan.Type == PlanType.Basic, cancellationToken);
+            u.UserSubscriptions.Any(s =>
+                s.IsActive &&
+                s.EndDate >= now &&
+                s.Plan.Type == PlanType.Basic), cancellationToken);
 
         var freeUsers = await _unitOfWork.Repository<User>().Query().CountAsync(u =>
             u.Role == UserRole.Student &&
             u.CenterId == null &&
-            (u.UserSubscriptions == null ||
-             !u.UserSubscriptions.IsActive ||
-             u.UserSubscriptions.EndDate < now ||
-             u.UserSubscriptions.Plan.Type == PlanType.Free), cancellationToken);
+            !u.UserSubscriptions.Any(s =>
+                s.IsActive &&
+                s.EndDate >= now &&
+                (s.Plan.Type == PlanType.Pro || s.Plan.Type == PlanType.Basic)), cancellationToken);
 
         var activeUsersLastMonth = await _unitOfWork.Repository<PracticeSession>().Query()
             .Where(ps => ps.StartedAt >= now.AddDays(-30))

@@ -43,8 +43,8 @@ public static class DependencyInjection
 
         services.AddScoped<IOtpService, OtpService>();
         services.AddScoped<ITokenService, JwtTokenService>();
-        // VNPay tạm vô hiệu hóa (sẽ thay bằng PayOS). Giữ lại VnPayService để tham chiếu.
-        // services.AddSingleton<IVnPayService, VnPayService>();
+        // PayOS payment gateway
+        services.AddSingleton<IPayOsService, PayOsService>();
 
         // Background Processing
         services.AddSingleton<IVideoProcessingQueue, VideoProcessingQueue>();

@@ -11,17 +11,18 @@ namespace SignMate.Application.Features.Subscription.Commands.Subscribe;
 /// Handler cho <see cref="SubscribeCommand"/>:
 /// <list type="bullet">
 /// <item>Gói Free (giá 0đ): hủy gói active cũ và kích hoạt gói mới ngay lập tức.</item>
-/// <item>Gói trả phí: <b>tạm vô hiệu hóa</b> — cổng VNPay sandbox đã được gỡ, sẽ thay bằng PayOS.
-/// Hiện trả về 503 (đang bảo trì). Logic VNPay cũ được giữ lại dạng comment bên dưới để tham chiếu.</item>
+/// <item>Gói trả phí: tạo bản ghi chờ thanh toán, gọi PayOS tạo link, trả về paymentUrl.</item>
 /// </list>
 /// </summary>
 public class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, SubscribeResponse>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPayOsService _payOsService;
 
-    public SubscribeCommandHandler(IUnitOfWork unitOfWork)
+    public SubscribeCommandHandler(IUnitOfWork unitOfWork, IPayOsService payOsService)
     {
         _unitOfWork = unitOfWork;
+        _payOsService = payOsService;
     }
 
     /// <inheritdoc />
@@ -47,13 +48,7 @@ public class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, Subscri
             return new SubscribeResponse { Success = true, Message = "Đã kích hoạt gói miễn phí." };
         }
 
-        // ── Gói trả phí: TẠM VÔ HIỆU HÓA (chờ tích hợp PayOS) ─────────
-        throw new ServiceUnavailableException(
-            "Thanh toán gói trả phí đang tạm bảo trì để nâng cấp cổng thanh toán. Vui lòng thử lại sau.");
-
-        /* === VNPay (giữ lại để tham chiếu khi làm PayOS) =============
-        const string DefaultReturnUrl = "http://localhost:5184/api/subscription/vnpay-return";
-
+        // ── Gói trả phí: tạo pending subscription + PayOS link ──────
         var pendingSub = new UserSubscription
         {
             UserId = command.UserId,
@@ -65,22 +60,24 @@ public class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, Subscri
         await _unitOfWork.Repository<UserSubscription>().AddAsync(pendingSub);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var returnUrl = command.Request.ReturnUrl ?? DefaultReturnUrl;
-        var paymentUrl = _vnPayService.CreatePaymentUrl(new VnPayPaymentRequest
+        var returnUrl = command.Request.ReturnUrl
+            ?? "http://localhost:5173/payment-callback";
+
+        var paymentUrl = await _payOsService.CreatePaymentLinkAsync(new PayOsPaymentRequest
         {
-            OrderId = pendingSub.Id,
-            Amount = plan.PriceVnd,
-            OrderInfo = $"SignMate - Thanh toan hoa don {pendingSub.Id.ToString("N")[..8]}",
-            ReturnUrl = returnUrl
-        }, command.IpAddress);
+            OrderCode = pendingSub.Id,
+            Amount = (int)plan.PriceVnd,
+            Description = $"SignMate Plan {plan.Id}",
+            ReturnUrl = returnUrl,
+            CancelUrl = returnUrl + "?cancel=true"
+        });
 
         return new SubscribeResponse
         {
             Success = true,
-            Message = "Chuyển hướng tới VNPay.",
+            Message = "Chuyển hướng tới PayOS.",
             PaymentUrl = paymentUrl,
             SubscriptionId = pendingSub.Id
         };
-        ============================================================= */
     }
 }

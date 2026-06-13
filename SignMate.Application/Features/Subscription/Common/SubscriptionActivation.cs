@@ -9,7 +9,7 @@ namespace SignMate.Application.Features.Subscription.Common;
 /// đang active của người dùng" được tái sử dụng nhất quán giữa kích hoạt gói Free và xác nhận
 /// thanh toán gói trả phí (DRY) — đảm bảo mỗi người dùng chỉ có tối đa một gói active.
 /// </summary>
-internal static class SubscriptionActivation
+public static class SubscriptionActivation
 {
     /// <summary>
     /// Đánh dấu tất cả gói đang active của người dùng thành không hiệu lực (chưa lưu DB —

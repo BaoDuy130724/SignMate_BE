@@ -23,5 +23,6 @@
     <PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="7.5.2" />
+    <PackageVersion Include="payOS" Version="2.1.0" />
   </ItemGroup>
 </Project>

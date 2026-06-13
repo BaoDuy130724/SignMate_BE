@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SignMate.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using SignMate.Infrastructure.Data;
 namespace SignMate.Infrastructure.Migrations
 {
     [DbContext(typeof(SignMateDbContext))]
-    partial class SignMateDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260613045444_SignmateDb")]
+    partial class SignmateDb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -896,6 +899,9 @@ namespace SignMate.Infrastructure.Migrations
 
                     b.HasIndex("PlanId");
 
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
                     b.HasIndex("UserId", "PlanId", "IsActive");
 
                     b.ToTable("UserSubscriptions");
@@ -1219,8 +1225,8 @@ namespace SignMate.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("SignMate.Domain.Entities.User", "User")
-                        .WithMany("UserSubscriptions")
-                        .HasForeignKey("UserId")
+                        .WithOne("UserSubscriptions")
+                        .HasForeignKey("SignMate.Domain.Entities.UserSubscription", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1295,7 +1301,8 @@ namespace SignMate.Infrastructure.Migrations
 
                     b.Navigation("Streak");
 
-                    b.Navigation("UserSubscriptions");
+                    b.Navigation("UserSubscriptions")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

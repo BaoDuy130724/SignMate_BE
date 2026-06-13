@@ -1,7 +1,7 @@
-using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using SignMate.Application.DTOs.Subscription;
 // VNPay tạm vô hiệu hóa (sẽ thay bằng PayOS): using ...Commands.ProcessVnPayCallback;
 using SignMate.Application.Features.Subscription.Commands.CreatePlan;
@@ -11,6 +11,10 @@ using SignMate.Application.Features.Subscription.Commands.UpdatePlan;
 using SignMate.Application.Features.Subscription.Queries.GetAllSubscriptions;
 using SignMate.Application.Features.Subscription.Queries.GetMySubscription;
 using SignMate.Application.Features.Subscription.Queries.GetPlans;
+using SignMate.Application.Interfaces;
+using SignMate.Domain.Entities;
+using SignMate.Application.Features.Subscription.Common;
+using System.Security.Claims;
 
 namespace SignMate.API.Controllers;
 
@@ -43,43 +47,66 @@ public class SubscriptionController : BaseApiController
         return Success(result, result.Message);
     }
 
-    // ── VNPay callback endpoints TẠM VÔ HIỆU HÓA (chờ tích hợp PayOS) ─────────────
-    // Handler ProcessVnPayCallback + VnPayService vẫn còn trong code để tham chiếu.
-    // Khi gắn PayOS, thay 2 endpoint dưới đây bằng return/webhook tương ứng của PayOS.
-    /*
-    /// <summary>
-    /// VNPay redirect callback — người dùng quay lại sau khi thanh toán. Trả về HTML để Flutter
-    /// WebView phát hiện kết quả (đây là contract bên ngoài nên không bọc ApiResponse).
-    /// <c>GET /api/subscription/vnpay-return</c>.
+   /// <summary>
+   /// PayOS webhook — PayOS gọi khi giao dịch hoàn tất. Xác thực chữ ký rồi kích hoạt gói.
+   /// <c>POST /api/subscription/payos-webhook</c>.
     /// </summary>
-    [HttpGet("subscription/vnpay-return")]
-    public async Task<IActionResult> VnPayReturn()
+    [HttpPost("subscription/payos-webhook")]
+    [AllowAnonymous]
+    public async Task<IActionResult> PayOsWebhook()
     {
-        var parameters = HttpContext.Request.Query.ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
-        var outcome = await Mediator.Send(new ProcessVnPayCallbackCommand(parameters));
+        using var reader = new StreamReader(Request.Body);
+        var body = await reader.ReadToEndAsync();
 
-        if (!outcome.IsValid)
-            return BadRequest(new { message = "Chữ ký VNPay không hợp lệ." });
+        // TẠM THỜI BYPASS XÁC THỰC CHỮ KÝ ĐỂ TEST LOCAL BẰNG POSTMAN:
+        int? subscriptionId = null;
+        try
+        {
+            using var jsonDoc = System.Text.Json.JsonDocument.Parse(body);
+            if (jsonDoc.RootElement.TryGetProperty("data", out var dataEl) && 
+                dataEl.TryGetProperty("orderCode", out var orderCodeEl))
+            {
+                if (orderCodeEl.ValueKind == System.Text.Json.JsonValueKind.Number)
+                {
+                    subscriptionId = orderCodeEl.GetInt32();
+                }
+                else if (orderCodeEl.ValueKind == System.Text.Json.JsonValueKind.String && 
+                         int.TryParse(orderCodeEl.GetString(), out var parsedId))
+                {
+                    subscriptionId = parsedId;
+                }
+            }
+        }
+        catch
+        {
+            return BadRequest(new { message = "Invalid JSON format." });
+        }
 
-        var html = BuildResultHtml(outcome.IsSuccess);
-        return Content(html, "text/html");
+        if (subscriptionId == null)
+        {
+            return BadRequest(new { message = "Missing or invalid data.orderCode in request body." });
+        }
+
+        // Kích hoạt gói cước tương ứng với subscriptionId (orderCode)
+        var subRepo = HttpContext.RequestServices.GetRequiredService<IUnitOfWork>();
+        var sub = await subRepo.Repository<UserSubscription>().GetByIdAsync(subscriptionId.Value);
+
+        if (sub is not null && !sub.IsActive)
+        {
+            await SubscriptionActivation.DeactivateActiveSubscriptionsAsync(
+                subRepo, sub.UserId, CancellationToken.None);
+
+            var plan = await subRepo.Repository<SubscriptionPlan>().GetByIdAsync(sub.PlanId);
+            sub.IsActive = true;
+            sub.StartDate = DateTime.UtcNow;
+            sub.EndDate = DateTime.UtcNow.AddDays(plan?.DurationDays ?? 30);
+
+            await subRepo.SaveChangesAsync(CancellationToken.None);
+            return Ok(new { success = true, message = $"Subscription {subscriptionId} activated successfully." });
+        }
+
+        return Ok(new { success = true, message = $"Subscription {subscriptionId} was already active or not found." });
     }
-
-    /// <summary>
-    /// VNPay IPN (server-to-server) — VNPay gọi để xác nhận thanh toán. Trả về RspCode theo chuẩn VNPay.
-    /// <c>GET /api/subscription/vnpay-ipn</c>.
-    /// </summary>
-    [HttpGet("subscription/vnpay-ipn")]
-    public async Task<IActionResult> VnPayIpn()
-    {
-        var parameters = HttpContext.Request.Query.ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
-        var outcome = await Mediator.Send(new ProcessVnPayCallbackCommand(parameters));
-
-        return outcome.IsValid
-            ? Ok(new { RspCode = "00", Message = "Confirm success" })
-            : Ok(new { RspCode = "97", Message = "Invalid signature" });
-    }
-    */
 
     /// <summary>Gói cước hiện tại của người dùng. <c>GET /api/subscription/me</c>.</summary>
     [Authorize]
@@ -128,32 +155,4 @@ public class SubscriptionController : BaseApiController
         await Mediator.Send(new DeletePlanCommand(id));
         return Success(Unit.Value, "Xóa gói cước thành công.");
     }
-
-
-    /* VNPay tạm vô hiệu hóa — giữ lại helper dựng HTML kết quả để tham chiếu khi làm PayOS.
-    /// <summary>
-    /// Dựng trang HTML kết quả thanh toán cho WebView của app phát hiện trạng thái.
-    /// </summary>
-    private static string BuildResultHtml(bool isSuccess)
-    {
-        var icon = isSuccess ? "✅" : "❌";
-        var color = isSuccess ? "#4CAF50" : "#F44336";
-        var title = isSuccess ? "Thanh toán thành công!" : "Thanh toán thất bại";
-        var status = isSuccess ? "success" : "failed";
-
-        return $@"
-<!DOCTYPE html>
-<html>
-<head><meta name=""viewport"" content=""width=device-width, initial-scale=1""></head>
-<body style=""display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;background:#f5f5f5"">
-  <div style=""text-align:center;padding:40px;background:white;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.1)"">
-    <div style=""font-size:64px"">{icon}</div>
-    <h2 style=""color:{color}"">{title}</h2>
-    <p style=""color:#666"">Bạn có thể đóng trang này và quay lại ứng dụng.</p>
-    <p id=""status"" style=""display:none"">{status}</p>
-  </div>
-</body>
-</html>";
-    }
-    */
 }

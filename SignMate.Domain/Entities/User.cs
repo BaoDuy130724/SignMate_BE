@@ -22,7 +22,7 @@ public class User
     public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
     public ICollection<Enrollment> Enrollments { get; set; } = [];
     public ICollection<PracticeSession> PracticeSessions { get; set; } = [];
-    public UserSubscription UserSubscriptions { get; set; }
+    public ICollection<UserSubscription> UserSubscriptions { get; set; } = [];
     public Streak? Streak { get; set; }
 }
 

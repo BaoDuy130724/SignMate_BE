@@ -54,6 +54,8 @@ builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options 
             .Where(msg => !string.IsNullOrWhiteSpace(msg))
             .ToList();
 
+        Console.WriteLine("MODEL STATE ERRORS: " + string.Join(" | ", errors));
+
         var apiResponse = SignMate.Application.DTOs.Common.ApiResponse
             .FailureResult("Dữ liệu không hợp lệ.", errors);
 
