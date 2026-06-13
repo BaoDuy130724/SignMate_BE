@@ -4,8 +4,7 @@ using SignMate.Application.DTOs.Admin;
 namespace SignMate.Application.Features.Admin.Queries.GetSystemDashboard;
 
 /// <summary>
-/// Truy vấn dashboard tổng quan — <c>GET /api/admin/dashboard</c>.
-/// SuperAdmin: toàn hệ thống. CenterAdmin: truyền CallerCenterId để lọc theo trung tâm.
+/// Truy vấn dashboard tổng quan toàn hệ thống — <c>GET /api/admin/dashboard</c>, chỉ SuperAdmin.
+/// (CenterAdmin có dashboard riêng theo trung tâm: <c>GET /api/centers/{id}/dashboard</c>.)
 /// </summary>
-/// <param name="CallerCenterId">Id trung tâm của caller; null = SuperAdmin (toàn hệ thống).</param>
-public record GetSystemDashboardQuery(int? CallerCenterId = null) : IQuery<SystemDashboardDto>;
+public record GetSystemDashboardQuery : IQuery<SystemDashboardDto>;

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using SignMate.Application.Common.Exceptions;
 using SignMate.Application.DTOs.Practice;
 using SignMate.Application.Features.Practice.Commands.EndSession;
-using SignMate.Application.Features.Practice.Commands.ReportResult;
 using SignMate.Application.Features.Practice.Commands.StartSession;
 using SignMate.Application.Features.Practice.Commands.SubmitAttempt;
 using SignMate.Application.Features.Practice.Queries.GetPracticeHistory;
@@ -62,12 +61,4 @@ public class PracticeController : BaseApiController
         return Success(result);
     }
 
-    /// <summary>Báo kết quả lượt thử đã chấm sẵn phía client. <c>POST /api/practice/report-result</c>.</summary>
-    [HttpPost("report-result")]
-    public async Task<IActionResult> ReportResult([FromBody] ReportResultRequest request)
-    {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var result = await Mediator.Send(new ReportResultCommand(userId, request));
-        return Success(result);
-    }
 }

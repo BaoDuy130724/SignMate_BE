@@ -5,9 +5,9 @@ using SignMate.Domain.Entities;
 namespace SignMate.Application.Features.Practice.Common;
 
 /// <summary>
-/// Tiện ích dùng chung cập nhật tiến độ luyện một ký hiệu sau mỗi lượt thử. Tái sử dụng giữa luồng
-/// nộp video (SubmitAttempt) và báo kết quả chấm sẵn (ReportResult) để quy tắc cộng số lần thử &amp;
-/// đánh dấu thành thạo luôn nhất quán (DRY). Không <c>SaveChanges</c> — caller lưu trong cùng transaction.
+/// Tiện ích dùng chung cập nhật tiến độ luyện một ký hiệu sau mỗi lượt thử (luồng nộp video
+/// SubmitAttempt) để quy tắc cộng số lần thử &amp; đánh dấu thành thạo luôn nhất quán (DRY).
+/// Không <c>SaveChanges</c> — caller lưu trong cùng transaction.
 /// </summary>
 internal static class SignProgressUpdater
 {

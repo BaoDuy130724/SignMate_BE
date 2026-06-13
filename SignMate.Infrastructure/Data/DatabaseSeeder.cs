@@ -182,16 +182,21 @@ public static class DatabaseSeeder
             // student[1] — học viên Basic
             new() { Email = "student2@gmail.com", PasswordHash = hash, FullName = "Học viên Phạm D", Role = UserRole.Student, CenterId = centerId, IsOnboarded = true, XpPoints = 80, Goal = "Phát triển sự nghiệp", Level = "Biết cơ bản", CreatedAt = now, UpdatedAt = now },
             // student[2] — học viên Free, mới (chưa onboard)
-            new() { Email = "student3@gmail.com", PasswordHash = hash, FullName = "Học viên Võ E", Role = UserRole.Student, IsOnboarded = false, XpPoints = 0, CreatedAt = now, UpdatedAt = now }
+            new() { Email = "student3@gmail.com", PasswordHash = hash, FullName = "Học viên Võ E", Role = UserRole.Student, IsOnboarded = false, XpPoints = 0, CreatedAt = now, UpdatedAt = now },
+            // student[3] — học viên B2C (không thuộc trung tâm) gói Pro: để dashboard có
+            // tỉ lệ chuyển đổi Free→Paid > 0 (student B2B không tính vào conversion).
+            new() { Email = "student4@gmail.com", PasswordHash = hash, FullName = "Học viên Đỗ F", Role = UserRole.Student, IsOnboarded = true, XpPoints = 220, Goal = "Học giao tiếp", Level = "Biết cơ bản", CreatedAt = now, UpdatedAt = now }
         };
 
         context.Users.AddRange(users);
         await context.SaveChangesAsync(); // sinh Id cho User trước khi tạo các bản ghi phụ thuộc
 
         var students = users.Where(u => u.Role == UserRole.Student).ToList();
+        // Ngày streak tính theo giờ VN (UTC+7) — khớp quy tắc của StreakActivity bên Application.
+        var todayVn = DateOnly.FromDateTime(now.AddHours(7));
         context.Streaks.AddRange(
-            new Streak { UserId = students[0].Id, CurrentStreak = 3, LongestStreak = 5, LastActiveDate = DateOnly.FromDateTime(now) },
-            new Streak { UserId = students[1].Id, CurrentStreak = 1, LongestStreak = 4, LastActiveDate = DateOnly.FromDateTime(now.AddDays(-1)) });
+            new Streak { UserId = students[0].Id, CurrentStreak = 3, LongestStreak = 5, LastActiveDate = todayVn },
+            new Streak { UserId = students[1].Id, CurrentStreak = 1, LongestStreak = 4, LastActiveDate = todayVn.AddDays(-1) });
         await context.SaveChangesAsync();
 
         return users;
@@ -219,7 +224,8 @@ public static class DatabaseSeeder
         context.UserSubscriptions.AddRange(
             Make(students[0].Id, pro, "SEED-PRO-0001"),
             Make(students[1].Id, basic, "SEED-BASIC-0001"),
-            Make(students[2].Id, free, null));
+            Make(students[2].Id, free, null),
+            Make(students[3].Id, pro, "SEED-PRO-0002")); // B2C trả phí → conversion > 0
         await context.SaveChangesAsync();
     }
 

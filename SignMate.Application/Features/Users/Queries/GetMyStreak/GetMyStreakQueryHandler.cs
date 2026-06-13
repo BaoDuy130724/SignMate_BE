@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SignMate.Application.DTOs.User;
+using SignMate.Application.Features.Streaks.Common;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 
@@ -9,6 +10,7 @@ namespace SignMate.Application.Features.Users.Queries.GetMyStreak;
 /// <summary>
 /// Handler đọc streak của người dùng. Nếu chưa có bản ghi (user mới), trả về streak 0
 /// với ngày hoạt động là hôm nay để client luôn có dữ liệu hiển thị an toàn.
+/// Chuỗi hiện tại trả về là chuỗi hiệu lực (0 nếu đã đứt quãng), không phải giá trị thô trong DB.
 /// </summary>
 public class GetMyStreakQueryHandler : IRequestHandler<GetMyStreakQuery, StreakDto>
 {
@@ -28,11 +30,11 @@ public class GetMyStreakQueryHandler : IRequestHandler<GetMyStreakQuery, StreakD
             {
                 CurrentStreak = 0,
                 LongestStreak = 0,
-                LastActiveDate = DateOnly.FromDateTime(DateTime.UtcNow)
+                LastActiveDate = StreakActivity.TodayVietnam()
             }
             : new StreakDto
             {
-                CurrentStreak = streak.CurrentStreak,
+                CurrentStreak = StreakActivity.EffectiveCurrent(streak),
                 LongestStreak = streak.LongestStreak,
                 LastActiveDate = streak.LastActiveDate
             };

@@ -4,6 +4,7 @@ using SignMate.Application.Common.Exceptions;
 using SignMate.Application.DTOs.Practice;
 using SignMate.Application.Features.Practice.Common;
 using SignMate.Application.Features.Streaks.Common;
+using SignMate.Application.Features.Subscription.Common;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 
@@ -111,7 +112,7 @@ public class SubmitAttemptCommandHandler : IRequestHandler<SubmitAttemptCommand,
             .Include(s => s.Plan)
             .FirstOrDefaultAsync(s => s.UserId == userId && s.IsActive && s.EndDate > DateTime.UtcNow, cancellationToken);
 
-        if (activeSub?.Plan.Type != PlanType.Pro)
+        if (activeSub is null || !PlanEntitlements.HasProFeatures(activeSub.Plan.Type))
             return null;
 
         var previousAttempt = await _unitOfWork.Repository<PracticeAttempt>().Query()

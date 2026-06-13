@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SignMate.Application.DTOs.Course;
 using SignMate.Application.DTOs.Dashboard;
+using SignMate.Application.Features.Streaks.Common;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 
@@ -84,7 +85,7 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
         return new DashboardSummaryDto
         {
             AverageAccuracy = Math.Round(avgAccuracy, 1),
-            CurrentStreak = streak?.CurrentStreak ?? 0,
+            CurrentStreak = StreakActivity.EffectiveCurrent(streak),
             SuggestedLesson = suggestedLesson,
             Deadlines = deadlines
         };

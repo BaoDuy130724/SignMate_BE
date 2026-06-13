@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SignMate.Application.Common.Exceptions;
+using SignMate.Application.Features.Streaks.Common;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 
@@ -9,8 +10,9 @@ namespace SignMate.Application.Features.Progress.Commands.UpdateLessonProgress;
 /// <summary>
 /// Handler cho <see cref="UpdateLessonProgressCommand"/>: tạo mới hoặc cập nhật bản ghi tiến độ bài học
 /// của người dùng. Nếu bài chuyển sang <see cref="LessonStatus.Completed"/> và đã hoàn thành toàn bộ
-/// bài của khóa thì đánh dấu enrollment hoàn tất. Bao nhiều bước ghi phụ thuộc nhau trong một transaction
-/// để đảm bảo Atomicity (tiến độ + đánh dấu hoàn thành khóa luôn nhất quán).
+/// bài của khóa thì đánh dấu enrollment hoàn tất. Xem bài học cũng là hoạt động học tập nên cập nhật
+/// luôn streak. Bao nhiều bước ghi phụ thuộc nhau trong một transaction để đảm bảo Atomicity
+/// (tiến độ + đánh dấu hoàn thành khóa + streak luôn nhất quán).
 /// </summary>
 public class UpdateLessonProgressCommandHandler : IRequestHandler<UpdateLessonProgressCommand, Unit>
 {
@@ -71,6 +73,8 @@ public class UpdateLessonProgressCommandHandler : IRequestHandler<UpdateLessonPr
                 if (completedLessons >= totalLessons)
                     enrollment.CompletedAt = DateTime.UtcNow;
             }
+
+            await StreakActivity.RecordAsync(_unitOfWork, command.UserId, cancellationToken);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await _unitOfWork.CommitTransactionAsync(cancellationToken);

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SignMate.Application.Common.Exceptions;
+using SignMate.Application.Features.Streaks.Common;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 
@@ -8,7 +9,8 @@ namespace SignMate.Application.Features.Practice.Commands.EndSession;
 
 /// <summary>
 /// Handler cho <see cref="EndSessionCommand"/>: đánh dấu thời điểm kết thúc cho phiên luyện tập
-/// thuộc đúng người dùng. Ghi đơn nên một lần <c>SaveChanges</c> là đủ nguyên tử.
+/// thuộc đúng người dùng, đồng thời ghi nhận streak — phiên gương tập realtime không nộp lượt thử
+/// nào nhưng vẫn là hoạt động học trong ngày. Một lần <c>SaveChanges</c> cho cả hai ghi là đủ nguyên tử.
 /// </summary>
 public class EndSessionCommandHandler : IRequestHandler<EndSessionCommand, Unit>
 {
@@ -26,6 +28,7 @@ public class EndSessionCommandHandler : IRequestHandler<EndSessionCommand, Unit>
         if (!session.EndedAt.HasValue)
         {
             session.EndedAt = DateTime.UtcNow;
+            await StreakActivity.RecordAsync(_unitOfWork, command.UserId, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
 

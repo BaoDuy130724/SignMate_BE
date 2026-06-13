@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SignMate.Application.DTOs.User;
+using SignMate.Application.Features.Streaks.Common;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 
@@ -29,10 +30,10 @@ internal static class UserProfileBuilder
             .FirstOrDefaultAsync(cancellationToken);
         var currentPlan = activeSubscription?.Plan.Type.ToString() ?? "Free";
 
-        var currentStreak = await unitOfWork.Repository<Streak>().Query()
-            .Where(s => s.UserId == user.Id)
-            .Select(s => (int?)s.CurrentStreak)
-            .FirstOrDefaultAsync(cancellationToken) ?? 0;
+        var streak = await unitOfWork.Repository<Streak>().Query()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.UserId == user.Id, cancellationToken);
+        var currentStreak = StreakActivity.EffectiveCurrent(streak);
 
         var completedLessons = await unitOfWork.Repository<LessonProgress>().Query()
             .CountAsync(p => p.UserId == user.Id && p.Status == LessonStatus.Completed, cancellationToken);
