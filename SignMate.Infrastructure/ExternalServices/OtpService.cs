@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SignMate.Application.Common.Exceptions;
 using SignMate.Application.Interfaces;
@@ -9,21 +10,21 @@ namespace SignMate.Infrastructure.ExternalServices;
 public class OtpService : IOtpService
 {
     private readonly IMemoryCache _cache;
-    private readonly IEmailService _emailService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<OtpService> _logger;
     private const int OtpExpiryMinutes = 5;
 
     /// <summary>Khoảng chờ tối thiểu giữa 2 lần gửi OTP cho cùng một email (chống spam gửi lại).</summary>
     private const int ResendCooldownSeconds = 60;
 
-    public OtpService(IMemoryCache cache, IEmailService emailService, ILogger<OtpService> logger)
+    public OtpService(IMemoryCache cache, IServiceScopeFactory scopeFactory, ILogger<OtpService> logger)
     {
         _cache = cache;
-        _emailService = emailService;
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
-    public async Task<string> GenerateAndSendOtpAsync(string email, string purpose)
+    public Task<string> GenerateAndSendOtpAsync(string email, string purpose)
     {
         var cooldownKey = $"OTP_CD_{purpose}_{email}";
 
@@ -39,29 +40,39 @@ public class OtpService : IOtpService
         var until = DateTimeOffset.UtcNow.AddSeconds(ResendCooldownSeconds);
         _cache.Set(cooldownKey, until, TimeSpan.FromSeconds(ResendCooldownSeconds));
 
+        var otpCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+        var cacheKey = $"OTP_{purpose}_{email}";
+        _cache.Set(cacheKey, otpCode, TimeSpan.FromMinutes(OtpExpiryMinutes));
+
+        // Gửi email KHÔNG chặn response. SMTP (connect/auth/send) có thể mất >10s; nếu await
+        // thì client (timeout ~15s) báo "lỗi mạng" giả dù OTP đã tạo và mail vẫn gửi. OTP đã
+        // nằm trong cache nên hợp lệ ngay → trả về liền để client sang màn nhập OTP; mail tới sau.
+        _ = SendOtpEmailAsync(email, purpose, otpCode, cooldownKey);
+
+        _logger.LogInformation("Generated OTP for {Email} ({Purpose})", email, purpose);
+        return Task.FromResult(otpCode);
+    }
+
+    /// <summary>
+    /// Gửi email OTP ở nền. Tạo <b>scope DI mới</b> vì <see cref="IEmailService"/> là scoped —
+    /// không được tái dùng scope của request (đã đóng khi handler trả về). Nuốt lỗi để task nền
+    /// không "unobserved"; gửi hỏng thì gỡ cooldown cho phép gửi lại ngay.
+    /// </summary>
+    private async Task SendOtpEmailAsync(string email, string purpose, string otpCode, string cooldownKey)
+    {
         try
         {
-            var otpCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
-            var cacheKey = $"OTP_{purpose}_{email}";
-            _cache.Set(cacheKey, otpCode, TimeSpan.FromMinutes(OtpExpiryMinutes));
-
+            using var scope = _scopeFactory.CreateScope();
+            var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
             if (purpose == "Register")
-            {
-                await _emailService.SendRegistrationOtpEmailAsync(email, otpCode);
-            }
+                await emailService.SendRegistrationOtpEmailAsync(email, otpCode);
             else if (purpose == "ResetPassword")
-            {
-                await _emailService.SendPasswordResetEmailAsync(email, otpCode);
-            }
-
-            _logger.LogInformation("Generated OTP for {Email} ({Purpose})", email, purpose);
-            return otpCode;
+                await emailService.SendPasswordResetEmailAsync(email, otpCode);
         }
-        catch
+        catch (Exception ex)
         {
-            // Gửi mail thất bại → gỡ cooldown để người dùng có thể thử lại ngay.
             _cache.Remove(cooldownKey);
-            throw;
+            _logger.LogError(ex, "Gửi OTP email tới {Email} ({Purpose}) thất bại.", email, purpose);
         }
     }
 
