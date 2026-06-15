@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace SignMate.Application.DTOs.Analytics;
 
 public class GlobalAnalyticsDto
@@ -11,6 +13,7 @@ public class GlobalAnalyticsDto
     public double AverageAccuracy { get; set; }
 
     /// <summary>Số học viên B2B (gắn trung tâm) — để hiển thị mạng lưới đối tác.</summary>
+    [JsonPropertyName("b2bUsers")]
     public int B2BUsers { get; set; }
 
     /// <summary>Số người dùng có ít nhất một phiên luyện tập trong 30 ngày gần nhất.</summary>

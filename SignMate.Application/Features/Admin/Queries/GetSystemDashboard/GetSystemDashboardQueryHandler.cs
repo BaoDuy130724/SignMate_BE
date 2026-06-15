@@ -21,9 +21,9 @@ public class GetSystemDashboardQueryHandler : IRequestHandler<GetSystemDashboard
     {
         var now = DateTime.UtcNow;
 
-        // ── B2B: student có centerId ─────────────────────────────────────────
+        // ── B2B: student có centerId và trung tâm đang hoạt động ──────────────
         var b2bUsers = await _unitOfWork.Repository<User>().Query()
-            .CountAsync(u => u.Role == UserRole.Student && u.CenterId != null, cancellationToken);
+            .CountAsync(u => u.Role == UserRole.Student && u.CenterId != null && u.Center!.IsActive, cancellationToken);
 
         var totalUsers = await _unitOfWork.Repository<User>().Query()
             .CountAsync(cancellationToken);
@@ -57,7 +57,7 @@ public class GetSystemDashboardQueryHandler : IRequestHandler<GetSystemDashboard
                 (s.Plan.Type == PlanType.Pro || s.Plan.Type == PlanType.Basic)), cancellationToken);
 
         var activeUsersLastMonth = await _unitOfWork.Repository<PracticeSession>().Query()
-            .Where(ps => ps.StartedAt >= now.AddDays(-30))
+            .Where(ps => ps.StartedAt >= now.AddDays(-30) && ps.User.Role == UserRole.Student)
             .Select(ps => ps.UserId)
             .Distinct()
             .CountAsync(cancellationToken);

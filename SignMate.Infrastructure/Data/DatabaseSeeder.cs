@@ -15,6 +15,26 @@ public static class DatabaseSeeder
     /// <summary>Mật khẩu mặc định cho các tài khoản demo seed (chỉ chạy ở dev).</summary>
     public const string DefaultPassword = "SignMateDemo2026!";
 
+    private static readonly string[] FreeFeatures =
+    {
+        "5 bài học mỗi ngày", "Phản hồi đúng sai cơ bản", "Không phân tích thống kê", "Không sửa lỗi chi tiết"
+    };
+
+    private static readonly string[] BasicFeatures =
+    {
+        "Bài học không giới hạn", "Phản hồi lỗi cơ bản", "Theo dõi tiến độ học tập", "Duy trì chuỗi ngày học (Streak)"
+    };
+
+    private static readonly string[] ProFeatures =
+    {
+        "AI sửa lỗi chi tiết", "Phân tích góc độ, hình dáng tay", "Phát hiện điểm yếu cần cải thiện", "Phân tích chuyên sâu (Advanced analytics)"
+    };
+
+    private static readonly string[] B2bFeatures =
+    {
+        "Trang quản trị cho giáo viên", "Quản lý danh sách lớp học", "Theo dõi tiến độ học viên", "Báo cáo kết quả học tập", "Yêu cầu tối thiểu 20 học viên"
+    };
+
     /// <summary>
     /// Nạp dữ liệu chuẩn. Khi <paramref name="reset"/> = true sẽ <b>xóa toàn bộ DB hiện tại</b>
     /// rồi tạo lại từ migration (identity reset về 1 → dữ liệu tất định), bảo đảm trạng thái sạch.
@@ -65,7 +85,7 @@ public static class DatabaseSeeder
         {
             // Trường hợp DB đã có user (do người dùng tự đăng ký trước khi seed) nhưng chưa có khóa học/bài học,
             // ta vẫn cần seed Courses & Lessons để tránh lỗi ràng buộc khóa ngoại khi seed Signs (cần LessonId = 1).
-            var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Role == UserRole.SuperAdmin) 
+            var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Role == UserRole.SuperAdmin)
                 ?? await context.Users.FirstOrDefaultAsync();
             if (adminUser != null)
             {
@@ -83,7 +103,7 @@ public static class DatabaseSeeder
         var adminPassword = config["Seed:AdminInitialPassword"];
         if (string.IsNullOrEmpty(adminPassword))
         {
-            adminPassword = Guid.NewGuid().ToString("N").Substring(0, 16);
+            adminPassword = Guid.NewGuid().ToString("N")[..16];
             Console.WriteLine($"[SECURITY WARNING] Seed:AdminInitialPassword is not configured. Generated a secure SuperAdmin password: {adminPassword}");
         }
 
@@ -112,17 +132,13 @@ public static class DatabaseSeeder
         var plans = new List<SubscriptionPlan>
         {
             new() { Name = "Gói Miễn phí", PriceVnd = 0, DurationDays = 30, Type = PlanType.Free,
-                FeaturesJson = JsonSerializer.Serialize(new[]
-                { "5 bài học mỗi ngày", "Phản hồi đúng sai cơ bản", "Không phân tích thống kê", "Không sửa lỗi chi tiết" }) },
+                FeaturesJson = JsonSerializer.Serialize(FreeFeatures) },
             new() { Name = "Gói Cơ bản", PriceVnd = 49000, DurationDays = 30, Type = PlanType.Basic,
-                FeaturesJson = JsonSerializer.Serialize(new[]
-                { "Bài học không giới hạn", "Phản hồi lỗi cơ bản", "Theo dõi tiến độ học tập", "Duy trì chuỗi ngày học (Streak)" }) },
+                FeaturesJson = JsonSerializer.Serialize(BasicFeatures) },
             new() { Name = "Gói Nâng cao (Pro)", PriceVnd = 99000, DurationDays = 30, Type = PlanType.Pro,
-                FeaturesJson = JsonSerializer.Serialize(new[]
-                { "AI sửa lỗi chi tiết", "Phân tích góc độ, hình dáng tay", "Phát hiện điểm yếu cần cải thiện", "Phân tích chuyên sâu (Advanced analytics)" }) },
+                FeaturesJson = JsonSerializer.Serialize(ProFeatures) },
             new() { Name = "Gói Trung tâm (B2B)", PriceVnd = 79000, DurationDays = 30, Type = PlanType.B2B,
-                FeaturesJson = JsonSerializer.Serialize(new[]
-                { "Trang quản trị cho giáo viên", "Quản lý danh sách lớp học", "Theo dõi tiến độ học viên", "Báo cáo kết quả học tập", "Yêu cầu tối thiểu 20 học viên" }) }
+                FeaturesJson = JsonSerializer.Serialize(B2bFeatures) }
         };
 
         if (!await context.SubscriptionPlans.AnyAsync())
@@ -220,6 +236,7 @@ public static class DatabaseSeeder
         var pro = plans.First(p => p.Type == PlanType.Pro);
         var basic = plans.First(p => p.Type == PlanType.Basic);
         var free = plans.First(p => p.Type == PlanType.Free);
+        var b2b = plans.First(p => p.Type == PlanType.B2B);
         var now = DateTime.UtcNow;
 
         UserSubscription Make(int userId, SubscriptionPlan plan, string? payRef) => new()
@@ -232,11 +249,33 @@ public static class DatabaseSeeder
             PaymentReference = payRef
         };
 
-        context.UserSubscriptions.AddRange(
-            Make(students[0].Id, pro, "SEED-PRO-0001"),
-            Make(students[1].Id, basic, "SEED-BASIC-0001"),
-            Make(students[2].Id, free, null),
-            Make(students[3].Id, pro, "SEED-PRO-0002")); // B2C trả phí → conversion > 0
+        foreach (var student in students)
+        {
+            SubscriptionPlan plan;
+            string? payRef = null;
+
+            if (student.CenterId != null)
+            {
+                plan = b2b;
+                payRef = $"SEED-B2B-{student.Id:D4}";
+            }
+            else
+            {
+                // Học viên B2C (không có CenterId)
+                if (student.IsOnboarded)
+                {
+                    plan = pro;
+                    payRef = $"SEED-PRO-{student.Id:D4}";
+                }
+                else
+                {
+                    plan = free;
+                }
+            }
+
+            context.UserSubscriptions.Add(Make(student.Id, plan, payRef));
+        }
+
         await context.SaveChangesAsync();
     }
 
