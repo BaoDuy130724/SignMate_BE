@@ -58,8 +58,8 @@ public class SubscriptionController : BaseApiController
         using var reader = new StreamReader(Request.Body);
         var body = await reader.ReadToEndAsync();
 
-        // TẠM THỜI BYPASS XÁC THỰC CHỮ KÝ ĐỂ TEST LOCAL BẰNG POSTMAN:
-        int? subscriptionId = null;
+        // Parse orderCode từ webhook payload
+        string? orderCode = null;
         try
         {
             using var jsonDoc = System.Text.Json.JsonDocument.Parse(body);
@@ -68,12 +68,11 @@ public class SubscriptionController : BaseApiController
             {
                 if (orderCodeEl.ValueKind == System.Text.Json.JsonValueKind.Number)
                 {
-                    subscriptionId = orderCodeEl.GetInt32();
+                    orderCode = orderCodeEl.GetInt64().ToString();
                 }
-                else if (orderCodeEl.ValueKind == System.Text.Json.JsonValueKind.String && 
-                         int.TryParse(orderCodeEl.GetString(), out var parsedId))
+                else if (orderCodeEl.ValueKind == System.Text.Json.JsonValueKind.String)
                 {
-                    subscriptionId = parsedId;
+                    orderCode = orderCodeEl.GetString();
                 }
             }
         }
@@ -82,30 +81,79 @@ public class SubscriptionController : BaseApiController
             return BadRequest(new { message = "Invalid JSON format." });
         }
 
-        if (subscriptionId == null)
+        if (string.IsNullOrEmpty(orderCode))
         {
             return BadRequest(new { message = "Missing or invalid data.orderCode in request body." });
         }
 
-        // Kích hoạt gói cước tương ứng với subscriptionId (orderCode)
-        var subRepo = HttpContext.RequestServices.GetRequiredService<IUnitOfWork>();
-        var sub = await subRepo.Repository<UserSubscription>().GetByIdAsync(subscriptionId.Value);
+        // Tìm subscription theo PaymentReference (chứa orderCode đã gửi cho PayOS)
+        var uow = HttpContext.RequestServices.GetRequiredService<IUnitOfWork>();
+        var sub = uow.Repository<UserSubscription>()
+            .Query(s => s.PaymentReference == orderCode)
+            .FirstOrDefault();
 
         if (sub is not null && !sub.IsActive)
         {
             await SubscriptionActivation.DeactivateActiveSubscriptionsAsync(
-                subRepo, sub.UserId, CancellationToken.None);
+                uow, sub.UserId, CancellationToken.None);
 
-            var plan = await subRepo.Repository<SubscriptionPlan>().GetByIdAsync(sub.PlanId);
+            var plan = await uow.Repository<SubscriptionPlan>().GetByIdAsync(sub.PlanId);
             sub.IsActive = true;
             sub.StartDate = DateTime.UtcNow;
             sub.EndDate = DateTime.UtcNow.AddDays(plan?.DurationDays ?? 30);
 
-            await subRepo.SaveChangesAsync(CancellationToken.None);
-            return Ok(new { success = true, message = $"Subscription {subscriptionId} activated successfully." });
+            await uow.SaveChangesAsync(CancellationToken.None);
+            return Ok(new { success = true, message = $"Subscription (orderCode={orderCode}) activated successfully." });
         }
 
-        return Ok(new { success = true, message = $"Subscription {subscriptionId} was already active or not found." });
+        return Ok(new { success = true, message = $"Subscription (orderCode={orderCode}) was already active or not found." });
+    }
+
+    /// <summary>
+    /// Kiểm tra trạng thái giao dịch trực tiếp từ PayOS và kích hoạt nếu thành công. 
+    /// Dùng làm fallback khi webhook không tới được localhost.
+    /// <c>POST /api/subscription/verify-payment</c>
+    /// </summary>
+    [HttpPost("subscription/verify-payment")]
+    [Authorize]
+    public async Task<IActionResult> VerifyPayment([FromQuery] long orderCode)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var uow = HttpContext.RequestServices.GetRequiredService<IUnitOfWork>();
+        
+        var pending = uow.Repository<UserSubscription>()
+            .Query(s => s.UserId == userId && s.PaymentReference == orderCode.ToString() && !s.IsActive)
+            .FirstOrDefault();
+
+        if (pending is null)
+        {
+            // Có thể đã được kích hoạt bởi webhook trước đó rồi
+            var active = uow.Repository<UserSubscription>()
+                .Query(s => s.UserId == userId && s.PaymentReference == orderCode.ToString() && s.IsActive)
+                .FirstOrDefault();
+                
+            if (active != null)
+                return Ok(new { success = true, message = "Giao dịch đã được kích hoạt trước đó." });
+                
+            return BadRequest(new { success = false, message = "Không tìm thấy giao dịch chờ." });
+        }
+
+        var payOsService = HttpContext.RequestServices.GetRequiredService<IPayOsService>();
+        var isPaid = await payOsService.VerifyPaymentLinkAsync(orderCode);
+
+        if (!isPaid)
+            return BadRequest(new { success = false, message = "Giao dịch chưa thanh toán thành công." });
+
+        await SubscriptionActivation.DeactivateActiveSubscriptionsAsync(uow, userId, CancellationToken.None);
+
+        var plan = await uow.Repository<SubscriptionPlan>().GetByIdAsync(pending.PlanId);
+        pending.IsActive = true;
+        pending.StartDate = DateTime.UtcNow;
+        pending.EndDate = DateTime.UtcNow.AddDays(plan?.DurationDays ?? 30);
+
+        await uow.SaveChangesAsync(CancellationToken.None);
+
+        return Ok(new { success = true, message = "Giao dịch thành công, gói đã được kích hoạt." });
     }
 
     /// <summary>Gói cước hiện tại của người dùng. <c>GET /api/subscription/me</c>.</summary>

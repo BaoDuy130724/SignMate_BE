@@ -14,6 +14,11 @@ public interface IPayOsService
 
     /// <summary>
     Task<PayOsWebhookResult> VerifyWebhookAsync(string webhookBody);
+
+    /// <summary>
+    /// Kiểm tra trạng thái giao dịch trực tiếp từ PayOS (hữu ích khi webhook bị trễ hoặc test ở localhost).
+    /// </summary>
+    Task<bool> VerifyPaymentLinkAsync(long orderCode);
 }
 
 public class PayOsPaymentRequest

@@ -49,13 +49,21 @@ public class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, Subscri
         }
 
         // ── Gói trả phí: tạo pending subscription + PayOS link ──────
+        // CHÚ Ý: Không xóa các pending subscription cũ. Nếu xóa, người dùng lỡ thanh toán mã QR cũ 
+        // thì hệ thống sẽ không tìm thấy để kích hoạt. Việc dọn dẹp rác nên dùng CronJob quét giao dịch > 24h.
+        
+        // Tạo OrderCode duy nhất dựa trên timestamp (tránh trùng khi re-seed DB,
+        // vì PayOS nhớ tất cả order code cũ trên server của họ).
+        var orderCode = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 1_000_000_000;
+
         var pendingSub = new UserSubscription
         {
             UserId = command.UserId,
             PlanId = plan.Id,
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(plan.DurationDays),
-            IsActive = false
+            IsActive = false,
+            PaymentReference = orderCode.ToString()
         };
         await _unitOfWork.Repository<UserSubscription>().AddAsync(pendingSub);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -63,14 +71,29 @@ public class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, Subscri
         var returnUrl = command.Request.ReturnUrl
             ?? "http://localhost:5173/payment-callback";
 
-        var paymentUrl = await _payOsService.CreatePaymentLinkAsync(new PayOsPaymentRequest
+        string paymentUrl;
+        try
         {
-            OrderCode = pendingSub.Id,
-            Amount = (int)plan.PriceVnd,
-            Description = $"SignMate Plan {plan.Id}",
-            ReturnUrl = returnUrl,
-            CancelUrl = returnUrl + "?cancel=true"
-        });
+            paymentUrl = await _payOsService.CreatePaymentLinkAsync(new PayOsPaymentRequest
+            {
+                OrderCode = orderCode,
+                Amount = (int)plan.PriceVnd,
+                Description = $"SignMate Plan {plan.Id}",
+                ReturnUrl = returnUrl,
+                CancelUrl = returnUrl + "?cancel=true"
+            });
+        }
+        catch (Exception ex)
+        {
+            // Xóa pending subscription nếu PayOS thất bại
+            _unitOfWork.Repository<UserSubscription>().Delete(pendingSub);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            throw new BadRequestException(
+                !string.IsNullOrWhiteSpace(ex.Message)
+                    ? $"Lỗi thanh toán: {ex.Message}"
+                    : "Không thể tạo đơn thanh toán. Vui lòng thử lại sau.");
+        }
 
         return new SubscribeResponse
         {

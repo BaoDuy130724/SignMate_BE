@@ -10,6 +10,8 @@ namespace SignMate.Infrastructure.ExternalServices;
 public class PayOsService : IPayOsService
 {
     private readonly PayOSClient _payOS;
+    private readonly string _clientId;
+    private readonly string _apiKey;
 
     public PayOsService(IConfiguration config)
     {
@@ -23,6 +25,9 @@ public class PayOsService : IPayOsService
             throw new ArgumentException("Missing or empty PayOS:ApiKey in configuration.");
         if (string.IsNullOrWhiteSpace(checksumKey))
             throw new ArgumentException("Missing or empty PayOS:ChecksumKey in configuration.");
+
+        _clientId = clientId;
+        _apiKey = apiKey;
 
         _payOS = new PayOSClient(new PayOSOptions
         {
@@ -77,6 +82,34 @@ public class PayOsService : IPayOsService
         catch
         {
             return new PayOsWebhookResult { IsValid = false };
+        }
+    }
+    public async Task<bool> VerifyPaymentLinkAsync(long orderCode)
+    {
+        try
+        {
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("x-client-id", _clientId);
+            client.DefaultRequestHeaders.Add("x-api-key", _apiKey);
+
+            var response = await client.GetAsync($"https://api-merchant.payos.vn/v2/payment-requests/{orderCode}");
+            if (!response.IsSuccessStatusCode)
+                return false;
+
+            var json = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+            
+            if (doc.RootElement.TryGetProperty("data", out var dataEl) && 
+                dataEl.TryGetProperty("status", out var statusEl))
+            {
+                return statusEl.GetString() == "PAID";
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
         }
     }
 }

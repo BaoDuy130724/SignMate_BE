@@ -75,6 +75,9 @@ builder.Services.AddResponseCompression(opts =>
 // ── Health Checks ──────────────────────────────────────────────
 builder.Services.AddHealthChecks();
 
+// ── Background Services ────────────────────────────────────────
+builder.Services.AddHostedService<SignMate.API.Services.PendingSubscriptionCleanupService>();
+
 // ── Swagger ────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
