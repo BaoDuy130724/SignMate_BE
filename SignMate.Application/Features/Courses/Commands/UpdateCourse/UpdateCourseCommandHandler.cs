@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SignMate.Application.Common.Exceptions;
 using SignMate.Application.DTOs.Course;
+using SignMate.Application.Features.Courses.Common;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 
@@ -14,8 +15,13 @@ namespace SignMate.Application.Features.Courses.Commands.UpdateCourse;
 public class UpdateCourseCommandHandler : IRequestHandler<UpdateCourseCommand, CourseDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public UpdateCourseCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public UpdateCourseCommandHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<CourseDto> Handle(UpdateCourseCommand command, CancellationToken cancellationToken)
@@ -23,6 +29,8 @@ public class UpdateCourseCommandHandler : IRequestHandler<UpdateCourseCommand, C
         var repo = _unitOfWork.Repository<Course>();
         var course = await repo.GetByIdAsync(command.Id)
             ?? throw new NotFoundException(nameof(Course), command.Id);
+
+        ContentAccess.EnsureCanManage(course.CenterId, _currentUser);
 
         var request = command.Request;
         if (request.Title is not null) course.Title = request.Title;
@@ -51,7 +59,8 @@ public class UpdateCourseCommandHandler : IRequestHandler<UpdateCourseCommand, C
             CreatedBy = course.CreatedBy,
             CreatedAt = course.CreatedAt,
             LessonCount = lessonCount,
-            Topic = topic
+            Topic = topic,
+            CenterId = course.CenterId
         };
     }
 }

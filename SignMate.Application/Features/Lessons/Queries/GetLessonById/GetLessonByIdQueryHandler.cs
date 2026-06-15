@@ -14,15 +14,25 @@ namespace SignMate.Application.Features.Lessons.Queries.GetLessonById;
 public class GetLessonByIdQueryHandler : IRequestHandler<GetLessonByIdQuery, LessonDetailDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public GetLessonByIdQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public GetLessonByIdQueryHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<LessonDetailDto> Handle(GetLessonByIdQuery query, CancellationToken cancellationToken)
     {
+        // Phân tầng nội dung (chống IDOR): chỉ xem được bài học của khóa global hoặc của center mình.
+        var isSuperAdmin = _currentUser.Role == nameof(UserRole.SuperAdmin);
+        var centerId = _currentUser.CenterId;
+
         return await _unitOfWork.Repository<Lesson>().Query()
             .AsNoTracking()
             .Where(l => l.Id == query.LessonId)
+            .Where(l => isSuperAdmin || l.Course.CenterId == null || l.Course.CenterId == centerId)
             .Select(l => new LessonDetailDto
             {
                 Id = l.Id,

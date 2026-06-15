@@ -23,7 +23,7 @@ public class LessonsController : BaseApiController
     }
 
     /// <summary>Tạo bài học trong khóa. <c>POST /api/lessons/course/{courseId}</c>.</summary>
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "SuperAdmin,CenterAdmin")]
     [HttpPost("course/{courseId:int}")]
     public async Task<IActionResult> CreateLesson(int courseId, [FromBody] CreateLessonRequest request)
     {
@@ -32,7 +32,7 @@ public class LessonsController : BaseApiController
     }
 
     /// <summary>Cập nhật bài học. <c>PUT /api/lessons/{id}</c>.</summary>
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "SuperAdmin,CenterAdmin")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateLesson(int id, [FromBody] UpdateLessonRequest request)
     {
@@ -41,7 +41,7 @@ public class LessonsController : BaseApiController
     }
 
     /// <summary>Xóa bài học. <c>DELETE /api/lessons/{id}</c>.</summary>
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "SuperAdmin,CenterAdmin")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteLesson(int id)
     {

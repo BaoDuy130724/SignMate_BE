@@ -34,8 +34,8 @@ public class CoursesController : BaseApiController
         return Success(result);
     }
 
-    /// <summary>Tạo khóa học mới. <c>POST /api/courses</c>.</summary>
-    [Authorize(Roles = "Teacher,SuperAdmin")]
+    /// <summary>Tạo khóa học mới. <c>POST /api/courses</c>. CenterAdmin tạo khóa riêng của center (CenterId tự gán theo caller).</summary>
+    [Authorize(Roles = "Teacher,SuperAdmin,CenterAdmin")]
     [HttpPost]
     public async Task<IActionResult> CreateCourse([FromBody] CreateCourseRequest request)
     {
@@ -44,8 +44,8 @@ public class CoursesController : BaseApiController
         return Created(result, "Tạo khóa học thành công.");
     }
 
-    /// <summary>Cập nhật khóa học. <c>PUT /api/courses/{id}</c>.</summary>
-    [Authorize(Roles = "Teacher,SuperAdmin")]
+    /// <summary>Cập nhật khóa học. <c>PUT /api/courses/{id}</c>. Handler chặn sửa khóa ngoài center của caller.</summary>
+    [Authorize(Roles = "Teacher,SuperAdmin,CenterAdmin")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateCourse(int id, [FromBody] UpdateCourseRequest request)
     {
@@ -53,8 +53,8 @@ public class CoursesController : BaseApiController
         return Success(result, "Cập nhật khóa học thành công.");
     }
 
-    /// <summary>Xóa khóa học. <c>DELETE /api/courses/{id}</c>.</summary>
-    [Authorize(Roles = "SuperAdmin")]
+    /// <summary>Xóa khóa học. <c>DELETE /api/courses/{id}</c>. Handler chặn xóa khóa ngoài center của caller.</summary>
+    [Authorize(Roles = "SuperAdmin,CenterAdmin")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteCourse(int id)
     {

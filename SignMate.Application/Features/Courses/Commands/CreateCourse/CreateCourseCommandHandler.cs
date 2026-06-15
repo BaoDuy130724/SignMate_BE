@@ -12,8 +12,13 @@ namespace SignMate.Application.Features.Courses.Commands.CreateCourse;
 public class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, CourseDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public CreateCourseCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public CreateCourseCommandHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<CourseDto> Handle(CreateCourseCommand command, CancellationToken cancellationToken)
@@ -29,7 +34,10 @@ public class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, C
             Level = level,
             IsPublished = false,
             CreatedBy = command.CreatedBy,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            // Phân tầng: SuperAdmin (CenterId null) tạo khóa global; CenterAdmin/Teacher tạo
+            // khóa RIÊNG của center mình. Người dùng không thể tự chọn — luôn theo center của caller.
+            CenterId = _currentUser.CenterId
         };
 
         await _unitOfWork.Repository<Course>().AddAsync(course);
@@ -46,7 +54,8 @@ public class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, C
             CreatedBy = course.CreatedBy,
             CreatedAt = course.CreatedAt,
             LessonCount = 0,
-            Topic = "Chung"
+            Topic = "Chung",
+            CenterId = course.CenterId
         };
     }
 }

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SignMate.Application.Common.Exceptions;
 using SignMate.Application.DTOs.Course;
+using SignMate.Application.Features.Courses.Common;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 
@@ -13,16 +14,25 @@ namespace SignMate.Application.Features.Lessons.Commands.CreateLesson;
 public class CreateLessonCommandHandler : IRequestHandler<CreateLessonCommand, LessonDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public CreateLessonCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public CreateLessonCommandHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<LessonDto> Handle(CreateLessonCommand command, CancellationToken cancellationToken)
     {
-        var courseExists = await _unitOfWork.Repository<Course>().Query()
-            .AnyAsync(c => c.Id == command.CourseId, cancellationToken);
-        if (!courseExists)
-            throw new NotFoundException(nameof(Course), command.CourseId);
+        var course = await _unitOfWork.Repository<Course>().Query()
+            .Where(c => c.Id == command.CourseId)
+            .Select(c => new { c.Id, c.CenterId })
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(nameof(Course), command.CourseId);
+
+        // Chỉ được thêm bài học vào khóa mình có quyền quản lý (center của mình / SuperAdmin).
+        ContentAccess.EnsureCanManage(course.CenterId, _currentUser);
 
         var request = command.Request;
         var lesson = new Lesson
