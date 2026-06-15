@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Caching.Memory;
 using SignMate.Application.Common.Exceptions;
 using SignMate.Application.DTOs.Subscription;
 using SignMate.Application.Features.Subscription.Common;
@@ -18,16 +19,27 @@ public class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, Subscri
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPayOsService _payOsService;
+    private readonly IMemoryCache _cache;
 
-    public SubscribeCommandHandler(IUnitOfWork unitOfWork, IPayOsService payOsService)
+    /// <summary>Chống spam: 1 yêu cầu subscribe / user trong khoảng này (chặn double-tap tạo nhiều pending sub).</summary>
+    private const int CooldownSeconds = 8;
+
+    public SubscribeCommandHandler(IUnitOfWork unitOfWork, IPayOsService payOsService, IMemoryCache cache)
     {
         _unitOfWork = unitOfWork;
         _payOsService = payOsService;
+        _cache = cache;
     }
 
     /// <inheritdoc />
     public async Task<SubscribeResponse> Handle(SubscribeCommand command, CancellationToken cancellationToken)
     {
+        // Chống spam bấm "mua gói" liên tục → mỗi lần lại tạo 1 pending subscription + gọi PayOS.
+        var cooldownKey = $"SUB_CD_{command.UserId}";
+        if (_cache.TryGetValue(cooldownKey, out _))
+            throw new TooManyRequestsException("Bạn thao tác quá nhanh. Vui lòng đợi vài giây rồi thử lại.");
+        _cache.Set(cooldownKey, true, TimeSpan.FromSeconds(CooldownSeconds));
+
         var plan = await _unitOfWork.Repository<SubscriptionPlan>().GetByIdAsync(command.Request.PlanId)
             ?? throw new NotFoundException(nameof(SubscriptionPlan), command.Request.PlanId);
 
@@ -88,6 +100,7 @@ public class SubscribeCommandHandler : IRequestHandler<SubscribeCommand, Subscri
             // Xóa pending subscription nếu PayOS thất bại
             _unitOfWork.Repository<UserSubscription>().Delete(pendingSub);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            _cache.Remove(cooldownKey); // lỗi thật → cho thử lại ngay, không bắt chờ cooldown
 
             throw new BadRequestException(
                 !string.IsNullOrWhiteSpace(ex.Message)
