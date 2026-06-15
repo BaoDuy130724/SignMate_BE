@@ -60,7 +60,8 @@ public class GetCoursesQueryHandler : IRequestHandler<GetCoursesQuery, List<Cour
                 CreatedBy = c.CreatedBy,
                 CreatedAt = c.CreatedAt,
                 LessonCount = c.Lessons.Count,
-                Topic = c.Lessons.OrderBy(l => l.OrderIndex).Select(l => l.Topic).FirstOrDefault() ?? "Chung"
+                Topic = c.Lessons.OrderBy(l => l.OrderIndex).Select(l => l.Topic).FirstOrDefault() ?? "Chung",
+                CenterId = c.CenterId
             })
             .ToListAsync(cancellationToken);
     }

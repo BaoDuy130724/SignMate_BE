@@ -44,6 +44,7 @@ public class GetCourseByIdQueryHandler : IRequestHandler<GetCourseByIdQuery, Cou
                 CreatedAt = c.CreatedAt,
                 LessonCount = c.Lessons.Count,
                 Topic = c.Lessons.OrderBy(l => l.OrderIndex).Select(l => l.Topic).FirstOrDefault() ?? "Chung",
+                CenterId = c.CenterId,
                 Lessons = c.Lessons.OrderBy(l => l.OrderIndex).Select(l => new LessonDto
                 {
                     Id = l.Id,

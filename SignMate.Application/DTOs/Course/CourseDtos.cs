@@ -14,6 +14,8 @@ public class CourseDto
     public DateTime CreatedAt { get; set; }
     public int LessonCount { get; set; }
     public string Topic { get; set; } = "Chung";
+    /// <summary>null = khóa global (nền tảng); có giá trị = khóa riêng của trung tâm này.</summary>
+    public int? CenterId { get; set; }
 }
 
 public class CourseDetailDto : CourseDto
