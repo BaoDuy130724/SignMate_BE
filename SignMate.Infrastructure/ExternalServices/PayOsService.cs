@@ -3,6 +3,8 @@ using PayOS;
 using PayOS.Models.V2.PaymentRequests;
 using PayOS.Models.Webhooks;
 using SignMate.Application.Interfaces;
+using System.Net;
+using System.Net.Sockets;
 using System.Text.Json;
 
 namespace SignMate.Infrastructure.ExternalServices;
@@ -33,7 +35,34 @@ public class PayOsService : IPayOsService
         {
             ClientId = clientId,
             ApiKey = apiKey,
-            ChecksumKey = checksumKey
+            ChecksumKey = checksumKey,
+            // Ép kết nối IPv4 tới PayOS. .NET 8 chưa có "Happy Eyeballs": nếu host có bản ghi
+            // IPv6 (PayOS qua Cloudflare có) nhưng mạng IPv6 hỏng, runtime thử IPv6 trước rồi
+            // treo ~21s mới fallback IPv4 → tạo link mất ~40s (client timeout). Buộc IPv4 để
+            // luôn nhanh & ổn định trên mọi môi trường.
+            HttpClient = new HttpClient(new SocketsHttpHandler
+            {
+                ConnectTimeout = TimeSpan.FromSeconds(15),
+                ConnectCallback = async (context, ct) =>
+                {
+                    var addresses = await Dns.GetHostAddressesAsync(
+                        context.DnsEndPoint.Host, AddressFamily.InterNetwork, ct);
+                    var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+                    {
+                        NoDelay = true
+                    };
+                    try
+                    {
+                        await socket.ConnectAsync(addresses, context.DnsEndPoint.Port, ct);
+                        return new NetworkStream(socket, ownsSocket: true);
+                    }
+                    catch
+                    {
+                        socket.Dispose();
+                        throw;
+                    }
+                }
+            })
         });
     }
 
