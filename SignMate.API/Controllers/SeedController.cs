@@ -64,10 +64,10 @@ public class SeedController : ControllerBase
             }
             return StatusCode(500, "Invalid DB Context type.");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Bảo mật: Ẩn chi tiết exception của DB để tránh rò rỉ cấu trúc hoặc thông tin nhạy cảm.
-            return StatusCode(500, new { message = "Seeding failed." });
+            Console.WriteLine($"[SEED ERROR] Seeding failed: {ex}");
+            return StatusCode(500, new { message = "Seeding failed.", error = _env.IsDevelopment() ? ex.Message : null, details = _env.IsDevelopment() ? ex.StackTrace : null });
         }
     }
 }

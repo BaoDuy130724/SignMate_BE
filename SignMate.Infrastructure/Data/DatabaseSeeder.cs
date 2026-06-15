@@ -382,7 +382,7 @@ public static class DatabaseSeeder
 
         var students = await context.Users.Where(u => u.Role == UserRole.Student).ToListAsync();
         var sign = await context.Signs.FirstOrDefaultAsync();
-        if (students.Count == 0 || sign == null) return;
+        if (students.Count < 2 || sign == null) return;
 
         var now = DateTime.UtcNow;
 
