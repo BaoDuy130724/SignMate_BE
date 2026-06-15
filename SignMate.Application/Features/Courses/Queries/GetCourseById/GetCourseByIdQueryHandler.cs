@@ -13,15 +13,25 @@ namespace SignMate.Application.Features.Courses.Queries.GetCourseById;
 public class GetCourseByIdQueryHandler : IRequestHandler<GetCourseByIdQuery, CourseDetailDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public GetCourseByIdQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public GetCourseByIdQueryHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<CourseDetailDto> Handle(GetCourseByIdQuery query, CancellationToken cancellationToken)
     {
+        // Phân tầng nội dung (chống IDOR): không cho xem chi tiết khóa của center khác.
+        var isSuperAdmin = _currentUser.Role == nameof(UserRole.SuperAdmin);
+        var centerId = _currentUser.CenterId;
+
         return await _unitOfWork.Repository<Course>().Query()
             .AsNoTracking()
             .Where(c => c.Id == query.Id)
+            .Where(c => isSuperAdmin || c.CenterId == null || c.CenterId == centerId)
             .Select(c => new CourseDetailDto
             {
                 Id = c.Id,

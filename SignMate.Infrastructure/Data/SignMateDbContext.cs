@@ -58,6 +58,10 @@ public class SignMateDbContext : DbContext, ISignMateDbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Title).HasMaxLength(300);
             e.Property(x => x.Level).HasConversion<string>().HasMaxLength(20);
+            // CenterId null = khóa học global; có giá trị = riêng của center. Restrict để
+            // xóa center không tự xóa khóa học (tránh cascade nhiều nhánh + mất nội dung ngầm).
+            e.HasOne(x => x.Center).WithMany()
+             .HasForeignKey(x => x.CenterId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Lesson>(e =>

@@ -68,7 +68,7 @@ public static class DatabaseSeeder
 
                 await SeedSubscriptionsAsync(context, students);
                 var classes = await SeedClassesAsync(context, centers[0].Id, teacher.Id, students);
-                var (courses, lessons) = await SeedCoursesAndLessonsAsync(context, adminUser.Id);
+                var (courses, lessons) = await SeedCoursesAndLessonsAsync(context, adminUser.Id, centers[0].Id);
                 await SeedEnrollmentsAndProgressAsync(context, students, courses, lessons);
                 await SeedLessonAssignmentsAsync(context, classes[0].Id, lessons[0].Id, teacher.Id);
                 await SeedNotificationsAsync(context, students[0].Id);
@@ -302,7 +302,7 @@ public static class DatabaseSeeder
 
     // ── Khóa học + bài học ───────────────────────────────────────────────────
     private static async Task<(List<Course> Courses, List<Lesson> Lessons)> SeedCoursesAndLessonsAsync(
-        SignMateDbContext context, int adminId)
+        SignMateDbContext context, int adminId, int? centerId = null)
     {
         var now = DateTime.UtcNow;
         var courses = new List<Course>
@@ -311,6 +311,11 @@ public static class DatabaseSeeder
             new() { Title = "Bảng chữ cái & Số đếm", Description = "Nền tảng quan trọng nhất để ghép vần tên riêng.", Level = CourseLevel.Beginner, IsPublished = true, CreatedBy = adminId, CreatedAt = now },
             new() { Title = "Giao tiếp Nâng cao", Description = "Mẫu câu phức tạp, hội thoại theo tình huống.", Level = CourseLevel.Intermediate, IsPublished = true, CreatedBy = adminId, CreatedAt = now }
         };
+        // Khóa học RIÊNG của trung tâm demo (chỉ học viên thuộc center này mới thấy/học).
+        // Phải nằm CUỐI danh sách để 3 khóa global giữ Id 1..3 và lesson global giữ Id đầu
+        // (SeedData_Signs.sql tham chiếu LessonId=1).
+        if (centerId != null)
+            courses.Add(new() { Title = "Giáo trình riêng Trung tâm VSL", Description = "Nội dung độc quyền do trung tâm biên soạn cho học viên của mình.", Level = CourseLevel.Beginner, IsPublished = true, CreatedBy = adminId, CreatedAt = now, CenterId = centerId });
         context.Courses.AddRange(courses);
         await context.SaveChangesAsync();
 
@@ -322,6 +327,13 @@ public static class DatabaseSeeder
             new() { CourseId = courses[1].Id, Title = "Bài 1: Bảng chữ cái", Topic = "Bảng chữ cái", Description = "Ký hiệu bảng chữ cái tiếng Việt.", OrderIndex = 1, DurationSeconds = 360, IsPublished = true },
             new() { CourseId = courses[1].Id, Title = "Bài 2: Số đếm", Topic = "Số đếm", Description = "Ký hiệu số đếm cơ bản.", OrderIndex = 2, DurationSeconds = 320, IsPublished = true }
         };
+        // Bài học của khóa riêng trung tâm — append sau cùng để không xê dịch Id lesson global.
+        if (centerId != null)
+        {
+            var centerCourse = courses[^1];
+            lessons.Add(new() { CourseId = centerCourse.Id, Title = "Bài 1: Quy tắc lớp học", Topic = "Nội quy", Description = "Hướng dẫn riêng của trung tâm.", OrderIndex = 1, DurationSeconds = 300, IsPublished = true });
+            lessons.Add(new() { CourseId = centerCourse.Id, Title = "Bài 2: Từ vựng chuyên đề", Topic = "Chuyên đề", Description = "Bộ từ vựng do trung tâm chọn lọc.", OrderIndex = 2, DurationSeconds = 360, IsPublished = true });
+        }
         context.Lessons.AddRange(lessons);
         await context.SaveChangesAsync();
 

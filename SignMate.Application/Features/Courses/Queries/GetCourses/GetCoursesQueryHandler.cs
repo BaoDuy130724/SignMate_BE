@@ -13,8 +13,13 @@ namespace SignMate.Application.Features.Courses.Queries.GetCourses;
 public class GetCoursesQueryHandler : IRequestHandler<GetCoursesQuery, List<CourseDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
 
-    public GetCoursesQueryHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public GetCoursesQueryHandler(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+    {
+        _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
+    }
 
     /// <inheritdoc />
     public async Task<List<CourseDto>> Handle(GetCoursesQuery query, CancellationToken cancellationToken)
@@ -23,6 +28,15 @@ public class GetCoursesQueryHandler : IRequestHandler<GetCoursesQuery, List<Cour
 
         if (!query.IncludeUnpublished)
             coursesQuery = coursesQuery.Where(c => c.IsPublished);
+
+        // Phân tầng nội dung: SuperAdmin thấy tất cả; còn lại chỉ thấy khóa global
+        // (CenterId == null) hoặc khóa riêng của chính center mình. B2C (CenterId == null)
+        // → chỉ global; B2B/teacher/centeradmin → global + center của họ.
+        if (_currentUser.Role != nameof(UserRole.SuperAdmin))
+        {
+            var centerId = _currentUser.CenterId;
+            coursesQuery = coursesQuery.Where(c => c.CenterId == null || c.CenterId == centerId);
+        }
 
         if (!string.IsNullOrWhiteSpace(query.Search))
             coursesQuery = coursesQuery.Where(c =>
