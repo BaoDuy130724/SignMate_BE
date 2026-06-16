@@ -6,7 +6,6 @@ using SignMate.Application.Common.Exceptions;
 using SignMate.Application.DTOs.Course;
 using SignMate.Application.Features.Vocabulary.Commands.ApproveReferenceRequest;
 using SignMate.Application.Features.Vocabulary.Commands.RejectReferenceRequest;
-using SignMate.Application.Features.Vocabulary.Commands.SetSignReference;
 using SignMate.Application.Features.Vocabulary.Commands.UploadReferenceVideo;
 using SignMate.Application.Features.Vocabulary.Queries.GetPendingReferenceRequests;
 
@@ -19,15 +18,6 @@ namespace SignMate.API.Controllers;
 [Authorize]
 public class VocabularyController : BaseApiController
 {
-    /// <summary>Gán trực tiếp keypoint mẫu cho từ vựng. <c>POST /api/vocabulary/set-reference</c>.</summary>
-    [HttpPost("set-reference")]
-    [Authorize(Roles = "SuperAdmin,CenterAdmin,Teacher")]
-    public async Task<IActionResult> SetReference([FromBody] SetReferenceRequest request)
-    {
-        await Mediator.Send(new SetSignReferenceCommand(request));
-        return Success("Gán keypoint mẫu thành công.");
-    }
-
     /// <summary>
     /// Tải lên video mẫu cho từ vựng và khởi động xử lý ngầm tách keypoint.
     /// <c>POST /api/vocabulary/{signId}/upload-reference</c>.
