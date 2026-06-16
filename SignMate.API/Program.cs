@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.IdentityModel.Tokens;
 using SignMate.API.Middleware;
@@ -22,7 +23,24 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<SignMate.Application.Interfaces.ICurrentUser, SignMate.API.Services.CurrentUser>();
 
+// ── Forwarded Headers (chạy sau reverse proxy: runasp / Render / Azure) ──
+// Để client IP (rate limit + IP thanh toán) và scheme https được nhận đúng từ proxy.
+// KnownProxies/Networks clear vì PaaS dùng proxy IP động không biết trước.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 // ── Authentication (JWT) ───────────────────────────────────────
+// Fail-fast nếu thiếu secret → tránh NullReferenceException khó hiểu lúc khởi động trên server.
+var jwtSecret = builder.Configuration["Jwt:Secret"];
+if (string.IsNullOrWhiteSpace(jwtSecret))
+    throw new InvalidOperationException(
+        "Thiếu cấu hình 'Jwt:Secret'. Đặt qua biến môi trường Jwt__Secret " +
+        "hoặc appsettings.Local.json trước khi chạy.");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opt =>
     {
@@ -30,7 +48,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]!)),
+                Encoding.UTF8.GetBytes(jwtSecret)),
             ValidateIssuer = false,
             ValidateAudience = false,
             ClockSkew = TimeSpan.Zero
@@ -176,6 +194,9 @@ var app = builder.Build();
 
 
 // ── Middleware Pipeline ────────────────────────────────────────
+// Đặt đầu tiên: dịch X-Forwarded-* từ proxy thành scheme/IP thật cho các middleware sau.
+app.UseForwardedHeaders();
+
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseSwagger();
