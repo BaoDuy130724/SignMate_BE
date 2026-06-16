@@ -19,8 +19,9 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.7" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="8.10.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="7.5.2" />
     <PackageVersion Include="payOS" Version="2.1.0" />
