@@ -4,7 +4,6 @@ using SignMate.Application.Common.Exceptions;
 using SignMate.Application.DTOs.Practice;
 using SignMate.Application.Features.Practice.Common;
 using SignMate.Application.Features.Streaks.Common;
-using SignMate.Application.Features.Subscription.Common;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
 
@@ -14,21 +13,21 @@ namespace SignMate.Application.Features.Practice.Commands.SubmitAttempt;
 /// Handler cho <see cref="SubmitAttemptCommand"/>: tải video lên blob, gọi AI chấm điểm rồi ghi lượt thử
 /// kèm phản hồi, cập nhật tiến độ ký hiệu và streak. Các thao tác bên ngoài (blob, AI) thực hiện trước
 /// transaction; toàn bộ ghi DB phụ thuộc nhau gói trong một transaction để đảm bảo Atomicity.
+/// Nhận xét chi tiết Gemini KHÔNG sinh ở đây nữa (trước đây await chặn tới 10s) — điểm trả về ngay,
+/// app lấy nhận xét qua <c>GET /api/practice/attempt/{id}/feedback</c> (GetAttemptFeedbackQuery).
 /// </summary>
 public class SubmitAttemptCommandHandler : IRequestHandler<SubmitAttemptCommand, AttemptResponse>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IBlobService _blobService;
     private readonly IAIClientService _aiClient;
-    private readonly IGeminiService _geminiService;
 
     public SubmitAttemptCommandHandler(
-        IUnitOfWork unitOfWork, IBlobService blobService, IAIClientService aiClient, IGeminiService geminiService)
+        IUnitOfWork unitOfWork, IBlobService blobService, IAIClientService aiClient)
     {
         _unitOfWork = unitOfWork;
         _blobService = blobService;
         _aiClient = aiClient;
-        _geminiService = geminiService;
     }
 
     /// <inheritdoc />
@@ -85,10 +84,7 @@ public class SubmitAttemptCommandHandler : IRequestHandler<SubmitAttemptCommand,
             throw;
         }
 
-        // Sau commit: nếu là gói Pro thì sinh phản hồi chi tiết bằng Gemini (thao tác ngoài transaction).
-        var geminiFeedback = await TryGenerateGeminiFeedbackAsync(
-            command.UserId, session, aiResult, attempt.Id, cancellationToken);
-
+        // Điểm trả về NGAY (không chờ Gemini). Nhận xét chi tiết Pro/B2B lấy ở endpoint riêng.
         return new AttemptResponse
         {
             AttemptId = attempt.Id,
@@ -96,39 +92,7 @@ public class SubmitAttemptCommandHandler : IRequestHandler<SubmitAttemptCommand,
             Feedbacks = aiResult.Feedbacks
                 .Select(f => new FeedbackDto { Type = f.Type, Score = f.Score, Message = f.Message })
                 .ToList(),
-            GeminiFeedback = geminiFeedback
+            GeminiFeedback = null
         };
-    }
-
-    /// <summary>
-    /// Sinh phản hồi chi tiết bằng Gemini cho người dùng gói Pro (đối chiếu điểm lượt thử liền trước).
-    /// Trả về null nếu người dùng không thuộc gói Pro — đúng phân tầng UC-06 (Pro → detailed).
-    /// </summary>
-    private async Task<string?> TryGenerateGeminiFeedbackAsync(
-        int userId, PracticeSession session, AIAnalysisResult aiResult,
-        int currentAttemptId, CancellationToken cancellationToken)
-    {
-        var activeSub = await _unitOfWork.Repository<UserSubscription>().Query()
-            .Include(s => s.Plan)
-            .FirstOrDefaultAsync(s => s.UserId == userId && s.IsActive && s.EndDate > DateTime.UtcNow, cancellationToken);
-
-        if (activeSub is null || !PlanEntitlements.HasProFeatures(activeSub.Plan.Type))
-            return null;
-
-        var previousAttempt = await _unitOfWork.Repository<PracticeAttempt>().Query()
-            .Where(a => a.SessionId == session.Id && a.Id != currentAttemptId)
-            .OrderByDescending(a => a.RecordedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        var context = new GeminiFeedbackContext
-        {
-            SignWord = session.Sign.Word,
-            OverallScore = aiResult.OverallScore,
-            DtwFeedbacks = aiResult.Feedbacks,
-            AttemptNumber = session.TotalAttempts,
-            PreviousScore = previousAttempt?.OverallScore
-        };
-
-        return await _geminiService.GenerateDetailedFeedbackAsync(context);
     }
 }

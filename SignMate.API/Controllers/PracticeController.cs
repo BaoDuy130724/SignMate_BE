@@ -7,6 +7,7 @@ using SignMate.Application.DTOs.Practice;
 using SignMate.Application.Features.Practice.Commands.EndSession;
 using SignMate.Application.Features.Practice.Commands.StartSession;
 using SignMate.Application.Features.Practice.Commands.SubmitAttempt;
+using SignMate.Application.Features.Practice.Queries.GetAttemptFeedback;
 using SignMate.Application.Features.Practice.Queries.GetPracticeHistory;
 
 namespace SignMate.API.Controllers;
@@ -50,6 +51,19 @@ public class PracticeController : BaseApiController
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         await Mediator.Send(new EndSessionCommand(userId, request.SessionId));
         return Success("Đã kết thúc phiên luyện tập.");
+    }
+
+    /// <summary>
+    /// Nhận xét chi tiết Gemini cho một lượt thử (gói Pro/B2B). <c>GET /api/practice/attempt/{attemptId}/feedback</c>.
+    /// Tách khỏi luồng chấm điểm để điểm hiện ngay; app gọi sau khi đã có điểm. Trả <c>feedback=null</c>
+    /// nếu người dùng không thuộc gói Pro/B2B (hoặc Gemini tạm lỗi).
+    /// </summary>
+    [HttpGet("attempt/{attemptId:int}/feedback")]
+    public async Task<IActionResult> GetAttemptFeedback(int attemptId)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await Mediator.Send(new GetAttemptFeedbackQuery(userId, attemptId));
+        return Success(result);
     }
 
     /// <summary>Lịch sử luyện tập cho một ký hiệu. <c>GET /api/practice/history/{signId}</c>.</summary>
