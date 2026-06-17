@@ -40,29 +40,7 @@ public static class DependencyInjection
             // Để resilience (TotalRequestTimeout) điều phối thời gian, tắt timeout mặc định
             // 100s của HttpClient (nếu không nó cắt ngang trước pipeline).
             .ConfigureHttpClient(c => c.Timeout = System.Threading.Timeout.InfiniteTimeSpan)
-            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
-            {
-                ConnectTimeout = TimeSpan.FromSeconds(10),
-                ConnectCallback = async (context, ct) =>
-                {
-                    var addresses = await Dns.GetHostAddressesAsync(
-                        context.DnsEndPoint.Host, AddressFamily.InterNetwork, ct);
-                    var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
-                    {
-                        NoDelay = true
-                    };
-                    try
-                    {
-                        await socket.ConnectAsync(addresses, context.DnsEndPoint.Port, ct);
-                        return new NetworkStream(socket, ownsSocket: true);
-                    }
-                    catch
-                    {
-                        socket.Dispose();
-                        throw;
-                    }
-                }
-            })
+            .ConfigurePrimaryHttpMessageHandler(() => CreateIpv4Handler(TimeSpan.FromSeconds(10)))
             .AddStandardResilienceHandler(options =>
             {
                 // Video + MediaPipe có thể lâu → mỗi lần thử cho 30s; trần tổng 100s.
@@ -76,7 +54,10 @@ public static class DependencyInjection
                 options.Retry.UseJitter = true;
             });
 
-        services.AddHttpClient<IGeminiService, GeminiService>();
+        // Gemini cũng ép IPv4: nó nằm trên đường trả kết quả chấm điểm cho gói Pro/B2B
+        // (await trong SubmitAttemptCommandHandler) nên nếu IPv6 hỏng sẽ treo tới 10s/lượt.
+        services.AddHttpClient<IGeminiService, GeminiService>()
+            .ConfigurePrimaryHttpMessageHandler(() => CreateIpv4Handler(TimeSpan.FromSeconds(10)));
         services.AddScoped<IBlobService, BlobService>();
 
         // Email: gửi thật qua SMTP khi đã cấu hình "Email:Host"; nếu chưa thì rơi về Mock (chỉ log).
@@ -98,4 +79,33 @@ public static class DependencyInjection
 
         return services;
     }
+
+    /// <summary>
+    /// Tạo handler ép kết nối IPv4 cho HttpClient gọi dịch vụ ngoài. Máy dev có IPv6 hỏng và
+    /// .NET 8 chưa có Happy Eyeballs nên mặc định sẽ thử IPv6 trước rồi treo ~21s mới fallback;
+    /// ép IPv4 tránh hẳn (xem note PayOS/IPv6 trong CLAUDE.md). Dùng chung cho AIClient + Gemini.
+    /// </summary>
+    private static SocketsHttpHandler CreateIpv4Handler(TimeSpan connectTimeout) => new()
+    {
+        ConnectTimeout = connectTimeout,
+        ConnectCallback = async (context, ct) =>
+        {
+            var addresses = await Dns.GetHostAddressesAsync(
+                context.DnsEndPoint.Host, AddressFamily.InterNetwork, ct);
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+            {
+                NoDelay = true
+            };
+            try
+            {
+                await socket.ConnectAsync(addresses, context.DnsEndPoint.Port, ct);
+                return new NetworkStream(socket, ownsSocket: true);
+            }
+            catch
+            {
+                socket.Dispose();
+                throw;
+            }
+        }
+    };
 }
