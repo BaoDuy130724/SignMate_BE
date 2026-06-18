@@ -43,12 +43,14 @@ public static class DependencyInjection
             .ConfigurePrimaryHttpMessageHandler(() => CreateIpv4Handler(TimeSpan.FromSeconds(10)))
             .AddStandardResilienceHandler(options =>
             {
-                // Video + MediaPipe có thể lâu → mỗi lần thử cho 30s; trần tổng 100s.
-                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(30);
-                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(100);
-                // Ràng buộc của handler: SamplingDuration >= 2 × AttemptTimeout (đặt 70 cho dư).
-                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(70);
-                options.Retry.MaxRetryAttempts = 2;
+                // /analyze giờ gồm: tải video + MediaPipe + giám khảo Gemini multimodal (~7-9s,
+                // có retry nội bộ) → một lượt có thể tới ~30-45s. Cho mỗi lần thử 60s, trần tổng 120s.
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(60);
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
+                // Ràng buộc của handler: SamplingDuration >= 2 × AttemptTimeout.
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(125);
+                // Giám khảo không idempotent về chi phí (re-run = gọi lại Gemini) → chỉ thử lại 1 lần.
+                options.Retry.MaxRetryAttempts = 1;
                 options.Retry.Delay = TimeSpan.FromSeconds(1);
                 options.Retry.BackoffType = DelayBackoffType.Exponential;
                 options.Retry.UseJitter = true;

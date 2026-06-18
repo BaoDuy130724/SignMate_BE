@@ -28,6 +28,31 @@ public class AttemptResponse
     // tức thì; app lấy nhận xét qua GET /api/practice/attempt/{id}/feedback (xem
     // AttemptFeedbackResponse). Giữ field cho client cũ; luôn null ở luồng mới.
     public string? GeminiFeedback { get; set; }
+
+    // === Đánh giá THẬT (giám khảo Gemini multimodal), phân tầng theo gói ===
+    // IsCorrect là nguồn sự thật mới cho "Đạt/Chưa đạt": lấy từ verdict giám khảo khi có,
+    // fallback OverallScore >= 0.7 (DTW) khi giám khảo không chạy được.
+    public bool IsCorrect { get; set; }
+    public string? Verdict { get; set; }     // "dat" | "chua_dat" | null (không có giám khảo)
+    public string? Summary { get; set; }     // 1 câu nhận xét — mọi gói đều thấy
+    public JudgeRubricDto? Rubric { get; set; }  // chi tiết tiêu chí — Basic (tiêu chí yếu) / Pro-B2B (đầy đủ); Free = null
+}
+
+/// <summary>Rubric đánh giá theo tiêu chí, đã trim theo gói. Tiêu chí rỗng = gói không được xem chi tiết.</summary>
+public class JudgeRubricDto
+{
+    public string Verdict { get; set; } = "chua_dat";
+    public float Confidence { get; set; }
+    public string Summary { get; set; } = "";
+    public List<JudgeCriterionDto> Criteria { get; set; } = [];
+}
+
+public class JudgeCriterionDto
+{
+    public string Key { get; set; } = "";     // hand_shape | location | movement | palm_orientation
+    public string Label { get; set; } = "";   // nhãn tiếng Việt hiển thị
+    public string Status { get; set; } = "";  // good | needs_work | wrong
+    public string Note { get; set; } = "";
 }
 
 /// <summary>

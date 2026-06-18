@@ -15,7 +15,9 @@ public class AIClientService : IAIClientService
         _aiBaseUrl = config["AIService:BaseUrl"] ?? "http://localhost:8000";
     }
 
-    public async Task<AIAnalysisResult> AnalyzeAsync(string videoUrl, string signId, string? referenceKeypoints)
+    public async Task<AIAnalysisResult> AnalyzeAsync(
+        string videoUrl, string signId, string? referenceKeypoints,
+        string? referenceVideoUrl = null, string? signWord = null)
     {
         var payload = new
         {
@@ -23,7 +25,10 @@ public class AIClientService : IAIClientService
             sign_id = signId,
             // Python /analyze expects `reference_url`; it accepts either an inline JSON
             // array of keypoints (what we store in Sign.ReferenceKeypointData) or a URL.
-            reference_url = referenceKeypoints ?? ""
+            reference_url = referenceKeypoints ?? "",
+            // Khi có video mẫu: AI chạy thêm giám khảo Gemini multimodal (chấm THẬT + rubric).
+            reference_video_url = referenceVideoUrl,
+            sign_word = signWord
         };
 
         var response = await _http.PostAsJsonAsync($"{_aiBaseUrl}/analyze", payload);
