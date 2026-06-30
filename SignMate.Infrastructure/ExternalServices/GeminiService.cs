@@ -23,17 +23,26 @@ public class GeminiService : IGeminiService
         _logger = logger;
     }
 
-    public async Task<string?> GenerateDetailedFeedbackAsync(GeminiFeedbackContext context)
+    public Task<string?> GenerateDetailedFeedbackAsync(GeminiFeedbackContext context)
+        => GenerateInternalAsync(BuildPrompt(context), temperature: 0.7, maxOutputTokens: 300);
+
+    public Task<string?> GenerateAsync(string prompt, int maxOutputTokens = 600)
+        => GenerateInternalAsync(prompt, temperature: 0.4, maxOutputTokens: maxOutputTokens);
+
+    /// <summary>
+    /// Gọi Gemini <c>generateContent</c> với một prompt text. Trả null (degrade êm) khi chưa cấu hình
+    /// key, request timeout, hoặc API lỗi — caller quyết định fallback.
+    /// </summary>
+    private async Task<string?> GenerateInternalAsync(string prompt, double temperature, int maxOutputTokens)
     {
         if (string.IsNullOrEmpty(_apiKey))
         {
-            _logger.LogWarning("Gemini API key is not configured. Skipping AI feedback.");
+            _logger.LogWarning("Gemini API key is not configured. Skipping AI generation.");
             return null;
         }
 
         try
         {
-            var prompt = BuildPrompt(context);
             var url = $"https://generativelanguage.googleapis.com/v1beta/models/{_model}:generateContent?key={_apiKey}";
 
             var payload = new
@@ -50,8 +59,8 @@ public class GeminiService : IGeminiService
                 },
                 generationConfig = new
                 {
-                    temperature = 0.7,
-                    maxOutputTokens = 300
+                    temperature,
+                    maxOutputTokens
                 }
             };
 
@@ -81,7 +90,7 @@ public class GeminiService : IGeminiService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Gemini AI feedback generation failed.");
+            _logger.LogWarning(ex, "Gemini AI generation failed.");
             return null;
         }
     }

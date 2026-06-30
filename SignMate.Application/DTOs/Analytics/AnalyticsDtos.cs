@@ -54,3 +54,32 @@ public class CourseAnalyticsDto
     /// <summary>Số học viên ghi danh mới trong 30 ngày gần nhất.</summary>
     public int NewEnrollmentsLast30Days { get; set; }
 }
+
+/// <summary>
+/// Nhận định do AI (Gemini) sinh ra từ số liệu thật — dùng cho card "AI Insights" / "AI phân tích doanh thu".
+/// AI chỉ diễn giải số đã tính sẵn, không tự bịa dữ liệu. Degrade: <see cref="AiAvailable"/> = false khi
+/// chưa cấu hình key hoặc gọi lỗi (web hiện thông báo thay vì báo lỗi).
+/// </summary>
+public class AdminInsightDto
+{
+    public string Summary { get; set; } = "";
+    public List<string> Positives { get; set; } = [];
+    public List<string> Concerns { get; set; } = [];
+    public List<string> Recommendations { get; set; } = [];
+    public DateTime GeneratedAt { get; set; }
+    public string Model { get; set; } = "";
+    public bool AiAvailable { get; set; }
+}
+
+/// <summary>
+/// Một cảnh báo bất thường được phát hiện bằng LUẬT (deterministic) từ số liệu thật — không để AI bịa.
+/// </summary>
+public class AdminAlertDto
+{
+    /// <summary>"info" | "warning" | "critical".</summary>
+    public string Severity { get; set; } = "info";
+    public string Title { get; set; } = "";
+    public string Detail { get; set; } = "";
+    /// <summary>Chỉ số liên quan (vd "-18%", "47%") — tùy chọn.</summary>
+    public string? Metric { get; set; }
+}
