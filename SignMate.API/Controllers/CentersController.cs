@@ -9,6 +9,7 @@ using SignMate.Application.Features.Center.Commands.UpdateCenter;
 using SignMate.Application.Features.Center.Commands.UpdateCenterMember;
 using SignMate.Application.Features.Center.Commands.DeleteCenterMember;
 using SignMate.Application.Features.Center.Queries.GetCenterDashboard;
+using SignMate.Application.Features.Center.Queries.GetCenterInsight;
 using SignMate.Application.Features.Center.Queries.GetCenterMembers;
 using SignMate.Application.Features.Center.Queries.GetCenterMember;
 using SignMate.Application.Features.Center.Queries.GetCenters;
@@ -55,6 +56,11 @@ public class CentersController : BaseApiController
     [HttpGet("{id:int}/dashboard")]
     public async Task<IActionResult> GetDashboard(int id)
         => Success(await Mediator.Send(new GetCenterDashboardQuery(id)));
+
+    /// <summary>Nhận định AI cho trung tâm (scope theo center của caller). <c>GET /api/centers/{id}/insight?forceRefresh=</c>.</summary>
+    [HttpGet("{id:int}/insight")]
+    public async Task<IActionResult> GetInsight(int id, [FromQuery] bool forceRefresh = false)
+        => Success(await Mediator.Send(new GetCenterInsightQuery(id, forceRefresh)));
 
     /// <summary>Tạo tài khoản CenterAdmin. <c>POST /api/centers/{id}/admin</c>.</summary>
     [HttpPost("{id:int}/admin")]
