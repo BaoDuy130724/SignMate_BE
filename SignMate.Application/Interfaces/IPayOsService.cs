@@ -19,6 +19,11 @@ public interface IPayOsService
     /// Kiểm tra trạng thái giao dịch trực tiếp từ PayOS (hữu ích khi webhook bị trễ hoặc test ở localhost).
     /// </summary>
     Task<bool> VerifyPaymentLinkAsync(long orderCode);
+
+    /// <summary>
+    /// Lấy chi tiết thông tin thanh toán từ PayOS qua orderCode.
+    /// </summary>
+    Task<PayOsPaymentInfo?> GetPaymentLinkInformationAsync(long orderCode);
 }
 
 public class PayOsPaymentRequest
@@ -35,4 +40,14 @@ public class PayOsWebhookResult
     public bool IsValid { get; set; }
     public bool IsSuccess { get; set; }
     public long OrderCode { get; set; }
+}
+
+public class PayOsPaymentInfo
+{
+    public long OrderCode { get; set; }
+    public int Amount { get; set; }
+    public int AmountPaid { get; set; }
+    public string Status { get; set; } = null!;
+    public DateTime? CreatedAt { get; set; }
+    public string? CancellationReason { get; set; }
 }

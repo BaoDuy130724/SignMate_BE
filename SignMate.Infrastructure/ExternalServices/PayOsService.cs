@@ -125,27 +125,47 @@ public class PayOsService : IPayOsService
     }
     public async Task<bool> VerifyPaymentLinkAsync(long orderCode)
     {
+        var info = await GetPaymentLinkInformationAsync(orderCode);
+        return info?.Status == "PAID";
+    }
+
+    public async Task<PayOsPaymentInfo?> GetPaymentLinkInformationAsync(long orderCode)
+    {
         try
         {
             var response = await _verifyHttp.GetAsync(
                 $"https://api-merchant.payos.vn/v2/payment-requests/{orderCode}");
             if (!response.IsSuccessStatusCode)
-                return false;
+                return null;
 
             var json = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(json);
-            
-            if (doc.RootElement.TryGetProperty("data", out var dataEl) && 
-                dataEl.TryGetProperty("status", out var statusEl))
+
+            if (doc.RootElement.TryGetProperty("data", out var dataEl))
             {
-                return statusEl.GetString() == "PAID";
+                var info = new PayOsPaymentInfo
+                {
+                    OrderCode = orderCode,
+                    Status = dataEl.TryGetProperty("status", out var s) ? s.GetString() ?? "PENDING" : "PENDING",
+                    Amount = dataEl.TryGetProperty("amount", out var a) && a.TryGetInt32(out var amountVal) ? amountVal : 0,
+                    AmountPaid = dataEl.TryGetProperty("amountPaid", out var ap) && ap.TryGetInt32(out var amountPaidVal) ? amountPaidVal : 0,
+                    CancellationReason = dataEl.TryGetProperty("cancellationReason", out var cr) ? cr.GetString() : null
+                };
+
+                if (dataEl.TryGetProperty("createdAt", out var createdEl) &&
+                    DateTime.TryParse(createdEl.GetString(), out var createdAt))
+                {
+                    info.CreatedAt = createdAt;
+                }
+
+                return info;
             }
 
-            return false;
+            return null;
         }
         catch
         {
-            return false;
+            return null;
         }
     }
 }

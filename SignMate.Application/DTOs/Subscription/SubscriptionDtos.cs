@@ -72,3 +72,35 @@ public class SubscriptionListItemDto
     public DateTime EndDate { get; set; }
     public bool IsActive { get; set; }
 }
+
+public class TransactionHistoryDto
+{
+    public int Id { get; set; }
+    public long? OrderCode { get; set; }
+    public int PlanId { get; set; }
+    public string PlanName { get; set; } = null!;
+    public string PlanType { get; set; } = null!;
+    public decimal PriceVnd { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public bool IsActive { get; set; }
+    public string Status { get; set; } = null!; // PAID, PENDING, CANCELLED, EXPIRED, FREE
+}
+
+public class AdminTransactionHistoryDto
+{
+    public int Id { get; set; }
+    public long? OrderCode { get; set; }
+    public int UserId { get; set; }
+    public string UserFullName { get; set; } = null!;
+    public string Email { get; set; } = null!;
+    public string? CenterName { get; set; }
+    public int PlanId { get; set; }
+    public string PlanName { get; set; } = null!;
+    public string PlanType { get; set; } = null!;
+    public decimal PriceVnd { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public bool IsActive { get; set; }
+    public string Status { get; set; } = null!;
+}

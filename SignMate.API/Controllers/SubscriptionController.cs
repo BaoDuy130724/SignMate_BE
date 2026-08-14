@@ -10,6 +10,8 @@ using SignMate.Application.Features.Subscription.Commands.Subscribe;
 using SignMate.Application.Features.Subscription.Commands.UpdatePlan;
 using SignMate.Application.Features.Subscription.Queries.GetAllSubscriptions;
 using SignMate.Application.Features.Subscription.Queries.GetMySubscription;
+using SignMate.Application.Features.Subscription.Queries.GetMyTransactions;
+using SignMate.Application.Features.Subscription.Queries.GetAdminTransactions;
 using SignMate.Application.Features.Subscription.Queries.GetPlans;
 using SignMate.Application.Interfaces;
 using SignMate.Domain.Entities;
@@ -163,6 +165,30 @@ public class SubscriptionController : BaseApiController
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var result = await Mediator.Send(new GetMySubscriptionQuery(userId));
+        return Success(result);
+    }
+
+    /// <summary>Lịch sử giao dịch/đăng ký gói của người dùng hiện tại. <c>GET /api/subscription/my-history</c>.</summary>
+    [Authorize]
+    [HttpGet("subscription/my-history")]
+    public async Task<IActionResult> GetMyTransactionHistory()
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await Mediator.Send(new GetMyTransactionsQuery(userId));
+        return Success(result);
+    }
+
+    /// <summary>Lịch sử giao dịch toàn hệ thống hoặc theo trung tâm. <c>GET /api/subscription/admin/transactions</c>.</summary>
+    [Authorize(Roles = "SuperAdmin,CenterAdmin")]
+    [HttpGet("subscription/admin/transactions")]
+    public async Task<IActionResult> GetAdminTransactions(
+        [FromQuery] int? userId,
+        [FromQuery] string? status)
+    {
+        var currentUser = HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
+        var callerCenterId = currentUser.Role == "SuperAdmin" ? (int?)null : currentUser.CenterId;
+
+        var result = await Mediator.Send(new GetAdminTransactionsQuery(callerCenterId, userId, status));
         return Success(result);
     }
 
