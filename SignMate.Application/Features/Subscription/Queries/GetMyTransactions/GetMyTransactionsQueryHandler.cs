@@ -25,9 +25,39 @@ public class GetMyTransactionsQueryHandler : IRequestHandler<GetMyTransactionsQu
     /// <inheritdoc />
     public async Task<List<TransactionHistoryDto>> Handle(GetMyTransactionsQuery query, CancellationToken cancellationToken)
     {
-        var subscriptions = await _unitOfWork.Repository<UserSubscription>().Query()
+        // Kiểm tra người dùng: Chỉ học viên B2C (không thuộc trung tâm - CenterId == null) mới có lịch sử giao dịch cá nhân
+        var user = await _unitOfWork.Repository<User>().GetByIdAsync(query.UserId);
+        if (user == null || user.CenterId != null)
+        {
+            return new List<TransactionHistoryDto>();
+        }
+
+        var subscriptionQuery = _unitOfWork.Repository<UserSubscription>().Query()
             .Include(s => s.Plan)
             .Where(s => s.UserId == query.UserId)
+            .AsQueryable();
+
+        // Lọc theo thời gian: giới hạn tối đa khoảng 1 tháng (31 ngày) để tránh query quá nặng
+        var now = DateTime.UtcNow;
+        var toDate = query.ToDate ?? now;
+        DateTime? fromDate = query.FromDate;
+
+        if (fromDate.HasValue)
+        {
+            // Nếu khoảng cách lớn hơn 31 ngày, tự động giới hạn về 31 ngày trước toDate
+            if ((toDate - fromDate.Value).TotalDays > 31)
+            {
+                fromDate = toDate.AddDays(-31);
+            }
+            subscriptionQuery = subscriptionQuery.Where(s => s.StartDate >= fromDate.Value);
+        }
+
+        if (query.ToDate.HasValue)
+        {
+            subscriptionQuery = subscriptionQuery.Where(s => s.StartDate <= query.ToDate.Value);
+        }
+
+        var subscriptions = await subscriptionQuery
             .OrderByDescending(s => s.Id)
             .ToListAsync(cancellationToken);
 
@@ -99,6 +129,12 @@ public class GetMyTransactionsQueryHandler : IRequestHandler<GetMyTransactionsQu
             else
             {
                 status = "INACTIVE";
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.Status) &&
+                !string.Equals(status, query.Status, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
             }
 
             result.Add(new TransactionHistoryDto

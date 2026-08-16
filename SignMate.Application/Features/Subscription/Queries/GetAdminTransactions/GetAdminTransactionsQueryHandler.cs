@@ -37,6 +37,16 @@ public class GetAdminTransactionsQueryHandler : IRequestHandler<GetAdminTransact
             subscriptionQuery = subscriptionQuery.Where(s => s.UserId == query.UserId.Value);
         }
 
+        if (query.FromDate.HasValue)
+        {
+            subscriptionQuery = subscriptionQuery.Where(s => s.StartDate >= query.FromDate.Value);
+        }
+
+        if (query.ToDate.HasValue)
+        {
+            subscriptionQuery = subscriptionQuery.Where(s => s.StartDate <= query.ToDate.Value);
+        }
+
         var list = await subscriptionQuery
             .OrderByDescending(s => s.Id)
             .ToListAsync(cancellationToken);

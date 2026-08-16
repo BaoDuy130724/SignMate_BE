@@ -8,8 +8,11 @@ namespace SignMate.Application.Features.Subscription.Queries.GetAdminTransaction
 /// </summary>
 /// <param name="CallerCenterId">Id trung tâm của caller; null = SuperAdmin (toàn bộ hệ thống).</param>
 /// <param name="UserId">Lọc theo Id người dùng (tùy chọn).</param>
-/// <param name="Status">Lọc theo trạng thái giao dịch (PAID, PENDING, CANCELLED, EXPIRED, FREE) (tùy chọn).</param>
+/// <param name="FromDate">Thời gian bắt đầu lọc (tùy chọn).</param>
+/// <param name="ToDate">Thời gian kết thúc lọc (tùy chọn).</param>
 public record GetAdminTransactionsQuery(
     int? CallerCenterId = null,
     int? UserId = null,
-    string? Status = null) : IQuery<List<AdminTransactionHistoryDto>>;
+    string? Status = null,
+    DateTime? FromDate = null,
+    DateTime? ToDate = null) : IQuery<List<AdminTransactionHistoryDto>>;

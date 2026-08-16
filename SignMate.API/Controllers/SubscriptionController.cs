@@ -168,13 +168,16 @@ public class SubscriptionController : BaseApiController
         return Success(result);
     }
 
-    /// <summary>Lịch sử giao dịch/đăng ký gói của người dùng hiện tại. <c>GET /api/subscription/my-history</c>.</summary>
+    /// <summary>Lịch sử giao dịch/đăng ký gói của người dùng hiện tại (chỉ học viên B2C). <c>GET /api/subscription/my-history</c>.</summary>
     [Authorize]
     [HttpGet("subscription/my-history")]
-    public async Task<IActionResult> GetMyTransactionHistory()
+    public async Task<IActionResult> GetMyTransactionHistory(
+        [FromQuery] DateTime? fromDate,
+        [FromQuery] DateTime? toDate,
+        [FromQuery] string? status)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var result = await Mediator.Send(new GetMyTransactionsQuery(userId));
+        var result = await Mediator.Send(new GetMyTransactionsQuery(userId, fromDate, toDate, status));
         return Success(result);
     }
 
@@ -183,12 +186,14 @@ public class SubscriptionController : BaseApiController
     [HttpGet("subscription/admin/transactions")]
     public async Task<IActionResult> GetAdminTransactions(
         [FromQuery] int? userId,
-        [FromQuery] string? status)
+        [FromQuery] string? status,
+        [FromQuery] DateTime? fromDate,
+        [FromQuery] DateTime? toDate)
     {
         var currentUser = HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
         var callerCenterId = currentUser.Role == "SuperAdmin" ? (int?)null : currentUser.CenterId;
 
-        var result = await Mediator.Send(new GetAdminTransactionsQuery(callerCenterId, userId, status));
+        var result = await Mediator.Send(new GetAdminTransactionsQuery(callerCenterId, userId, status, fromDate, toDate));
         return Success(result);
     }
 
